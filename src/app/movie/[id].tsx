@@ -133,7 +133,7 @@ export default function MovieDetailScreen() {
       <Button label="상세 정보 다시 확인" loading={refreshing} onPress={() => void refreshDetails()} variant="secondary" />
       {message ? <StateNotice message={message} title={message.includes('TMDB') ? '상세 정보' : '보고 싶어요'} tone={message.includes('저장했어요') || message.includes('TMDB') ? 'success' : 'info'} /> : null}
       <Button label={wanted ? '✓ 보고 싶어요에 저장됨' : '+ 보고 싶어요'} loading={saving} onPress={() => void toggleWatchlist()} variant={wanted ? 'secondary' : 'primary'} />
-      <Button label="이 영화 감상 기록 준비" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: movie.id, title: movie.title } })} variant="secondary" />
+      <Button label="이 영화 감상 기록하기" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: movie.id, title: movie.title } })} variant="secondary" />
       <Button label="데이터 출처와 크레딧" onPress={() => router.push('/credits')} variant="ghost" />
     </Screen>
   );
