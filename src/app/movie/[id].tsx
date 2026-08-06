@@ -18,25 +18,45 @@ export default function MovieDetailScreen() {
   const [wanted, setWanted] = useState(false);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    if (!movieId) return;
-    setStatus('loading');
+  const load = useCallback(async (force = false): Promise<Movie | null> => {
+    if (!movieId) return null;
+    if (!force) setStatus('loading');
     try {
-      const [nextMovie, ids] = await Promise.all([getMovie(movieId), getWatchlistMovieIds()]);
+      const [nextMovie, ids] = await Promise.all([getMovie(movieId, force), getWatchlistMovieIds()]);
       setMovie(nextMovie);
       setWanted(ids.includes(movieId));
       setStatus(nextMovie ? 'ready' : 'error');
+      return nextMovie;
     } catch {
-      setStatus('error');
+      if (!force) setStatus('error');
+      return null;
     }
   }, [movieId]);
 
   useEffect(() => {
-    const timer = setTimeout(() => void load(), 0);
+    const timer = setTimeout(() => void load(false), 0);
     return () => clearTimeout(timer);
   }, [load]);
+
+  const refreshDetails = async () => {
+    setRefreshing(true);
+    setMessage(null);
+    try {
+      const refreshedMovie = await load(true);
+      if (refreshedMovie?.detailsSource === 'tmdb') {
+        setMessage('TMDB의 최신 상세 정보를 다시 확인했어요.');
+      } else if (refreshedMovie?.details) {
+        setMessage('TMDB 최신 확인에 실패해 저장된 상세 정보를 유지했어요.');
+      } else {
+        setMessage('상세 정보를 받지 못했어요. 잠시 후 다시 시도해 주세요.');
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const toggleWatchlist = async () => {
     if (!movie) return;
@@ -60,6 +80,14 @@ export default function MovieDetailScreen() {
   if (status === 'loading') return <Screen><ActivityIndicator color={colors.primary} size="large" /></Screen>;
   if (status === 'error' || !movie) return <Screen title="영화를 찾지 못했어요"><StateNotice message="검색 화면으로 돌아가 다른 영화를 선택해 주세요." title="상세 정보 없음" tone="danger" /><Button label="뒤로 가기" onPress={() => router.back()} /></Screen>;
 
+  const details = movie.details;
+  const unavailableSections = details
+    ? Object.values(details.completeness).filter((value) => value === 'source_empty').length
+    : 0;
+  const providerNames = details
+    ? [...details.watchProviders.stream, ...details.watchProviders.rent, ...details.watchProviders.buy]
+    : [];
+
   return (
     <Screen>
       <Button label="← 뒤로" onPress={() => router.back()} style={styles.back} variant="ghost" />
@@ -72,9 +100,38 @@ export default function MovieDetailScreen() {
       </View>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>영화 소개</Text>
+        {details?.tagline ? <Text style={styles.tagline}>“{details.tagline}”</Text> : null}
         <Text style={styles.overview}>{movie.overview || '소개 정보가 아직 없어요.'}</Text>
       </View>
-      {message ? <StateNotice message={message} title="보고 싶어요" tone={message.includes('저장했어요') ? 'success' : 'info'} /> : null}
+      {details ? (
+        <>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>감독과 주요 출연</Text>
+            <Text style={styles.detailLine}>감독 · {details.directorNames.join(', ') || 'TMDB 원본 정보 없음'}</Text>
+            <Text style={styles.detailLine}>출연 · {details.cast.slice(0, 6).map((person) => person.name).join(', ') || 'TMDB 원본 정보 없음'}</Text>
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>제작 정보</Text>
+            <Text style={styles.detailLine}>제작사 · {details.productionCompanies.join(', ') || 'TMDB 원본 정보 없음'}</Text>
+            <Text style={styles.detailLine}>제작 국가 · {details.productionCountries.join(', ') || 'TMDB 원본 정보 없음'}</Text>
+            <Text style={styles.detailLine}>키워드 · {details.keywords.slice(0, 8).join(', ') || 'TMDB 원본 정보 없음'}</Text>
+          </View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>한국 OTT</Text>
+            <Text style={styles.detailLine}>{providerNames.length ? [...new Set(providerNames)].join(', ') : '현재 한국 제공 정보가 없어요.'}</Text>
+            <Text style={styles.sourceLine}>OTT 정보 제공: JustWatch · TMDB</Text>
+          </View>
+          <StateNotice
+            message={`${new Date(details.fetchedAt).toLocaleDateString('ko-KR')} 확인 · 이미지 ${details.imageCount}개 · 영상 ${details.videoCount}개${unavailableSections ? ` · TMDB 원본이 비어 있는 항목 ${unavailableSections}개` : ''}`}
+            title={movie.detailsSource === 'tmdb' ? '상세 정보 최신화 완료' : '저장된 상세 정보'}
+            tone={unavailableSections ? 'warning' : 'success'}
+          />
+        </>
+      ) : (
+        <StateNotice message="기본 영화 정보는 유지됩니다. 다시 확인하면 TMDB 상세 항목을 재수집합니다." title="상세 정보 수집 대기" tone="warning" />
+      )}
+      <Button label="상세 정보 다시 확인" loading={refreshing} onPress={() => void refreshDetails()} variant="secondary" />
+      {message ? <StateNotice message={message} title={message.includes('TMDB') ? '상세 정보' : '보고 싶어요'} tone={message.includes('저장했어요') || message.includes('TMDB') ? 'success' : 'info'} /> : null}
       <Button label={wanted ? '✓ 보고 싶어요에 저장됨' : '+ 보고 싶어요'} loading={saving} onPress={() => void toggleWatchlist()} variant={wanted ? 'secondary' : 'primary'} />
       <Button label="이 영화 감상 기록 준비" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: movie.id, title: movie.title } })} variant="secondary" />
       <Button label="데이터 출처와 크레딧" onPress={() => router.push('/credits')} variant="ghost" />
@@ -92,5 +149,8 @@ const styles = StyleSheet.create({
   rating: { ...typography.label, color: colors.warning },
   section: { backgroundColor: colors.surface, borderRadius: radii.lg, gap: spacing.sm, padding: spacing.xl },
   sectionTitle: { ...typography.heading, color: colors.text },
+  tagline: { ...typography.body, color: colors.text, fontWeight: '700' },
   overview: { ...typography.body, color: colors.textMuted },
+  detailLine: { ...typography.body, color: colors.textMuted },
+  sourceLine: { ...typography.caption, color: colors.textMuted },
 });

@@ -6,6 +6,7 @@ const baseMovie: Movie = {
   id: 'movie-1', provider: 'tmdb', providerId: '1', title: '테스트 영화', originalTitle: null,
   overview: '', posterPath: null, releaseDate: '2024-05-01', runtime: 100, genres: ['드라마'],
   recommendationKeywords: ['warm'], voteAverage: 7.5,
+  details: null, detailsSource: null, detailsStatus: 'summary', detailsFetchedAt: null,
 };
 
 describe('movie discovery helpers', () => {
