@@ -25,6 +25,9 @@
 - 인증 세션은 네이티브에서 SecureStore, 웹에서 AsyncStorage에 저장한다.
 - Supabase 환경이 없을 때는 외부 전송 없는 기기 내 데모 모드로 온보딩을 검증한다.
 - 실제 로그인 데이터는 Supabase RLS 정책과 서버 migration을 적용한 뒤 저장한다.
+- 영화 공급자는 TMDB로 정하고 앱은 Edge Function만 호출한다. 공급자 토큰은 서버 비밀값으로만 둔다.
+- 검색·추천은 Supabase 영화 캐시를 우선 복구 경로로 사용하며, 보고 싶어요는 사용자별 RLS가 적용된 `watchlist`에 저장한다.
+- TMDB 필수 고지는 Credits 화면에 항상 노출한다.
 
 ## 가정
 
@@ -38,8 +41,8 @@
 - 공식 서비스명과 상표 사용 가능성
 - Apple Developer 계정과 최종 iOS bundle identifier
 - 웹 호스팅 제공자와 도메인
-- Supabase 프로젝트 생성과 첫 migration 적용
-- 영화 데이터·포스터·예고편 공급자
+- TMDB API 토큰 발급과 `movies-discovery` Edge Function 운영 배포
+- 예고편 공급자와 사용 범위
 - AI 모델, 비용 상한, 개인정보 보관 정책
 - 콘텐츠 공개 기본값과 커뮤니티 운영 범위
 - 수익 모델과 출시 목표 시점

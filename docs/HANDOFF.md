@@ -8,17 +8,20 @@
 - Supabase가 활성화된 정적 웹 빌드에서도 브라우저 저장소를 서버에서 호출하지 않도록 인증 저장소를 SSR-safe하게 처리했고, check와 web export를 통과했다.
 - 실제 이메일 Magic Link 로그인, 동일 브라우저 복귀, `profiles` 1건과 `user_keywords` 3건 저장, 새로고침 후 계정 세션 복구까지 확인했다.
 - 데모 세션과 실제 계정 세션을 명확히 분리하고 마이 화면에 세션 초기화 동작을 추가했다. 모바일 반응형 웹 기준 1단계는 완료 상태다.
+- 2단계 영화 발견 화면, 검색, 상세, 보고 싶어요, 감상 영화 선택, 추천 이유, 포스터 스와이프 실험과 Credits를 구현했다.
+- Supabase에 `movies`와 사용자별 `watchlist` 테이블·RLS·검증용 영화 캐시 8편을 적용했다.
+- 실제 계정으로 검색 → 상세 → 보고 싶어요 저장 → 기록 준비 흐름을 확인했다.
 
 ## 현재 상태
 
-1단계 기반과 온보딩을 구현했다. Expo SDK 57, TypeScript strict mode, Expo Router, 공통 디자인 토큰, 모바일 우선 화면, 이메일 OTP 경계, 기기 내 데모 모드, 키워드 선택·복구·재설정과 Supabase 첫 migration이 포함된다.
+1단계 기반·온보딩과 2단계의 캐시 기반 영화 발견 기능을 구현했다. TMDB 실시간 검색은 서버 함수 소스까지 준비했으며 운영 비밀값과 함수 배포가 남았다.
 
 ## 다음 권장 작업
 
-1. Supabase 프로젝트를 만들 때 `.env.example`의 공개 클라이언트 값만 로컬 환경에 넣는다.
-2. `supabase/migrations/202608070001_stage1_profiles_and_keywords.sql`을 적용하고 이메일 OTP를 실계정으로 확인한다.
+1. Supabase Edge Function 비밀값 `TMDB_API_TOKEN`을 등록하고 `movies-discovery`를 배포한다.
+2. 실시간 TMDB 응답과 공급자 장애 시 Supabase 캐시 복구를 각각 재검증한다.
 3. Apple Developer 계정 전에는 비활성 Apple 로그인 경계를 유지한다.
-4. 다음 구현은 `기능 개발: 2단계 영화 발견`이다.
+4. 다음 구현은 `기능 개발: 3단계 핵심 기록과 AI`다.
 
 ## 다음 작업자 주의사항
 
@@ -38,7 +41,8 @@
 
 ## 외부 연결과 남은 위험
 
-- Supabase 프로젝트와 Apple Developer 계정이 없어 실 OTP와 iOS 네이티브 빌드는 실행하지 않았다.
+- TMDB API 토큰이 아직 없고 Edge Function 운영 배포가 완료되지 않아 현재 영화 발견은 Supabase 캐시로 동작한다. 앱의 직접 DB 복구 경로와 상태 안내는 검증했다.
+- Apple Developer 계정이 없어 iOS 네이티브 빌드는 실행하지 않았다.
 - `npm audit --omit=dev`는 Expo 빌드 도구의 `uuid` 전이 의존성에서 moderate 10건을 보고한다. 자동 강제 수정은 Expo 46으로 파괴적 다운그레이드하므로 적용하지 않았고, Expo 상위 릴리스에서 추적한다.
 - 앱 아이콘과 스토어 자산은 승인된 원본 FLICK 자산을 받은 뒤 교체한다.
 - 현재 Windows PowerShell 실행 정책에서는 `npm.ps1`이 차단되므로 명령은 `npm.cmd`로 실행한다.
