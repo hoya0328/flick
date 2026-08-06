@@ -20,7 +20,8 @@
 
 ## Engineering and safety
 
-- Do not choose or replace the application stack without an approved service design decision.
+- Preserve TypeScript, React Native, Expo, Expo Router, npm, and Supabase unless an architecture change is explicitly approved.
+- Keep one shared iOS, web, and Android codebase; allow platform-specific files only for real platform differences.
 - Inspect `git status --short` before edits and preserve unrelated work and history.
 - Never commit secrets, local environment files, dependencies, caches, builds, logs, or archives.
 - Preserve deployment IDs exactly if hosting metadata is added later.

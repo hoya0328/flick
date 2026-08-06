@@ -6,7 +6,7 @@
 - Workspace label: `FLICK`
 - Relationship: fully independent from Focus Quest
 - Git branch: `main`
-- Application stack: intentionally unresolved until `서비스 설계`
+- Application stack: TypeScript, React Native, Expo, Expo Router, npm, Supabase
 - Hosting metadata: none; no deployment was created
 - VS Code entry: `FLICK.code-workspace`
 - Codex extension: `openai.chatgpt`
@@ -29,4 +29,4 @@ Track product docs, source, tests, public assets, lockfiles, CI, and future requ
 
 ## Next stage
 
-Run `서비스 설계` to decide the initial platform, application architecture, data ownership, movie data provider boundary, AI processing flow, privacy model, responsive UX, and deployment shape.
+Run `기능 개발: 1단계 기반과 온보딩` to create the approved Expo application foundation without pulling later-stage features forward.
