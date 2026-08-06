@@ -6,7 +6,8 @@
 - Supabase `flick` 프로젝트 연결과 첫 migration 적용을 완료했다. `profiles`, `keywords`, `user_keywords` 및 RLS 정책이 생성되었고 초기 키워드 12개를 확인했다.
 - Auth Site URL과 Redirect URL은 로컬 웹 개발 주소 `http://localhost:8081` 기준으로 설정했다. 배포 시 운영 HTTPS 주소로 변경해야 한다.
 - Supabase가 활성화된 정적 웹 빌드에서도 브라우저 저장소를 서버에서 호출하지 않도록 인증 저장소를 SSR-safe하게 처리했고, check와 web export를 통과했다.
-- 실제 이메일 Magic Link와 `profiles`/`user_keywords` 저장을 브라우저에서 한 번 확인하면 1단계를 종료할 수 있다.
+- 실제 이메일 Magic Link 로그인, 동일 브라우저 복귀, `profiles` 1건과 `user_keywords` 3건 저장, 새로고침 후 계정 세션 복구까지 확인했다.
+- 데모 세션과 실제 계정 세션을 명확히 분리하고 마이 화면에 세션 초기화 동작을 추가했다. 모바일 반응형 웹 기준 1단계는 완료 상태다.
 
 ## 현재 상태
 

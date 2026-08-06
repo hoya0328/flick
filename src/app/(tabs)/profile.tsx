@@ -9,11 +9,16 @@ import { useSession } from '@/features/session/session-provider';
 import { colors, typography } from '@/theme/tokens';
 
 export default function ProfileScreen() {
-  const { backendConfigured, mode, resetOnboarding, selectedKeywords } = useSession();
+  const { backendConfigured, clearSession, mode, resetOnboarding, selectedKeywords } = useSession();
 
   const handleReset = async () => {
     await resetOnboarding();
     router.replace('/onboarding');
+  };
+
+  const handleClearSession = async () => {
+    await clearSession();
+    router.replace('/welcome');
   };
 
   return (
@@ -26,6 +31,7 @@ export default function ProfileScreen() {
         tone={backendConfigured ? 'success' : 'warning'}
       />
       <Button label="취향 키워드 다시 고르기" onPress={() => void handleReset()} variant="secondary" />
+      <Button label="로그인 화면으로 돌아가기" onPress={() => void handleClearSession()} variant="ghost" />
     </Screen>
   );
 }

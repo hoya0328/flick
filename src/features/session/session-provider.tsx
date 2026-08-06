@@ -22,6 +22,7 @@ type SessionContextValue = {
   startDemo: () => Promise<void>;
   sendMagicLink: (email: string) => Promise<void>;
   completeOnboarding: (keywordIds: string[]) => Promise<void>;
+  clearSession: () => Promise<void>;
   resetOnboarding: () => Promise<void>;
   retry: () => Promise<void>;
 };
@@ -46,7 +47,10 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [error, setError] = useState<string | null>(null);
 
   const applySupabaseSession = useCallback((session: Session | null) => {
-    if (session) setMode('supabase');
+    if (session) {
+      setMode('supabase');
+      void AsyncStorage.removeItem(DEMO_SESSION_KEY);
+    }
   }, []);
 
   const hydrate = useCallback(async () => {
@@ -143,9 +147,24 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setSelectedKeywords([]);
   }, []);
 
+  const clearSession = useCallback(async () => {
+    if (supabase && mode === 'supabase') {
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) throw signOutError;
+    }
+
+    await Promise.all([
+      AsyncStorage.removeItem(DEMO_SESSION_KEY),
+      AsyncStorage.removeItem(ONBOARDING_KEY),
+    ]);
+    setMode('none');
+    setSelectedKeywords([]);
+  }, [mode]);
+
   const value = useMemo<SessionContextValue>(
     () => ({
       backendConfigured: isSupabaseConfigured,
+      clearSession,
       completeOnboarding,
       error,
       mode,
@@ -157,7 +176,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       startDemo,
       status,
     }),
-    [completeOnboarding, error, hydrate, mode, resetOnboarding, selectedKeywords, sendMagicLink, startDemo, status],
+    [clearSession, completeOnboarding, error, hydrate, mode, resetOnboarding, selectedKeywords, sendMagicLink, startDemo, status],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
