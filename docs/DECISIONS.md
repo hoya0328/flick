@@ -1,5 +1,12 @@
 # DECISIONS
 
+## 2026-08-07 웹 우선 전환
+
+- 첫 출시 우선순위를 앱스토어 배포가 아닌 모바일 반응형 웹/PWA로 변경한다.
+- Expo와 Expo Router의 공통 코드베이스는 유지해 향후 iOS 앱 전환 가능성을 보존한다.
+- 1단계 완료 조건에서 Apple 로그인과 iOS 빌드를 제외하고, Supabase 이메일 로그인·데이터 저장·모바일 웹 검증을 포함한다.
+- 신규 Supabase 프로젝트는 클라이언트에서 publishable key를 사용하고 secret/service-role key는 사용하지 않는다.
+
 ## 결정
 
 - Focus Quest와 분리된 `C:\Users\letsh\Documents\Click`를 신규 서비스 기획 루트로 사용한다.

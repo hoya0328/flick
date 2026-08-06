@@ -15,6 +15,7 @@ FLICK는 영화 감상 전에는 감정 키워드로 작품을 발견하고, 감
 - `docs/DECISIONS.md`: 확정·가정·미결정 사항
 - `docs/HANDOFF.md`: 다음 작업자가 이어갈 항목
 - `docs/SERVICE_SETUP.md`: 현재 프로젝트 설정과 검증 결과
+- `docs/SUPABASE_SETUP.md`: Supabase 프로젝트 생성·DB·로그인 연결 순서
 
 ## 검토한 원본
 
@@ -32,7 +33,7 @@ npm.cmd install
 npm.cmd run web
 ```
 
-실기기 개발은 Expo 개발 앱을 사용한다. 실제 Supabase 로그인을 연결하려면 `.env.example`을 기준으로 로컬 환경변수를 만들고 `supabase/migrations`의 migration을 적용한다. 환경변수가 없으면 개인정보를 서버로 보내지 않는 기기 내 데모 모드로 동작한다.
+실제 Supabase 로그인을 연결하려면 `docs/SUPABASE_SETUP.md` 순서대로 공개용 환경변수와 migration을 적용한다. 환경변수가 없으면 개인정보를 서버로 보내지 않는 기기 내 데모 모드로 동작한다.
 
 ## 검증 명령
 

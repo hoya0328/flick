@@ -1,5 +1,13 @@
 # HANDOFF
 
+## 2026-08-07 다음 작업
+
+- 방향이 모바일 반응형 웹/PWA 우선으로 변경되었다. Apple 로그인과 iOS 빌드는 후속 단계로 미룬다.
+- Supabase `flick` 프로젝트 연결과 첫 migration 적용을 완료했다. `profiles`, `keywords`, `user_keywords` 및 RLS 정책이 생성되었고 초기 키워드 12개를 확인했다.
+- Auth Site URL과 Redirect URL은 로컬 웹 개발 주소 `http://localhost:8081` 기준으로 설정했다. 배포 시 운영 HTTPS 주소로 변경해야 한다.
+- Supabase가 활성화된 정적 웹 빌드에서도 브라우저 저장소를 서버에서 호출하지 않도록 인증 저장소를 SSR-safe하게 처리했고, check와 web export를 통과했다.
+- 실제 이메일 Magic Link와 `profiles`/`user_keywords` 저장을 브라우저에서 한 번 확인하면 1단계를 종료할 수 있다.
+
 ## 현재 상태
 
 1단계 기반과 온보딩을 구현했다. Expo SDK 57, TypeScript strict mode, Expo Router, 공통 디자인 토큰, 모바일 우선 화면, 이메일 OTP 경계, 기기 내 데모 모드, 키워드 선택·복구·재설정과 Supabase 첫 migration이 포함된다.

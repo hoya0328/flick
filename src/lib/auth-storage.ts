@@ -8,4 +8,13 @@ const secureStorage = {
   setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
 };
 
-export const authStorage = Platform.OS === 'web' ? AsyncStorage : secureStorage;
+const webStorage = {
+  getItem: (key: string) =>
+    typeof window === 'undefined' ? Promise.resolve(null) : AsyncStorage.getItem(key),
+  removeItem: (key: string) =>
+    typeof window === 'undefined' ? Promise.resolve() : AsyncStorage.removeItem(key),
+  setItem: (key: string, value: string) =>
+    typeof window === 'undefined' ? Promise.resolve() : AsyncStorage.setItem(key, value),
+};
+
+export const authStorage = Platform.OS === 'web' ? webStorage : secureStorage;
