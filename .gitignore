@@ -1,0 +1,43 @@
+# Secrets and local environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and virtual environments
+node_modules/
+.venv/
+venv/
+
+# Framework and build output
+.next/
+.nuxt/
+dist/
+build/
+out/
+coverage/
+.turbo/
+.cache/
+__pycache__/
+*.py[cod]
+
+# Local tooling and deployment state
+.vercel/
+.wrangler/
+.dev.vars
+tmp/
+temp/
+*.log
+
+# OS and editor-local noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.7z

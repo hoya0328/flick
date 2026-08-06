@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "name": "FLICK",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "explorer.fileNesting.enabled": true,
+    "explorer.fileNesting.patterns": {
+      "package.json": "package-lock.json, pnpm-lock.yaml, yarn.lock, tsconfig*.json, eslint.config.*, next.config.*, vite.config.*"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "openai.chatgpt"
+    ]
+  }
+}
