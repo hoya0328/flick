@@ -2,14 +2,14 @@
 
 ## 현재 상태
 
-FLICK의 제품 기획, 독립 Git·VS Code 환경, iOS 우선 기술 설계와 4단계 개발 순서를 확정했다. 개발 언어는 TypeScript이며 React Native + Expo로 iOS·웹·Android를 공유한다. 앱 코드는 아직 생성하지 않았다.
+1단계 기반과 온보딩을 구현했다. Expo SDK 57, TypeScript strict mode, Expo Router, 공통 디자인 토큰, 모바일 우선 화면, 이메일 OTP 경계, 기기 내 데모 모드, 키워드 선택·복구·재설정과 Supabase 첫 migration이 포함된다.
 
 ## 다음 권장 작업
 
-1. `기능 개발: 1단계 기반과 온보딩`으로 Expo 프로젝트와 디자인 시스템을 생성한다.
-2. Apple 로그인은 Apple Developer 계정 준비 전 인터페이스만 만들고 이메일 OTP로 개발한다.
-3. TMDB 개발 키와 AI API 키는 서버 환경변수로만 연결한다.
-4. 5~8명 사용자에게 Light/Core 기록 흐름을 테스트한다.
+1. Supabase 프로젝트를 만들 때 `.env.example`의 공개 클라이언트 값만 로컬 환경에 넣는다.
+2. `supabase/migrations/202608070001_stage1_profiles_and_keywords.sql`을 적용하고 이메일 OTP를 실계정으로 확인한다.
+3. Apple Developer 계정 전에는 비활성 Apple 로그인 경계를 유지한다.
+4. 다음 구현은 `기능 개발: 2단계 영화 발견`이다.
 
 ## 다음 작업자 주의사항
 
@@ -22,6 +22,14 @@ FLICK의 제품 기획, 독립 Git·VS Code 환경, iOS 우선 기술 설계와 
 
 ## 1단계 구현 경계
 
-- 포함: Expo 앱 골격, 공통 토큰, 라우팅, 인증 경계, 키워드 온보딩, Supabase 스키마 첫 migration
-- 제외: 실제 AI 호출, 영화 추천, 공개 피드, 결제, 배포
-- 필수 검증: TypeScript, lint, 핵심 상태 단위 테스트, iPhone 크기와 320/390/480px 웹 확인
+- 완료: Expo 앱 골격, 공통 토큰, 탭 라우팅, 인증 경계, 키워드 온보딩, 로컬 복구, Supabase 스키마 첫 migration
+- 제외 유지: 실제 AI 호출, 영화 추천, 공개 피드, 결제, 배포
+- 검증 완료: Expo 의존성 호환, TypeScript, lint, 4개 단위 테스트, 정적 웹 빌드
+- 시각 검증 완료: 390px 전체 온보딩, 새로고침 복구, 취향 재설정, 320/480px 가로 넘침 없음
+
+## 외부 연결과 남은 위험
+
+- Supabase 프로젝트와 Apple Developer 계정이 없어 실 OTP와 iOS 네이티브 빌드는 실행하지 않았다.
+- `npm audit --omit=dev`는 Expo 빌드 도구의 `uuid` 전이 의존성에서 moderate 10건을 보고한다. 자동 강제 수정은 Expo 46으로 파괴적 다운그레이드하므로 적용하지 않았고, Expo 상위 릴리스에서 추적한다.
+- 앱 아이콘과 스토어 자산은 승인된 원본 FLICK 자산을 받은 뒤 교체한다.
+- 현재 Windows PowerShell 실행 정책에서는 `npm.ps1`이 차단되므로 명령은 `npm.cmd`로 실행한다.

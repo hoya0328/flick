@@ -22,3 +22,23 @@ FLICK는 영화 감상 전에는 감정 키워드로 작품을 발견하고, 감
 - `C:\Users\letsh\Downloads\Click_화면구성.pdf`
 
 원본 PDF는 프로젝트 용량과 중복을 줄이기 위해 복사하지 않았다.
+
+## 개발 실행
+
+요구사항: Node.js 20 이상, npm.
+
+```powershell
+npm.cmd install
+npm.cmd run web
+```
+
+실기기 개발은 Expo 개발 앱을 사용한다. 실제 Supabase 로그인을 연결하려면 `.env.example`을 기준으로 로컬 환경변수를 만들고 `supabase/migrations`의 migration을 적용한다. 환경변수가 없으면 개인정보를 서버로 보내지 않는 기기 내 데모 모드로 동작한다.
+
+## 검증 명령
+
+```powershell
+npm.cmd run check
+npm.cmd run build:web
+```
+
+현재 구현 범위는 1단계 기반과 온보딩이다. 영화 탐색, 실제 기록, AI, 공개 피드와 배포는 아직 포함하지 않는다.

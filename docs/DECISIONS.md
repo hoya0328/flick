@@ -14,6 +14,10 @@
 - 개발 언어는 TypeScript, 앱·웹 프레임워크는 React Native + Expo + Expo Router로 정한다.
 - 백엔드의 초기 선택은 Supabase이며 DB·Auth·Storage·Edge Functions를 사용한다.
 - 영화와 AI 외부 서비스는 서버 어댑터 뒤에 두어 공급자를 교체할 수 있게 한다.
+- 1단계 구현은 Expo SDK 57 안정 버전과 npm lockfile을 사용한다.
+- 인증 세션은 네이티브에서 SecureStore, 웹에서 AsyncStorage에 저장한다.
+- Supabase 환경이 없을 때는 외부 전송 없는 기기 내 데모 모드로 온보딩을 검증한다.
+- 실제 로그인 데이터는 Supabase RLS 정책과 서버 migration을 적용한 뒤 저장한다.
 
 ## 가정
 
@@ -27,6 +31,7 @@
 - 공식 서비스명과 상표 사용 가능성
 - Apple Developer 계정과 최종 iOS bundle identifier
 - 웹 호스팅 제공자와 도메인
+- Supabase 프로젝트 생성과 첫 migration 적용
 - 영화 데이터·포스터·예고편 공급자
 - AI 모델, 비용 상한, 개인정보 보관 정책
 - 콘텐츠 공개 기본값과 커뮤니티 운영 범위

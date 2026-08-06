@@ -7,6 +7,7 @@
 - Relationship: fully independent from Focus Quest
 - Git branch: `main`
 - Application stack: TypeScript, React Native, Expo, Expo Router, npm, Supabase
+- Application baseline: Expo SDK 57, package lock, lint, typecheck, unit test, static web export
 - Hosting metadata: none; no deployment was created
 - VS Code entry: `FLICK.code-workspace`
 - Codex extension: `openai.chatgpt`
