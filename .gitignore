@@ -26,6 +26,7 @@ __pycache__/
 # Local tooling and deployment state
 .vercel/
 .wrangler/
+supabase/.temp/
 .dev.vars
 tmp/
 temp/

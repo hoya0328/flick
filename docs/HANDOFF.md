@@ -11,17 +11,18 @@
 - 2단계 영화 발견 화면, 검색, 상세, 보고 싶어요, 감상 영화 선택, 추천 이유, 포스터 스와이프 실험과 Credits를 구현했다.
 - Supabase에 `movies`와 사용자별 `watchlist` 테이블·RLS·검증용 영화 캐시 8편을 적용했다.
 - 실제 계정으로 검색 → 상세 → 보고 싶어요 저장 → 기록 준비 흐름을 확인했다.
+- TMDB Read Access Token을 Supabase 비밀값으로 등록하고 `movies-discovery` Edge Function을 운영 배포했다.
+- 실시간 TMDB 추천 20편과 포스터, `Dune Part Two` 검색, 동적 영화 캐시, 상세와 보고 싶어요 저장을 실제 계정으로 확인했다.
 
 ## 현재 상태
 
-1단계 기반·온보딩과 2단계의 캐시 기반 영화 발견 기능을 구현했다. TMDB 실시간 검색은 서버 함수 소스까지 준비했으며 운영 비밀값과 함수 배포가 남았다.
+1단계 기반·온보딩과 2단계 영화 발견을 완료했다. 앱은 TMDB를 서버 함수로 호출하고 응답을 Supabase에 캐시하며 공급자 장애 시 기존 캐시와 상태 안내로 복구한다.
 
 ## 다음 권장 작업
 
-1. Supabase Edge Function 비밀값 `TMDB_API_TOKEN`을 등록하고 `movies-discovery`를 배포한다.
-2. 실시간 TMDB 응답과 공급자 장애 시 Supabase 캐시 복구를 각각 재검증한다.
-3. Apple Developer 계정 전에는 비활성 Apple 로그인 경계를 유지한다.
-4. 다음 구현은 `기능 개발: 3단계 핵심 기록과 AI`다.
+1. 다음 구현은 `기능 개발: 3단계 핵심 기록과 AI`다.
+2. Apple Developer 계정 전에는 비활성 Apple 로그인 경계를 유지한다.
+3. 운영 도메인이 정해지면 Supabase Auth 리디렉션과 TMDB 신청 URL을 갱신한다.
 
 ## 다음 작업자 주의사항
 
@@ -41,7 +42,7 @@
 
 ## 외부 연결과 남은 위험
 
-- TMDB API 토큰이 아직 없고 Edge Function 운영 배포가 완료되지 않아 현재 영화 발견은 Supabase 캐시로 동작한다. 앱의 직접 DB 복구 경로와 상태 안내는 검증했다.
+- Supabase 웹 함수 편집기의 배포 요청은 서버 500 오류를 반환해 CLI로 배포했다. 배포용 1일 개인 액세스 토큰은 배포 직후 폐기했다.
 - Apple Developer 계정이 없어 iOS 네이티브 빌드는 실행하지 않았다.
 - `npm audit --omit=dev`는 Expo 빌드 도구의 `uuid` 전이 의존성에서 moderate 10건을 보고한다. 자동 강제 수정은 Expo 46으로 파괴적 다운그레이드하므로 적용하지 않았고, Expo 상위 릴리스에서 추적한다.
 - 앱 아이콘과 스토어 자산은 승인된 원본 FLICK 자산을 받은 뒤 교체한다.
