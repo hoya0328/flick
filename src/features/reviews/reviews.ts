@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
-import { emptyReviewForm, type ReviewForm, type ReviewMode, type ReviewStatus } from '@/features/reviews/review-logic';
+import { emptyReviewForm, type LightQuestion, type LightTagOption, type ReviewForm, type ReviewMode, type ReviewStatus } from '@/features/reviews/review-logic';
 
 export type ReviewRecord = ReviewForm & {
   id: string;
@@ -17,11 +17,22 @@ type ReviewRow = {
   movies: ReviewRecord['movie'] | ReviewRecord['movie'][] | null;
   review_answers: { question_key: string; answer: string }[] | null;
   review_keywords: { keyword_id: string }[] | null;
+  review_questions: { question_key: string; question_text: string; source_rule: string; options: unknown; sort_order: number }[] | null;
+  review_answer_tags: { question_key: string; tag_id: string; sort_order: number }[] | null;
 };
 
 const DRAFT_PREFIX = 'flick.stage3.review-draft.';
 const DEMO_RECORDS_KEY = 'flick.stage3.demo-reviews';
-const reviewSelect = 'id,movie_id,mode,watched_at,rating,body,one_line,spoiler,status,created_at,updated_at,movies(id,title,original_title,poster_path,release_date),review_answers(question_key,answer),review_keywords(keyword_id)';
+const reviewSelect = 'id,movie_id,mode,watched_at,rating,body,one_line,spoiler,status,created_at,updated_at,movies(id,title,original_title,poster_path,release_date),review_answers(question_key,answer),review_keywords(keyword_id),review_questions(question_key,question_text,source_rule,options,sort_order),review_answer_tags(question_key,tag_id,sort_order)';
+
+function tagOptions(value: unknown): LightTagOption[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const option = item as Record<string, unknown>;
+    return typeof option.id === 'string' && typeof option.label === 'string' ? [{ id: option.id, label: option.label }] : [];
+  });
+}
 
 function normalizedMovie(value: ReviewRow['movies'], movieId: string): ReviewRecord['movie'] {
   const row = Array.isArray(value) ? value[0] : value;
@@ -29,19 +40,21 @@ function normalizedMovie(value: ReviewRow['movies'], movieId: string): ReviewRec
 }
 
 function fromRow(row: ReviewRow): ReviewRecord {
+  const questions: LightQuestion[] = (row.review_questions ?? []).sort((a, b) => a.sort_order - b.sort_order).map((question) => ({ key: question.question_key, text: question.question_text, sourceRule: question.source_rule, options: tagOptions(question.options) }));
+  const questionTags = (row.review_answer_tags ?? []).sort((a, b) => a.sort_order - b.sort_order).reduce<Record<string, string[]>>((result, item) => ({ ...result, [item.question_key]: [...(result[item.question_key] ?? []), item.tag_id] }), {});
   return {
     id: row.id, movieId: row.movie_id, mode: row.mode, watchedAt: row.watched_at,
     rating: row.rating === null ? null : Number(row.rating), body: row.body, oneLine: row.one_line,
     spoiler: row.spoiler, status: row.status, createdAt: row.created_at, updatedAt: row.updated_at,
     answers: Object.fromEntries((row.review_answers ?? []).map((item) => [item.question_key, item.answer])),
-    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), movie: normalizedMovie(row.movies, row.movie_id),
+    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, movie: normalizedMovie(row.movies, row.movie_id),
   };
 }
 
 async function demoRecords(): Promise<ReviewRecord[]> {
   const stored = await AsyncStorage.getItem(DEMO_RECORDS_KEY);
   if (!stored) return [];
-  try { return JSON.parse(stored) as ReviewRecord[]; } catch { return []; }
+  try { return (JSON.parse(stored) as ReviewRecord[]).map((record) => ({ ...record, questions: record.questions ?? [], questionTags: record.questionTags ?? {} })); } catch { return []; }
 }
 
 export async function listReviews(sessionMode: 'demo' | 'supabase'): Promise<ReviewRecord[]> {
@@ -85,6 +98,8 @@ export async function saveReview(form: ReviewForm, reviewId: string | null, comp
     p_movie_id: form.movieId, p_mode: form.mode, p_watched_at: form.watchedAt, p_rating: form.rating,
     p_body: form.body, p_one_line: form.oneLine, p_spoiler: form.spoiler, p_answers: form.answers,
     p_keyword_ids: form.keywordIds, p_complete: complete, p_review_id: reviewId,
+    p_questions: form.questions.map((question, sortOrder) => ({ key: question.key, text: question.text, sourceRule: question.sourceRule, options: question.options, sortOrder })),
+    p_question_tags: form.questions.flatMap((question) => (form.questionTags[question.key] ?? []).map((tagId, sortOrder) => ({ questionKey: question.key, tagId, sortOrder }))),
   });
   if (error) throw new Error(error.message);
   return data as string;

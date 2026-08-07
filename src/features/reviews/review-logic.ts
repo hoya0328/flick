@@ -1,5 +1,7 @@
 export type ReviewMode = 'light' | 'core';
 export type ReviewStatus = 'draft' | 'completed';
+export type LightTagOption = { id: string; label: string };
+export type LightQuestion = { key: string; text: string; sourceRule: string; options: LightTagOption[] };
 
 export type ReviewForm = {
   movieId: string;
@@ -11,15 +13,11 @@ export type ReviewForm = {
   spoiler: boolean;
   answers: Record<string, string>;
   keywordIds: string[];
+  questions: LightQuestion[];
+  questionTags: Record<string, string[]>;
 };
 
 export type ReviewPrompt = { key: string; label: string; placeholder: string };
-
-export const lightPrompts: ReviewPrompt[] = [
-  { key: 'first_impression', label: '가장 먼저 떠오른 감정은?', placeholder: '예: 조용하지만 오래 마음에 남았어요.' },
-  { key: 'memorable_moment', label: '가장 오래 남은 장면이나 순간은?', placeholder: '장면과 그 이유를 짧게 남겨보세요.' },
-  { key: 'aftertaste', label: '영화가 끝난 뒤 어떤 여운이 남았나요?', placeholder: '지금의 감정을 자유롭게 적어보세요.' },
-];
 
 export const corePrompts: ReviewPrompt[] = [
   { key: 'direction', label: '연출', placeholder: '장면 전환, 리듬, 감독의 선택을 어떻게 느꼈나요?' },
@@ -35,7 +33,7 @@ export function todayDate(now = new Date()): string {
 }
 
 export function emptyReviewForm(movieId: string): ReviewForm {
-  return { movieId, mode: 'light', watchedAt: todayDate(), rating: null, body: '', oneLine: '', spoiler: false, answers: {}, keywordIds: [] };
+  return { movieId, mode: 'light', watchedAt: todayDate(), rating: null, body: '', oneLine: '', spoiler: false, answers: {}, keywordIds: [], questions: [], questionTags: {} };
 }
 
 export function isValidWatchedAt(value: string, today = todayDate()): boolean {
@@ -51,8 +49,9 @@ export function reviewCompletionError(form: ReviewForm): string | null {
 
   const answers = Object.values(form.answers).map((answer) => answer.trim()).filter(Boolean);
   if (form.mode === 'light') {
-    const signals = answers.filter((answer) => answer.length >= 8).length + Math.min(form.keywordIds.length, 3) + (form.oneLine.trim().length >= 8 ? 1 : 0);
-    if (signals < 3) return '질문 답변, 감정 키워드, 한 줄 기록 중 세 가지 이상을 채워 주세요.';
+    if (form.questions.length !== 5) return '영화별 질문을 불러온 뒤 다시 시도해 주세요.';
+    const answeredQuestions = form.questions.filter((question) => (form.questionTags[question.key]?.length ?? 0) > 0).length;
+    if (answeredQuestions < 3) return '영화별 질문 5개 중 최소 3개에 느낌 태그를 선택해 주세요.';
   } else {
     const substantialAnswers = answers.filter((answer) => answer.length >= 20).length;
     if (form.body.trim().length < 100 && substantialAnswers < 2) return '자유 감상을 100자 이상 쓰거나, 두 개 이상의 항목을 충분히 기록해 주세요.';
@@ -60,6 +59,10 @@ export function reviewCompletionError(form: ReviewForm): string | null {
   return null;
 }
 
-export function reviewExcerpt(form: Pick<ReviewForm, 'oneLine' | 'body' | 'answers'>): string {
-  return form.oneLine.trim() || form.body.trim() || Object.values(form.answers).find((answer) => answer.trim())?.trim() || '아직 내용이 없는 초안';
+export function reviewExcerpt(form: Pick<ReviewForm, 'oneLine' | 'body' | 'answers' | 'questions' | 'questionTags'>): string {
+  const selectedLabels = form.questions.flatMap((question) => {
+    const selected = new Set(form.questionTags[question.key] ?? []);
+    return question.options.filter((option) => selected.has(option.id)).map((option) => option.label);
+  });
+  return form.oneLine.trim() || form.body.trim() || selectedLabels.slice(0, 4).join(' · ') || Object.values(form.answers).find((answer) => answer.trim())?.trim() || '아직 내용이 없는 초안';
 }

@@ -9,8 +9,9 @@ describe('stage 3A/3B review rules', () => {
     expect(isValidWatchedAt('2026-08-07', '2026-08-07')).toBe(true);
   });
 
-  it('completes a concise Light record with rating and meaningful signals', () => {
-    const form = { ...emptyReviewForm('movie-1'), watchedAt: '2026-08-07', rating: 4, oneLine: '조용하지만 오래 마음에 남는 영화', keywordIds: ['warm'], answers: { first_impression: '따뜻한 위로를 받은 기분이었어요.' } };
+  it('completes a Light record after three movie questions have tagged answers', () => {
+    const questions = Array.from({ length: 5 }, (_, index) => ({ key: `q${index + 1}`, text: `질문 ${index + 1}`, sourceRule: 'test', options: [{ id: 'warm', label: '따뜻한' }] }));
+    const form = { ...emptyReviewForm('movie-1'), watchedAt: '2026-08-07', rating: 4, questions, questionTags: { q1: ['warm'], q2: ['warm'], q3: ['warm'] } };
     expect(reviewCompletionError(form)).toBeNull();
   });
 
@@ -21,6 +22,6 @@ describe('stage 3A/3B review rules', () => {
   });
 
   it('uses the first meaningful field for list previews', () => {
-    expect(reviewExcerpt({ oneLine: '', body: '', answers: { story: '기억에 남은 이야기' } })).toBe('기억에 남은 이야기');
+    expect(reviewExcerpt({ oneLine: '', body: '', answers: { story: '기억에 남은 이야기' }, questions: [], questionTags: {} })).toBe('기억에 남은 이야기');
   });
 });

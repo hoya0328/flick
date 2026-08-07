@@ -49,6 +49,8 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `reviews` | user_id, movie_id, mode, watched_at, rating, body, visibility, status | 기본 본인 전용 |
 | `review_answers` | review_id, question_key, answer | 리뷰 소유자 전용 |
 | `review_keywords` | review_id, keyword_id, source | 리뷰 소유자 전용 |
+| `review_questions` | review_id, question_key, question_text, options, source_rule | 리뷰 시점 질문·선택지 스냅샷, 소유자 전용 |
+| `review_answer_tags` | review_id, question_key, tag_id | 질문별 사용자 선택 태그, 소유자 전용 |
 | `ai_jobs` | user_id, review_id, status, model, token_usage, error_code | 본인 메타데이터, 서버 원문 관리 |
 | `report_snapshots` | user_id, period, metrics, generated_at | 본인 전용 |
 

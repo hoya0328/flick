@@ -7,7 +7,9 @@ import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { getMovie } from '@/features/discovery/movies';
 import { tasteKeywords } from '@/features/onboarding/keywords';
-import { corePrompts, emptyReviewForm, lightPrompts, reviewCompletionError, reviewExcerpt, type ReviewForm, type ReviewMode, type ReviewStatus } from '@/features/reviews/review-logic';
+import { LightQuestionnaire } from '@/features/reviews/light-questionnaire';
+import { ensureLightQuestions } from '@/features/reviews/light-questions';
+import { corePrompts, emptyReviewForm, reviewCompletionError, reviewExcerpt, type ReviewForm, type ReviewMode, type ReviewStatus } from '@/features/reviews/review-logic';
 import { clearLocalReviewBackup, deleteReview, getDraftForMovie, getReview, listReviews, loadLocalReviewBackup, saveLocalReviewBackup, saveReview, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -49,9 +51,9 @@ export default function RecordScreen() {
         if (reviewIdParam) {
           const record = await getReview(reviewIdParam, storageMode);
           if (!record) throw new Error('기록을 찾을 수 없어요.');
-          const backup = await loadLocalReviewBackup(record.movieId);
+          const [backup, movie] = await Promise.all([loadLocalReviewBackup(record.movieId), getMovie(record.movieId)]);
           if (!active) return;
-          setForm(backup?.form ?? record);
+          setForm(ensureLightQuestions(backup?.form ?? record, movie, record.movie.title));
           setReviewId(backup?.reviewId ?? record.id);
           setRecordStatus(record.status);
           setMovieTitle(backup?.movieTitle || record.movie.title);
@@ -61,10 +63,10 @@ export default function RecordScreen() {
           const [draft, backup, movie] = await Promise.all([
             getDraftForMovie(movieIdParam, storageMode),
             loadLocalReviewBackup(movieIdParam),
-            titleParam ? Promise.resolve(null) : getMovie(movieIdParam),
+            getMovie(movieIdParam),
           ]);
           if (!active) return;
-          setForm(backup?.form ?? draft ?? emptyReviewForm(movieIdParam));
+          setForm(ensureLightQuestions(backup?.form ?? draft ?? emptyReviewForm(movieIdParam), movie, backup?.movieTitle || draft?.movie.title || titleParam || '선택한 영화'));
           setReviewId(backup?.reviewId ?? draft?.id ?? null);
           setRecordStatus(draft?.status ?? 'draft');
           setMovieTitle(backup?.movieTitle || draft?.movie.title || titleParam || movie?.title || '선택한 영화');
@@ -161,7 +163,7 @@ export default function RecordScreen() {
       if (target) await clearLocalReviewBackup(target.movieId);
       setPendingDelete(null);
       await loadList();
-      setNotice({ tone: 'success', title: '기록을 삭제했어요', message: '선택한 기록과 연결된 답변·키워드가 함께 삭제됐어요.' });
+      setNotice({ tone: 'success', title: '기록을 삭제했어요', message: '선택한 기록과 연결된 질문·태그·답변이 함께 삭제됐어요.' });
     } catch (error) {
       setNotice({ tone: 'danger', title: '삭제하지 못했어요', message: error instanceof Error ? error.message : '잠시 뒤 다시 시도해 주세요.' });
     } finally { setSaving(false); }
@@ -200,7 +202,6 @@ export default function RecordScreen() {
     );
   }
 
-  const prompts = form.mode === 'light' ? lightPrompts : corePrompts;
   return (
     <Screen eyebrow="감상 기록" title={movieTitle}>
       <View style={styles.selected}><Text style={styles.label}>{recordStatus === 'completed' ? '완료된 기록 수정' : reviewId ? '작성 중인 초안' : '새 기록'}</Text><Text style={styles.autosave}>{autosave || '입력 내용은 자동으로 임시 저장돼요.'}</Text></View>
@@ -222,26 +223,29 @@ export default function RecordScreen() {
         <View style={styles.ratingRow}>{[1, 2, 3, 4, 5].map((rating) => <Pressable accessibilityLabel={`${rating}점`} accessibilityRole="button" key={rating} onPress={() => change((current) => ({ ...current, rating }))} style={[styles.rating, form.rating === rating && styles.ratingSelected]}><Text style={[styles.ratingText, form.rating === rating && styles.ratingTextSelected]}>★ {rating}</Text></Pressable>)}</View>
       </View>
 
-      {prompts.map((prompt) => (
-        <View key={prompt.key} style={styles.section}>
-          <Text style={styles.sectionTitle}>{prompt.label}</Text>
-          <TextInput maxLength={2000} multiline onChangeText={(answer) => change((current) => ({ ...current, answers: { ...current.answers, [prompt.key]: answer } }))} placeholder={prompt.placeholder} placeholderTextColor={colors.textMuted} style={[styles.input, styles.textarea]} textAlignVertical="top" value={form.answers[prompt.key] ?? ''} />
-        </View>
-      ))}
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>감정 키워드</Text>
-        <View style={styles.chips}>{tasteKeywords.map((keyword) => { const selected = form.keywordIds.includes(keyword.id); return <Pressable accessibilityRole="button" key={keyword.id} onPress={() => change((current) => ({ ...current, keywordIds: selected ? current.keywordIds.filter((id) => id !== keyword.id) : [...current.keywordIds, keyword.id] }))} style={[styles.chip, selected && styles.chipSelected]}><Text style={[styles.chipText, selected && styles.chipTextSelected]}>{keyword.label}</Text></Pressable>; })}</View>
-      </View>
-
       {form.mode === 'light' ? (
-        <View style={styles.section}><Text style={styles.sectionTitle}>한 줄 기록</Text><TextInput maxLength={280} onChangeText={(oneLine) => change((current) => ({ ...current, oneLine }))} placeholder="이 영화를 한 문장으로 남긴다면?" placeholderTextColor={colors.textMuted} style={styles.input} value={form.oneLine} /><Text style={styles.counter}>{form.oneLine.length}/280</Text></View>
+        <>
+          <LightQuestionnaire form={form} onChange={change} />
+          <View style={styles.section}><Text style={styles.sectionTitle}>한 줄 기록 · 선택</Text><TextInput maxLength={280} onChangeText={(oneLine) => change((current) => ({ ...current, oneLine }))} placeholder="선택한 느낌을 내 문장으로 남겨보세요." placeholderTextColor={colors.textMuted} style={styles.input} value={form.oneLine} /><Text style={styles.counter}>{form.oneLine.length}/280</Text></View>
+        </>
       ) : (
-        <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><TextInput maxLength={10000} multiline onChangeText={(body) => change((current) => ({ ...current, body }))} placeholder="질문에 담지 못한 생각을 자유롭게 기록해 보세요." placeholderTextColor={colors.textMuted} style={[styles.input, styles.longTextarea]} textAlignVertical="top" value={form.body} /><Text style={styles.counter}>{form.body.length}/10,000</Text></View>
+        <>
+          {corePrompts.map((prompt) => (
+            <View key={prompt.key} style={styles.section}>
+              <Text style={styles.sectionTitle}>{prompt.label}</Text>
+              <TextInput maxLength={2000} multiline onChangeText={(answer) => change((current) => ({ ...current, answers: { ...current.answers, [prompt.key]: answer } }))} placeholder={prompt.placeholder} placeholderTextColor={colors.textMuted} style={[styles.input, styles.textarea]} textAlignVertical="top" value={form.answers[prompt.key] ?? ''} />
+            </View>
+          ))}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>감정 키워드</Text>
+            <View style={styles.chips}>{tasteKeywords.map((keyword) => { const selected = form.keywordIds.includes(keyword.id); return <Pressable accessibilityRole="button" key={keyword.id} onPress={() => change((current) => ({ ...current, keywordIds: selected ? current.keywordIds.filter((id) => id !== keyword.id) : [...current.keywordIds, keyword.id] }))} style={[styles.chip, selected && styles.chipSelected]}><Text style={[styles.chipText, selected && styles.chipTextSelected]}>{keyword.label}</Text></Pressable>; })}</View>
+          </View>
+          <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><TextInput maxLength={10000} multiline onChangeText={(body) => change((current) => ({ ...current, body }))} placeholder="질문에 담지 못한 생각을 자유롭게 기록해 보세요." placeholderTextColor={colors.textMuted} style={[styles.input, styles.longTextarea]} textAlignVertical="top" value={form.body} /><Text style={styles.counter}>{form.body.length}/10,000</Text></View>
+        </>
       )}
 
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: form.spoiler }} onPress={() => change((current) => ({ ...current, spoiler: !current.spoiler }))} style={styles.checkRow}><View style={[styles.checkbox, form.spoiler && styles.checkboxSelected]}><Text style={styles.checkmark}>{form.spoiler ? '✓' : ''}</Text></View><Text style={styles.checkLabel}>스포일러가 포함된 기록이에요</Text></Pressable>
-      <StateNotice title="공개 범위: 나만 보기" message="3A/3B의 모든 감상 기록은 기본적으로 비공개이며 로그인한 본인만 볼 수 있어요." />
+      <StateNotice title="공개 범위: 나만 보기" message="질문별 태그를 포함한 모든 감상 기록은 로그인한 본인만 볼 수 있어요." />
       <Button label={recordStatus === 'completed' ? '수정 완료' : '기록 완료'} loading={saving} onPress={() => void persist(true)} />
       <Button label={recordStatus === 'completed' ? '수정 내용 임시 보관' : '초안으로 저장'} loading={saving} onPress={() => void persist(false)} variant="secondary" />
       <Button label="기록 목록으로" onPress={() => router.replace('/(tabs)/record')} variant="ghost" />
