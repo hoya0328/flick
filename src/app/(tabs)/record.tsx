@@ -5,17 +5,23 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
-import { getMovie } from '@/features/discovery/movies';
+import { getMovie, type Movie } from '@/features/discovery/movies';
 import { tasteKeywords } from '@/features/onboarding/keywords';
+import { CoreQuestionnaire } from '@/features/reviews/core-questionnaire';
+import { ensureCoreQuestions } from '@/features/reviews/core-questions';
 import { LightQuestionnaire } from '@/features/reviews/light-questionnaire';
 import { ensureLightQuestions } from '@/features/reviews/light-questions';
-import { corePrompts, emptyReviewForm, reviewCompletionError, reviewExcerpt, type ReviewForm, type ReviewMode, type ReviewStatus } from '@/features/reviews/review-logic';
+import { emptyReviewForm, reviewCompletionError, reviewExcerpt, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
 import { clearLocalReviewBackup, deleteReview, getDraftForMovie, getReview, listReviews, loadLocalReviewBackup, saveLocalReviewBackup, saveReview, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 function one(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function ensureModeQuestions(form: ReviewForm, movie: Movie | null, title: string): ReviewForm {
+  return form.mode === 'core' ? ensureCoreQuestions(form, movie, title) : ensureLightQuestions(form, movie, title);
 }
 
 export default function RecordScreen() {
@@ -29,6 +35,7 @@ export default function RecordScreen() {
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [recordStatus, setRecordStatus] = useState<ReviewStatus>('draft');
   const [movieTitle, setMovieTitle] = useState('');
+  const [movie, setMovie] = useState<Movie | null>(null);
   const [records, setRecords] = useState<ReviewRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -53,7 +60,8 @@ export default function RecordScreen() {
           if (!record) throw new Error('기록을 찾을 수 없어요.');
           const [backup, movie] = await Promise.all([loadLocalReviewBackup(record.movieId), getMovie(record.movieId)]);
           if (!active) return;
-          setForm(ensureLightQuestions(backup?.form ?? record, movie, record.movie.title));
+          setMovie(movie);
+          setForm(ensureModeQuestions(backup?.form ?? record, movie, record.movie.title));
           setReviewId(backup?.reviewId ?? record.id);
           setRecordStatus(record.status);
           setMovieTitle(backup?.movieTitle || record.movie.title);
@@ -66,7 +74,8 @@ export default function RecordScreen() {
             getMovie(movieIdParam),
           ]);
           if (!active) return;
-          setForm(ensureLightQuestions(backup?.form ?? draft ?? emptyReviewForm(movieIdParam), movie, backup?.movieTitle || draft?.movie.title || titleParam || '선택한 영화'));
+          setMovie(movie);
+          setForm(ensureModeQuestions(backup?.form ?? draft ?? emptyReviewForm(movieIdParam), movie, backup?.movieTitle || draft?.movie.title || titleParam || '선택한 영화'));
           setReviewId(backup?.reviewId ?? draft?.id ?? null);
           setRecordStatus(draft?.status ?? 'draft');
           setMovieTitle(backup?.movieTitle || draft?.movie.title || titleParam || movie?.title || '선택한 영화');
@@ -74,6 +83,7 @@ export default function RecordScreen() {
           setAutosave(backup ? '기기에 남아 있던 초안을 복구했어요.' : draft ? '서버에 저장된 초안을 불러왔어요.' : '');
         } else {
           setForm(null);
+          setMovie(null);
           setReviewId(null);
           setMovieTitle('');
           await loadList();
@@ -95,6 +105,19 @@ export default function RecordScreen() {
     setAutosave('저장 중…');
     setNotice(null);
   }, []);
+
+  function switchMode(mode: ReviewMode) {
+    if (!form || form.mode === mode) return;
+    const hasProgress = Object.values(form.answers).some((answer) => answer.trim()) || Object.values(form.questionTags).some((tags) => tags.length);
+    if (hasProgress) {
+      setNotice({ tone: 'warning', title: '기록 방식은 그대로 유지해 주세요', message: '이미 작성한 질문 기록을 보호하기 위해 내용이 있는 상태에서는 Light와 Core를 바꿀 수 없어요.' });
+      return;
+    }
+    change((current) => {
+      const changed = { ...current, mode, questions: [], answers: {}, questionTags: {} };
+      return mode === 'core' ? ensureCoreQuestions(changed, movie, movieTitle) : ensureLightQuestions(changed, movie, movieTitle);
+    });
+  }
 
   useEffect(() => {
     if (!form || !dirty || loading) return;
@@ -183,7 +206,7 @@ export default function RecordScreen() {
             <View style={styles.rowBetween}>
               <View style={styles.flex}>
                 <Text style={styles.cardTitle}>{record.movie.title}</Text>
-                <Text style={styles.meta}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'} · {record.rating ? `★ ${record.rating}` : '별점 미정'}</Text>
+                <Text style={styles.meta}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'} · {record.rating ? `★ ${record.rating}` : '별점 미정'} · {record.visibility === 'public' ? '전체 공개' : '나만 보기'}</Text>
               </View>
               <Text style={[styles.status, record.status === 'completed' && styles.statusComplete]}>{record.status === 'completed' ? '완료' : '초안'}</Text>
             </View>
@@ -209,7 +232,7 @@ export default function RecordScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>기록 방식</Text>
-        <View style={styles.actions}>{(['light', 'core'] as ReviewMode[]).map((item) => <Pressable accessibilityRole="button" key={item} onPress={() => change((current) => ({ ...current, mode: item }))} style={[styles.mode, form.mode === item && styles.modeSelected]}><Text style={[styles.modeTitle, form.mode === item && styles.modeTitleSelected]}>{item === 'light' ? 'Light' : 'Core'}</Text><Text style={styles.modeCaption}>{item === 'light' ? '감정 중심, 빠르게' : '요소별로 깊이 있게'}</Text></Pressable>)}</View>
+        <View style={styles.actions}>{(['light', 'core'] as ReviewMode[]).map((item) => <Pressable accessibilityRole="button" key={item} onPress={() => switchMode(item)} style={[styles.mode, form.mode === item && styles.modeSelected]}><Text style={[styles.modeTitle, form.mode === item && styles.modeTitleSelected]}>{item === 'light' ? 'Light' : 'Core'}</Text><Text style={styles.modeCaption}>{item === 'light' ? '감정 중심, 빠르게' : '답변을 따라 깊이 있게'}</Text></Pressable>)}</View>
       </View>
 
       <View style={styles.section}>
@@ -230,12 +253,7 @@ export default function RecordScreen() {
         </>
       ) : (
         <>
-          {corePrompts.map((prompt) => (
-            <View key={prompt.key} style={styles.section}>
-              <Text style={styles.sectionTitle}>{prompt.label}</Text>
-              <TextInput maxLength={2000} multiline onChangeText={(answer) => change((current) => ({ ...current, answers: { ...current.answers, [prompt.key]: answer } }))} placeholder={prompt.placeholder} placeholderTextColor={colors.textMuted} style={[styles.input, styles.textarea]} textAlignVertical="top" value={form.answers[prompt.key] ?? ''} />
-            </View>
-          ))}
+          <CoreQuestionnaire form={form} movieTitle={movieTitle} onChange={change} sessionMode={storageMode} />
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>감정 키워드</Text>
             <View style={styles.chips}>{tasteKeywords.map((keyword) => { const selected = form.keywordIds.includes(keyword.id); return <Pressable accessibilityRole="button" key={keyword.id} onPress={() => change((current) => ({ ...current, keywordIds: selected ? current.keywordIds.filter((id) => id !== keyword.id) : [...current.keywordIds, keyword.id] }))} style={[styles.chip, selected && styles.chipSelected]}><Text style={[styles.chipText, selected && styles.chipTextSelected]}>{keyword.label}</Text></Pressable>; })}</View>
@@ -245,7 +263,11 @@ export default function RecordScreen() {
       )}
 
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: form.spoiler }} onPress={() => change((current) => ({ ...current, spoiler: !current.spoiler }))} style={styles.checkRow}><View style={[styles.checkbox, form.spoiler && styles.checkboxSelected]}><Text style={styles.checkmark}>{form.spoiler ? '✓' : ''}</Text></View><Text style={styles.checkLabel}>스포일러가 포함된 기록이에요</Text></Pressable>
-      <StateNotice title="공개 범위: 나만 보기" message="질문별 태그를 포함한 모든 감상 기록은 로그인한 본인만 볼 수 있어요." />
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>공개 범위</Text>
+        <View style={styles.actions}>{([['private', '나만 보기'], ['public', '전체 공개']] as [ReviewVisibility, string][]).map(([value, label]) => <Pressable accessibilityRole="radio" accessibilityState={{ checked: form.visibility === value }} key={value} onPress={() => change((current) => ({ ...current, visibility: value }))} style={[styles.visibility, form.visibility === value && styles.visibilitySelected]}><Text style={[styles.modeTitle, form.visibility === value && styles.modeTitleSelected]}>{label}</Text><Text style={styles.modeCaption}>{value === 'private' ? '내 계정에서만 확인' : '완료 후 Flick 사용자에게 공개'}</Text></Pressable>)}</View>
+        <Text style={styles.help}>초안은 선택한 범위와 관계없이 항상 나만 볼 수 있어요.</Text>
+      </View>
       <Button label={recordStatus === 'completed' ? '수정 완료' : '기록 완료'} loading={saving} onPress={() => void persist(true)} />
       <Button label={recordStatus === 'completed' ? '수정 내용 임시 보관' : '초안으로 저장'} loading={saving} onPress={() => void persist(false)} variant="secondary" />
       <Button label="기록 목록으로" onPress={() => router.replace('/(tabs)/record')} variant="ghost" />
@@ -266,6 +288,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: spacing.sm }, action: { flex: 1 }, flex: { flex: 1 },
   mode: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radii.md, borderWidth: 1, flex: 1, gap: spacing.xs, minHeight: 82, padding: spacing.md },
   modeSelected: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
+  visibility: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radii.md, borderWidth: 1, flex: 1, gap: spacing.xs, minHeight: 72, padding: spacing.md },
+  visibilitySelected: { backgroundColor: colors.primarySoft, borderColor: colors.primary },
   modeTitle: { ...typography.label, color: colors.text }, modeTitleSelected: { color: colors.primary }, modeCaption: { ...typography.caption, color: colors.textMuted },
   ratingRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   rating: { backgroundColor: colors.background, borderColor: colors.border, borderRadius: radii.pill, borderWidth: 1, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },

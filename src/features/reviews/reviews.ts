@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
-import { emptyReviewForm, type LightQuestion, type LightTagOption, type ReviewForm, type ReviewMode, type ReviewStatus } from '@/features/reviews/review-logic';
+import { emptyReviewForm, type LightQuestion, type LightTagOption, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
 
 export type ReviewRecord = ReviewForm & {
   id: string;
@@ -13,7 +13,7 @@ export type ReviewRecord = ReviewForm & {
 
 type ReviewRow = {
   id: string; movie_id: string; mode: ReviewMode; watched_at: string; rating: number | string | null;
-  body: string; one_line: string; spoiler: boolean; status: ReviewStatus; created_at: string; updated_at: string;
+  body: string; one_line: string; spoiler: boolean; visibility: ReviewVisibility; status: ReviewStatus; created_at: string; updated_at: string;
   movies: ReviewRecord['movie'] | ReviewRecord['movie'][] | null;
   review_answers: { question_key: string; answer: string }[] | null;
   review_keywords: { keyword_id: string }[] | null;
@@ -23,7 +23,14 @@ type ReviewRow = {
 
 const DRAFT_PREFIX = 'flick.stage3.review-draft.';
 const DEMO_RECORDS_KEY = 'flick.stage3.demo-reviews';
-const reviewSelect = 'id,movie_id,mode,watched_at,rating,body,one_line,spoiler,status,created_at,updated_at,movies(id,title,original_title,poster_path,release_date),review_answers(question_key,answer),review_keywords(keyword_id),review_questions(question_key,question_text,source_rule,options,sort_order),review_answer_tags(question_key,tag_id,sort_order)';
+const reviewSelect = 'id,movie_id,mode,watched_at,rating,body,one_line,spoiler,visibility,status,created_at,updated_at,movies(id,title,original_title,poster_path,release_date),review_answers(question_key,answer),review_keywords(keyword_id),review_questions!review_questions_review_id_fkey(question_key,question_text,source_rule,options,sort_order),review_answer_tags(question_key,tag_id,sort_order)';
+
+async function currentUserId(): Promise<string> {
+  if (!supabase) throw new Error('기록 서버가 연결되지 않았어요.');
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error('로그인 세션을 다시 확인해 주세요.');
+  return data.user.id;
+}
 
 function tagOptions(value: unknown): LightTagOption[] {
   if (!Array.isArray(value)) return [];
@@ -45,7 +52,7 @@ function fromRow(row: ReviewRow): ReviewRecord {
   return {
     id: row.id, movieId: row.movie_id, mode: row.mode, watchedAt: row.watched_at,
     rating: row.rating === null ? null : Number(row.rating), body: row.body, oneLine: row.one_line,
-    spoiler: row.spoiler, status: row.status, createdAt: row.created_at, updatedAt: row.updated_at,
+    spoiler: row.spoiler, visibility: row.visibility ?? 'private', status: row.status, createdAt: row.created_at, updatedAt: row.updated_at,
     answers: Object.fromEntries((row.review_answers ?? []).map((item) => [item.question_key, item.answer])),
     keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, movie: normalizedMovie(row.movies, row.movie_id),
   };
@@ -54,13 +61,14 @@ function fromRow(row: ReviewRow): ReviewRecord {
 async function demoRecords(): Promise<ReviewRecord[]> {
   const stored = await AsyncStorage.getItem(DEMO_RECORDS_KEY);
   if (!stored) return [];
-  try { return (JSON.parse(stored) as ReviewRecord[]).map((record) => ({ ...record, questions: record.questions ?? [], questionTags: record.questionTags ?? {} })); } catch { return []; }
+  try { return (JSON.parse(stored) as ReviewRecord[]).map((record) => ({ ...record, visibility: record.visibility ?? 'private', questions: record.questions ?? [], questionTags: record.questionTags ?? {} })); } catch { return []; }
 }
 
 export async function listReviews(sessionMode: 'demo' | 'supabase'): Promise<ReviewRecord[]> {
   if (sessionMode === 'demo') return (await demoRecords()).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   if (!supabase) throw new Error('기록 서버가 연결되지 않았어요.');
-  const { data, error } = await supabase.from('reviews').select(reviewSelect).order('updated_at', { ascending: false });
+  const userId = await currentUserId();
+  const { data, error } = await supabase.from('reviews').select(reviewSelect).eq('user_id', userId).order('updated_at', { ascending: false });
   if (error) throw new Error(error.message);
   return ((data ?? []) as unknown as ReviewRow[]).map(fromRow);
 }
@@ -68,7 +76,8 @@ export async function listReviews(sessionMode: 'demo' | 'supabase'): Promise<Rev
 export async function getReview(reviewId: string, sessionMode: 'demo' | 'supabase'): Promise<ReviewRecord | null> {
   if (sessionMode === 'demo') return (await demoRecords()).find((record) => record.id === reviewId) ?? null;
   if (!supabase) return null;
-  const { data, error } = await supabase.from('reviews').select(reviewSelect).eq('id', reviewId).maybeSingle();
+  const userId = await currentUserId();
+  const { data, error } = await supabase.from('reviews').select(reviewSelect).eq('id', reviewId).eq('user_id', userId).maybeSingle();
   if (error) throw new Error(error.message);
   return data ? fromRow(data as unknown as ReviewRow) : null;
 }
@@ -76,7 +85,8 @@ export async function getReview(reviewId: string, sessionMode: 'demo' | 'supabas
 export async function getDraftForMovie(movieId: string, sessionMode: 'demo' | 'supabase'): Promise<ReviewRecord | null> {
   if (sessionMode === 'demo') return (await demoRecords()).find((record) => record.movieId === movieId && record.status === 'draft') ?? null;
   if (!supabase) return null;
-  const { data, error } = await supabase.from('reviews').select(reviewSelect).eq('movie_id', movieId).eq('status', 'draft').maybeSingle();
+  const userId = await currentUserId();
+  const { data, error } = await supabase.from('reviews').select(reviewSelect).eq('movie_id', movieId).eq('user_id', userId).eq('status', 'draft').maybeSingle();
   if (error) throw new Error(error.message);
   return data ? fromRow(data as unknown as ReviewRow) : null;
 }
@@ -96,7 +106,7 @@ export async function saveReview(form: ReviewForm, reviewId: string | null, comp
   if (!supabase) throw new Error('기록 서버가 연결되지 않았어요.');
   const { data, error } = await supabase.rpc('save_review_record', {
     p_movie_id: form.movieId, p_mode: form.mode, p_watched_at: form.watchedAt, p_rating: form.rating,
-    p_body: form.body, p_one_line: form.oneLine, p_spoiler: form.spoiler, p_answers: form.answers,
+    p_body: form.body, p_one_line: form.oneLine, p_spoiler: form.spoiler, p_visibility: form.visibility, p_answers: form.answers,
     p_keyword_ids: form.keywordIds, p_complete: complete, p_review_id: reviewId,
     p_questions: form.questions.map((question, sortOrder) => ({ key: question.key, text: question.text, sourceRule: question.sourceRule, options: question.options, sortOrder })),
     p_question_tags: form.questions.flatMap((question) => (form.questionTags[question.key] ?? []).map((tagId, sortOrder) => ({ questionKey: question.key, tagId, sortOrder }))),

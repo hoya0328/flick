@@ -16,9 +16,14 @@ describe('stage 3A/3B review rules', () => {
   });
 
   it('requires depth for a Core record', () => {
-    const form = { ...emptyReviewForm('movie-1'), mode: 'core' as const, watchedAt: '2026-08-07', rating: 5 };
-    expect(reviewCompletionError(form)).toContain('100자');
-    expect(reviewCompletionError({ ...form, answers: { direction: '절제된 화면 전환이 감정의 리듬을 선명하게 만들었다.', visual: '좁은 공간의 구도와 대비되는 색감이 인물의 불안을 강화했다.' } })).toBeNull();
+    const questions = Array.from({ length: 5 }, (_, index) => ({ key: `core_q${index + 1}`, text: `Core 질문 ${index + 1}`, sourceRule: 'test', options: [] }));
+    const form = { ...emptyReviewForm('movie-1'), mode: 'core' as const, watchedAt: '2026-08-07', rating: 5, questions };
+    expect(reviewCompletionError(form)).toContain('각각 20자');
+    expect(reviewCompletionError({ ...form, answers: Object.fromEntries(questions.map((question) => [question.key, '장면의 구도와 인물의 선택이 주제를 선명하게 보여주었다.'])) })).toBeNull();
+  });
+
+  it('defaults every review to private visibility', () => {
+    expect(emptyReviewForm('movie-1').visibility).toBe('private');
   });
 
   it('uses the first meaningful field for list previews', () => {

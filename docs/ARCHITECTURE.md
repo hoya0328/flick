@@ -9,7 +9,7 @@
 - 패키지 관리: npm과 lockfile
 - 백엔드: Supabase의 PostgreSQL, Auth, Storage, Edge Functions
 - 영화 데이터: 서버 어댑터를 통한 TMDB 후보 사용
-- AI: 서버 전용 공급자 어댑터. 초기 후보는 OpenAI이며 모델명과 비용 상한은 환경설정으로 분리한다.
+- AI: Supabase Edge Function의 서버 전용 공급자 어댑터. Core 연계 질문 테스트는 Gemini 무료 등급을 사용하고 모델명은 서버 환경설정으로 분리한다.
 
 Expo Router는 iOS·Android·웹 라우팅과 딥링크를 한 구조로 공유한다. Windows에서도 EAS Build/Submit으로 iOS 빌드와 제출이 가능하므로 별도 Swift·웹 코드베이스보다 현재 우선순위와 비용에 적합하다.
 
@@ -46,15 +46,15 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `user_keywords` | user_id, keyword_id, weight | 본인 전용 |
 | `movies` | provider_id, title, poster_path, metadata, cached_at | 전체 읽기, 서버 갱신 |
 | `watchlist` | user_id, movie_id, status | 본인 전용 |
-| `reviews` | user_id, movie_id, mode, watched_at, rating, body, visibility, status | 기본 본인 전용 |
-| `review_answers` | review_id, question_key, answer | 리뷰 소유자 전용 |
+| `reviews` | user_id, movie_id, mode, watched_at, rating, body, visibility, status | 초안·비공개는 본인 전용, 완료된 공개 기록은 인증 사용자 읽기 |
+| `review_answers` | review_id, question_key, answer | 부모 리뷰 공개 범위를 상속 |
 | `review_keywords` | review_id, keyword_id, source | 리뷰 소유자 전용 |
 | `review_questions` | review_id, question_key, question_text, options, source_rule | 리뷰 시점 질문·선택지 스냅샷, 소유자 전용 |
 | `review_answer_tags` | review_id, question_key, tag_id | 질문별 사용자 선택 태그, 소유자 전용 |
 | `ai_jobs` | user_id, review_id, status, model, token_usage, error_code | 본인 메타데이터, 서버 원문 관리 |
 | `report_snapshots` | user_id, period, metrics, generated_at | 본인 전용 |
 
-모든 사용자 테이블은 Supabase RLS로 `auth.uid() = user_id`를 강제한다. 공개 리뷰는 별도 읽기 정책을 추가하며 비공개가 기본값이다.
+모든 쓰기·수정·삭제는 Supabase RLS로 소유자를 강제한다. `visibility = public`이면서 `status = completed`인 기록과 자식 질문·답변·태그만 인증 사용자에게 읽기를 허용한다. 초안과 비공개 기록은 항상 소유자 전용이며 기본값은 `private`이다.
 
 ## 인증과 권한
 
@@ -72,10 +72,13 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `GET /movies/:id` | provider id | movie detail | not_found, stale_cache |
 | `GET /recommendations` | keyword ids | movies + reason | insufficient_profile |
 | `POST /reviews` | movie, mode, answers, visibility | saved review | validation, conflict |
+| `POST /functions/v1/generate-core-question` | movie id, prior Q/A | next question | quota, timeout, unavailable |
 | `POST /ai/review-guide` | review id, current answers | questions/keywords/draft | quota, timeout, unsafe_output |
 | `GET /reports/me` | period | deterministic metrics | insufficient_data |
 
 클라이언트와 서버는 공유 TypeScript 스키마로 입력·응답을 검증한다. AI 응답은 구조화된 JSON으로 제한하고 저장 전 사용자가 수정·승인한다.
+
+Core 연계 질문 함수는 Supabase JWT를 검증하고 영화 메타데이터를 서버에서 조회한다. 클라이언트는 이메일이나 사용자 ID를 Gemini에 보내지 않으며, 이전 질문과 최대 1,200자의 답변만 전달한다. 응답은 질문 한 문장 JSON으로 제한하고 8초 뒤 중단한다. 실패하면 클라이언트의 결정적 질문으로 복구한다.
 
 ## 반응형·접근성
 
