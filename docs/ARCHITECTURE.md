@@ -73,12 +73,14 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `GET /recommendations` | keyword ids | movies + reason | insufficient_profile |
 | `POST /reviews` | movie, mode, answers, visibility | saved review | validation, conflict |
 | `POST /functions/v1/generate-core-question` | movie id, prior Q/A | next question | quota, timeout, unavailable |
-| `POST /ai/review-guide` | review id, current answers | questions/keywords/draft | quota, timeout, unsafe_output |
+| `POST /functions/v1/generate-core-review-draft` | movie id, five Q/A | keywords + editable draft | quota, timeout, invalid_output |
 | `GET /reports/me` | period | deterministic metrics | insufficient_data |
 
 클라이언트와 서버는 공유 TypeScript 스키마로 입력·응답을 검증한다. AI 응답은 구조화된 JSON으로 제한하고 저장 전 사용자가 수정·승인한다.
 
 Core 연계 질문 함수는 Supabase JWT를 검증하고 영화 메타데이터를 서버에서 조회한다. 클라이언트는 이메일이나 사용자 ID를 Gemini에 보내지 않으며, 이전 질문과 최대 1,200자의 답변만 전달한다. 응답은 질문 한 문장 JSON으로 제한하고 8초 뒤 중단한다. 실패하면 클라이언트의 결정적 질문으로 복구한다.
+
+Core 리뷰 초안 함수도 Supabase JWT와 영화 ID를 검증하고 Q1~Q5의 질문·답변만 Gemini에 전달한다. 응답은 키워드 3~5개와 편집 가능한 한국어 초안 JSON으로 제한하며, 이메일·사용자 ID는 전달하지 않는다. 생성은 별도 동의와 버튼 입력이 있어야 실행되고 결과는 자유 감상에만 채운다. 기존 자유 감상이 있으면 교체를 다시 확인하며 자동 완료·공개하지 않는다.
 
 ## 반응형·접근성
 

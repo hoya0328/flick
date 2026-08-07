@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { isCoreDraftReady, normalizeCoreReviewDraft } from '../src/features/reviews/core-draft';
 import { ensureCoreQuestions, fallbackCoreQuestion, updateCoreAnswer } from '../src/features/reviews/core-questions';
 import { emptyReviewForm } from '../src/features/reviews/review-logic';
 
@@ -22,5 +23,22 @@ describe('Core linked questions', () => {
     const updated = updateCoreAnswer(form, 0, '수정된 첫 답변입니다 충분히 길게 다시 작성합니다.');
     expect(updated.questions).toHaveLength(1);
     expect(updated.answers.core_q2).toBeUndefined();
+  });
+
+  it('allows a draft only after five substantial answers', () => {
+    const questions = Array.from({ length: 5 }, (_, index) => fallbackCoreQuestion(index, '테스트 영화'));
+    const complete = { questions, answers: Object.fromEntries(questions.map((question) => [question.key, '장면과 인물의 선택이 남긴 감정을 충분히 구체적으로 작성한 답변입니다.'])) };
+    expect(isCoreDraftReady(complete)).toBe(true);
+    expect(isCoreDraftReady({ ...complete, answers: { ...complete.answers, core_q5: '짧은 답변' } })).toBe(false);
+  });
+
+  it('normalizes a structured AI review draft', () => {
+    const result = normalizeCoreReviewDraft({
+      keywords: ['가족', '책임', '가족', '선택'],
+      draft: '사용자의 다섯 답변을 토대로 작성한 리뷰 초안입니다. '.repeat(12),
+    });
+    expect(result?.keywords).toEqual(['가족', '책임', '선택']);
+    expect(result?.draft.length).toBeGreaterThan(250);
+    expect(normalizeCoreReviewDraft({ keywords: ['하나'], draft: '짧음' })).toBeNull();
   });
 });

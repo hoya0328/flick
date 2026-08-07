@@ -8,6 +8,7 @@ import { StateNotice } from '@/components/state-notice';
 import { getMovie, type Movie } from '@/features/discovery/movies';
 import { tasteKeywords } from '@/features/onboarding/keywords';
 import { CoreQuestionnaire } from '@/features/reviews/core-questionnaire';
+import { CoreReviewDraftPanel } from '@/features/reviews/core-review-draft';
 import { ensureCoreQuestions } from '@/features/reviews/core-questions';
 import { LightQuestionnaire } from '@/features/reviews/light-questionnaire';
 import { ensureLightQuestions } from '@/features/reviews/light-questions';
@@ -258,7 +259,12 @@ export default function RecordScreen() {
             <Text style={styles.sectionTitle}>감정 키워드</Text>
             <View style={styles.chips}>{tasteKeywords.map((keyword) => { const selected = form.keywordIds.includes(keyword.id); return <Pressable accessibilityRole="button" key={keyword.id} onPress={() => change((current) => ({ ...current, keywordIds: selected ? current.keywordIds.filter((id) => id !== keyword.id) : [...current.keywordIds, keyword.id] }))} style={[styles.chip, selected && styles.chipSelected]}><Text style={[styles.chipText, selected && styles.chipTextSelected]}>{keyword.label}</Text></Pressable>; })}</View>
           </View>
-          <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><TextInput maxLength={10000} multiline onChangeText={(body) => change((current) => ({ ...current, body }))} placeholder="질문에 담지 못한 생각을 자유롭게 기록해 보세요." placeholderTextColor={colors.textMuted} style={[styles.input, styles.longTextarea]} textAlignVertical="top" value={form.body} /><Text style={styles.counter}>{form.body.length}/10,000</Text></View>
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>자유 감상</Text>
+            <CoreReviewDraftPanel form={form} onChange={change} sessionMode={storageMode} />
+            <TextInput accessibilityLabel="자유 감상 리뷰" maxLength={10000} multiline onChangeText={(body) => change((current) => ({ ...current, body }))} placeholder="질문에 담지 못한 생각을 자유롭게 기록해 보세요." placeholderTextColor={colors.textMuted} style={[styles.input, styles.longTextarea]} textAlignVertical="top" value={form.body} />
+            <Text style={styles.counter}>{form.body.length}/10,000</Text>
+          </View>
         </>
       )}
 
