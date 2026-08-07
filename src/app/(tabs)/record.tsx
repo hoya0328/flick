@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, type LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
@@ -12,7 +12,7 @@ import { CoreReviewDraftPanel } from '@/features/reviews/core-review-draft';
 import { ensureCoreQuestions } from '@/features/reviews/core-questions';
 import { LightQuestionnaire } from '@/features/reviews/light-questionnaire';
 import { ensureLightQuestions } from '@/features/reviews/light-questions';
-import { emptyReviewForm, reviewCompletionError, reviewExcerpt, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
+import { emptyReviewForm, reviewCompletionIssue, reviewExcerpt, type ReviewCompletionField, type ReviewCompletionIssue, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
 import { clearLocalReviewBackup, deleteReview, getDraftForMovie, getReview, listReviews, loadLocalReviewBackup, saveLocalReviewBackup, saveReview, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -43,8 +43,33 @@ export default function RecordScreen() {
   const [dirty, setDirty] = useState(false);
   const [autosave, setAutosave] = useState('');
   const [notice, setNotice] = useState<{ tone: 'success' | 'danger' | 'warning'; title: string; message: string } | null>(null);
+  const [completionIssue, setCompletionIssue] = useState<ReviewCompletionIssue | null>(null);
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
   const revision = useRef(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const sectionOffsets = useRef<Partial<Record<ReviewCompletionField, number>>>({});
+  const sectionRefs = useRef<Partial<Record<ReviewCompletionField, View>>>({});
+
+  const rememberSectionNode = useCallback((field: ReviewCompletionField) => (node: View | null) => {
+    if (node) sectionRefs.current[field] = node;
+    else delete sectionRefs.current[field];
+  }, []);
+
+  const rememberSection = useCallback((field: ReviewCompletionField) => (event: LayoutChangeEvent) => {
+    sectionOffsets.current[field] = event.nativeEvent.layout.y;
+  }, []);
+
+  const scrollToCompletionIssue = useCallback((field: ReviewCompletionField) => {
+    requestAnimationFrame(() => {
+      const target = sectionRefs.current[field] as (View & { scrollIntoView?: (options?: { behavior?: 'smooth'; block?: 'center' }) => void }) | undefined;
+      if (typeof target?.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      const y = sectionOffsets.current[field];
+      if (typeof y === 'number') scrollViewRef.current?.scrollTo({ animated: true, y: Math.max(0, y - spacing.xxxl) });
+    });
+  }, []);
 
   const loadList = useCallback(async () => {
     setRecords(await listReviews(storageMode));
@@ -105,6 +130,7 @@ export default function RecordScreen() {
     setDirty(true);
     setAutosave('저장 중…');
     setNotice(null);
+    setCompletionIssue(null);
   }, []);
 
   function switchMode(mode: ReviewMode) {
@@ -147,12 +173,15 @@ export default function RecordScreen() {
   async function persist(complete: boolean) {
     if (!form) return;
     if (complete) {
-      const validation = reviewCompletionError(form);
-      if (validation) {
-        setNotice({ tone: 'warning', title: '조금만 더 기록해 주세요', message: validation });
+      const issue = reviewCompletionIssue(form);
+      if (issue) {
+        setCompletionIssue(issue);
+        setNotice({ tone: 'warning', title: '조금만 더 기록해 주세요', message: issue.message });
+        scrollToCompletionIssue(issue.field);
         return;
       }
     }
+    setCompletionIssue(null);
     setSaving(true);
     setNotice(null);
     try {
@@ -227,7 +256,7 @@ export default function RecordScreen() {
   }
 
   return (
-    <Screen eyebrow="감상 기록" title={movieTitle}>
+    <Screen eyebrow="감상 기록" scrollViewRef={scrollViewRef} title={movieTitle}>
       <View style={styles.selected}><Text style={styles.label}>{recordStatus === 'completed' ? '완료된 기록 수정' : reviewId ? '작성 중인 초안' : '새 기록'}</Text><Text style={styles.autosave}>{autosave || '입력 내용은 자동으로 임시 저장돼요.'}</Text></View>
       {notice ? <StateNotice {...notice} /> : null}
 
@@ -236,24 +265,28 @@ export default function RecordScreen() {
         <View style={styles.actions}>{(['light', 'core'] as ReviewMode[]).map((item) => <Pressable accessibilityRole="button" key={item} onPress={() => switchMode(item)} style={[styles.mode, form.mode === item && styles.modeSelected]}><Text style={[styles.modeTitle, form.mode === item && styles.modeTitleSelected]}>{item === 'light' ? 'Light' : 'Core'}</Text><Text style={styles.modeCaption}>{item === 'light' ? '감정 중심, 빠르게' : '답변을 따라 깊이 있게'}</Text></Pressable>)}</View>
       </View>
 
-      <View style={styles.section}>
+      <View onLayout={rememberSection('watchedAt')} ref={rememberSectionNode('watchedAt')} style={[styles.section, completionIssue?.field === 'watchedAt' && styles.sectionError]}>
         <Text style={styles.sectionTitle}>감상일</Text>
         <TextInput accessibilityLabel="감상일" maxLength={10} onChangeText={(watchedAt) => change((current) => ({ ...current, watchedAt }))} placeholder="YYYY-MM-DD" style={styles.input} value={form.watchedAt} />
         <Text style={styles.help}>예: 2026-08-07 · 미래 날짜는 저장할 수 없어요.</Text>
+        {completionIssue?.field === 'watchedAt' ? <Text accessibilityLiveRegion="polite" style={styles.requirementError}>확인 필요 · {completionIssue.message}</Text> : null}
       </View>
 
-      <View style={styles.section}>
+      <View onLayout={rememberSection('rating')} ref={rememberSectionNode('rating')} style={[styles.section, completionIssue?.field === 'rating' && styles.sectionError]}>
         <Text style={styles.sectionTitle}>별점</Text>
         <View style={styles.ratingRow}>{[1, 2, 3, 4, 5].map((rating) => <Pressable accessibilityLabel={`${rating}점`} accessibilityRole="button" key={rating} onPress={() => change((current) => ({ ...current, rating }))} style={[styles.rating, form.rating === rating && styles.ratingSelected]}><Text style={[styles.ratingText, form.rating === rating && styles.ratingTextSelected]}>★ {rating}</Text></Pressable>)}</View>
+        <Text style={styles.requirement}>완료 조건 · 1~5점 중 하나를 선택해야 합니다.</Text>
+        {completionIssue?.field === 'rating' ? <Text accessibilityLiveRegion="polite" style={styles.requirementError}>확인 필요 · {completionIssue.message}</Text> : null}
       </View>
 
-      {form.mode === 'light' ? (
-        <>
+      <View onLayout={rememberSection('questions')} ref={rememberSectionNode('questions')} style={[styles.validationGroup, completionIssue?.field === 'questions' && styles.validationGroupError]}>
+        {form.mode === 'light' ? (
+          <>
           <LightQuestionnaire form={form} onChange={change} />
           <View style={styles.section}><Text style={styles.sectionTitle}>한 줄 기록 · 선택</Text><TextInput maxLength={280} onChangeText={(oneLine) => change((current) => ({ ...current, oneLine }))} placeholder="선택한 느낌을 내 문장으로 남겨보세요." placeholderTextColor={colors.textMuted} style={styles.input} value={form.oneLine} /><Text style={styles.counter}>{form.oneLine.length}/280</Text></View>
-        </>
-      ) : (
-        <>
+          </>
+        ) : (
+          <>
           <CoreQuestionnaire form={form} movieTitle={movieTitle} onChange={change} sessionMode={storageMode} />
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>감정 키워드</Text>
@@ -265,8 +298,11 @@ export default function RecordScreen() {
             <TextInput accessibilityLabel="자유 감상 리뷰" maxLength={10000} multiline onChangeText={(body) => change((current) => ({ ...current, body }))} placeholder="질문에 담지 못한 생각을 자유롭게 기록해 보세요." placeholderTextColor={colors.textMuted} style={[styles.input, styles.longTextarea]} textAlignVertical="top" value={form.body} />
             <Text style={styles.counter}>{form.body.length}/10,000</Text>
           </View>
-        </>
-      )}
+          </>
+        )}
+        <Text style={styles.requirement}>{form.mode === 'light' ? '완료 조건 · 질문 5개 중 최소 3개에 느낌 태그를 선택해야 합니다.' : '완료 조건 · Q1~Q5에 각각 20자 이상 작성해야 합니다.'}</Text>
+        {completionIssue?.field === 'questions' ? <Text accessibilityLiveRegion="polite" style={styles.requirementError}>확인 필요 · {completionIssue.message}</Text> : null}
+      </View>
 
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: form.spoiler }} onPress={() => change((current) => ({ ...current, spoiler: !current.spoiler }))} style={styles.checkRow}><View style={[styles.checkbox, form.spoiler && styles.checkboxSelected]}><Text style={styles.checkmark}>{form.spoiler ? '✓' : ''}</Text></View><Text style={styles.checkLabel}>스포일러가 포함된 기록이에요</Text></Pressable>
       <View style={styles.section}>
@@ -275,6 +311,7 @@ export default function RecordScreen() {
         <Text style={styles.help}>초안은 선택한 범위와 관계없이 항상 나만 볼 수 있어요.</Text>
       </View>
       <Button label={recordStatus === 'completed' ? '수정 완료' : '기록 완료'} loading={saving} onPress={() => void persist(true)} />
+      {completionIssue ? <Text accessibilityLiveRegion="polite" style={styles.completionError}>완료할 수 없어요 · {completionIssue.message} 안내된 위치로 이동했어요.</Text> : <Text style={styles.completionHelp}>필수 입력이 빠져 있으면 해당 위치로 자동 이동해 알려드려요.</Text>}
       <Button label={recordStatus === 'completed' ? '수정 내용 임시 보관' : '초안으로 저장'} loading={saving} onPress={() => void persist(false)} variant="secondary" />
       <Button label="기록 목록으로" onPress={() => router.replace('/(tabs)/record')} variant="ghost" />
     </Screen>
@@ -284,6 +321,13 @@ export default function RecordScreen() {
 const styles = StyleSheet.create({
   intro: { ...typography.body, color: colors.textMuted },
   selected: { backgroundColor: colors.primarySoft, borderRadius: radii.md, gap: spacing.xs, padding: spacing.lg },
+  sectionError: { borderColor: colors.warning, borderWidth: 1 },
+  validationGroup: { gap: spacing.lg },
+  validationGroupError: { borderColor: colors.warning, borderRadius: radii.lg, borderWidth: 1, padding: spacing.xs },
+  requirement: { ...typography.caption, color: colors.textMuted },
+  requirementError: { ...typography.caption, color: colors.warning, fontWeight: '700' },
+  completionError: { ...typography.caption, color: colors.warning, textAlign: 'center' },
+  completionHelp: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },
   label: { ...typography.label, color: colors.primary },
   autosave: { ...typography.caption, color: colors.textMuted },
   section: { backgroundColor: colors.surface, borderRadius: radii.lg, gap: spacing.md, padding: spacing.lg },

@@ -1,4 +1,4 @@
-import type { PropsWithChildren, ReactNode } from 'react';
+import type { PropsWithChildren, ReactNode, RefObject } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -9,9 +9,10 @@ type ScreenProps = PropsWithChildren<{
   eyebrow?: string;
   footer?: ReactNode;
   scroll?: boolean;
+  scrollViewRef?: RefObject<ScrollView | null>;
 }>;
 
-export function Screen({ children, title, eyebrow, footer, scroll = true }: ScreenProps) {
+export function Screen({ children, title, eyebrow, footer, scroll = true, scrollViewRef }: ScreenProps) {
   const content = (
     <View style={styles.content}>
       {eyebrow ? <Text style={styles.eyebrow}>{eyebrow}</Text> : null}
@@ -26,6 +27,7 @@ export function Screen({ children, title, eyebrow, footer, scroll = true }: Scre
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
+          ref={scrollViewRef}
           showsVerticalScrollIndicator={false}>
           {content}
         </ScrollView>

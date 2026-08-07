@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { emptyReviewForm, isValidWatchedAt, reviewCompletionError, reviewExcerpt } from '../src/features/reviews/review-logic';
+import { emptyReviewForm, isValidWatchedAt, reviewCompletionError, reviewCompletionIssue, reviewExcerpt } from '../src/features/reviews/review-logic';
 
 describe('stage 3A/3B review rules', () => {
   it('rejects impossible and future viewing dates', () => {
@@ -13,6 +13,15 @@ describe('stage 3A/3B review rules', () => {
     const questions = Array.from({ length: 5 }, (_, index) => ({ key: `q${index + 1}`, text: `질문 ${index + 1}`, sourceRule: 'test', options: [{ id: 'warm', label: '따뜻한' }] }));
     const form = { ...emptyReviewForm('movie-1'), watchedAt: '2026-08-07', rating: 4, questions, questionTags: { q1: ['warm'], q2: ['warm'], q3: ['warm'] } };
     expect(reviewCompletionError(form)).toBeNull();
+  });
+
+  it('identifies the section that should receive completion guidance', () => {
+    const empty = { ...emptyReviewForm('movie-1'), watchedAt: '2026-08-07' };
+    expect(reviewCompletionIssue(empty)?.field).toBe('rating');
+
+    const questions = Array.from({ length: 5 }, (_, index) => ({ key: `q${index + 1}`, text: `질문 ${index + 1}`, sourceRule: 'test', options: [] }));
+    const missingTags = { ...empty, rating: 4, questions };
+    expect(reviewCompletionIssue(missingTags)).toMatchObject({ field: 'questions' });
   });
 
   it('requires depth for a Core record', () => {
