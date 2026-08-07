@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { aiOperationMessage } from '@/features/reviews/ai-operations';
 import { generateCoreReviewDraft } from '@/features/reviews/core-draft-service';
 import { isCoreDraftReady } from '@/features/reviews/core-draft';
 import type { ReviewForm } from '@/features/reviews/review-logic';
@@ -50,9 +51,9 @@ export function CoreReviewDraftPanel({ form, onChange, sessionMode }: Props) {
       setKeywords(result.keywords);
       setLastAppliedDraft(result.draft);
       onChange((current) => ({ ...current, body: result.draft }));
-      setMessage('AI 초안을 자유 감상에 채웠어요. 내 문장처럼 수정한 뒤 저장해 주세요.');
-    } catch {
-      setMessage('Gemini가 응답하지 않았어요. 기존 답변과 자유 감상은 그대로 보존했어요. 잠시 뒤 다시 시도해 주세요.');
+      setMessage(result.quota ? `AI 초안을 채웠어요. 오늘 무료 초안 ${result.quota.remaining}회가 남았어요. 내 문장처럼 수정한 뒤 저장해 주세요.` : 'AI 초안을 자유 감상에 채웠어요. 내 문장처럼 수정한 뒤 저장해 주세요.');
+    } catch (error) {
+      setMessage(aiOperationMessage(error));
     } finally {
       setGenerating(false);
     }

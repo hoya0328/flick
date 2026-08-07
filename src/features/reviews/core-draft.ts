@@ -1,6 +1,7 @@
 import type { ReviewForm } from '@/features/reviews/review-logic';
+import { normalizeAiQuota, type AiQuota } from './ai-operations';
 
-export type CoreReviewDraft = { keywords: string[]; draft: string };
+export type CoreReviewDraft = { keywords: string[]; draft: string; quota?: AiQuota };
 
 export function isCoreDraftReady(form: Pick<ReviewForm, 'questions' | 'answers'>): boolean {
   return form.questions.length === 5
@@ -18,5 +19,5 @@ export function normalizeCoreReviewDraft(value: unknown): CoreReviewDraft | null
     : [];
   const draft = typeof candidate.draft === 'string' ? candidate.draft.trim().slice(0, 1200) : '';
   if (keywords.length < 3 || draft.length < 250) return null;
-  return { keywords, draft };
+  return { keywords, draft, quota: normalizeAiQuota((candidate as { quota?: unknown }).quota) };
 }

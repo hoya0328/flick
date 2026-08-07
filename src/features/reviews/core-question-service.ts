@@ -1,4 +1,5 @@
 import { fallbackCoreQuestion } from '@/features/reviews/core-questions';
+import { aiOperationMessage, normalizeAiQuota, readAiOperationError } from '@/features/reviews/ai-operations';
 import type { LightQuestion, ReviewForm } from '@/features/reviews/review-logic';
 import { supabase } from '@/lib/supabase';
 
@@ -14,13 +15,15 @@ export async function generateNextCoreQuestion(form: ReviewForm, movieTitle: str
   try {
     const turns = form.questions.map((question) => ({ question: question.text, answer: form.answers[question.key]?.trim() ?? '' }));
     const { data, error } = await supabase.functions.invoke('generate-core-question', { body: { movieId: form.movieId, turns } });
-    if (error || typeof data?.question !== 'string' || data.question.trim().length < 10) throw new Error('generation_failed');
+    if (error) throw await readAiOperationError(error, data);
+    if (typeof data?.question !== 'string' || data.question.trim().length < 10) throw new Error('generation_failed');
+    const quota = normalizeAiQuota(data.quota);
     return {
       question: { key: `core_q${index + 1}`, text: data.question.trim(), sourceRule: 'core-gemini-free-v1', options: [] },
       source: 'gemini',
-      notice: '무료 Gemini 테스트 질문을 생성했어요.',
+      notice: quota ? `무료 Gemini 질문을 생성했어요. 오늘 ${quota.remaining}회 남았어요.` : '무료 Gemini 질문을 생성했어요.',
     };
-  } catch {
-    return { question: fallback, source: 'fallback', notice: 'Gemini가 응답하지 않아 영화 기반 기본 질문으로 이어갈게요.' };
+  } catch (error) {
+    return { question: fallback, source: 'fallback', notice: `${aiOperationMessage(error)} 영화 기반 기본 질문으로 이어갈게요.` };
   }
 }

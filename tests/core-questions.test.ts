@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { AiOperationError, aiOperationMessage, normalizeAiQuota } from '../src/features/reviews/ai-operations';
 import { isCoreDraftReady, normalizeCoreReviewDraft } from '../src/features/reviews/core-draft';
 import { ensureCoreQuestions, fallbackCoreQuestion, updateCoreAnswer } from '../src/features/reviews/core-questions';
 import { emptyReviewForm } from '../src/features/reviews/review-logic';
@@ -40,5 +41,11 @@ describe('Core linked questions', () => {
     expect(result?.keywords).toEqual(['가족', '책임', '선택']);
     expect(result?.draft.length).toBeGreaterThan(250);
     expect(normalizeCoreReviewDraft({ keywords: ['하나'], draft: '짧음' })).toBeNull();
+  });
+
+  it('normalizes quota metadata and explains operational failures', () => {
+    expect(normalizeAiQuota({ remaining: 4, dailyLimit: 5 })).toEqual({ remaining: 4, dailyLimit: 5 });
+    expect(aiOperationMessage(new AiOperationError('daily_limit'))).toContain('내일');
+    expect(aiOperationMessage(new AiOperationError('sensitive_input'))).toContain('개인정보');
   });
 });
