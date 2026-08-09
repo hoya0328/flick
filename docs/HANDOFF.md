@@ -55,6 +55,7 @@
 - 2026-08-10 계정 경계 QA에서 공개 링크가 편집 화면 `/record`를 재사용해 비소유자에게 편집 가능해 보이던 결함을 발견했다. 실제 운영 RLS의 `reviews_update_own`은 `using`과 `with check` 모두 `auth.uid() = user_id`였고 삭제·자식 데이터 쓰기도 소유자 정책이 존재해 서버 원본의 타 계정 수정은 차단된 상태였다.
 - 공개 링크를 `/review/[id]` 읽기 전용 화면으로 분리하고 공유 후 로그인 복귀, 비공개·초안 숨김, 기존 편집 링크의 공개 상세 전환, 데모 기록 외부 공유 차단, 삭제 요청의 소유자 조건·삭제 결과 확인을 추가했다. 회귀 계약 테스트를 포함해 TypeScript·lint·27개 테스트, Expo Doctor 20개 검사, 17개 정적 웹 경로 빌드를 통과했다.
 - 운영 Supabase 정책 화면에서 모든 사용자 테이블의 RLS 활성화, 기록 테이블의 소유자 INSERT/UPDATE/DELETE와 인증 사용자 공개 SELECT 정책을 확인했다. Security Advisor는 오류 0건·경고 1건이며, 경고 상세는 대시보드 응답 지연으로 확인하지 못해 후속 점검 대상으로 남긴다.
+- 로그인 전 공유 상세가 무한 로딩되던 조건 순서도 외부 beta QA에서 발견해 회귀 테스트와 함께 수정했다. 최종 코드 커밋 `128dcce`를 GitHub `main`에 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `39wzuhpaep`이며, 390px·480px에서 가로 넘침과 편집 입력 0개, 로그인 안내와 원래 기록 경로 보존을 확인했다.
 
 ## 현재 상태
 
@@ -88,7 +89,7 @@
 
 - Supabase 웹 함수 편집기의 배포 요청은 서버 500 오류를 반환해 CLI로 배포했다. 배포용 1일 개인 액세스 토큰은 배포 직후 폐기했다.
 - Apple Developer 계정이 없어 iOS 네이티브 빌드는 실행하지 않았다.
-- `npm audit --omit=dev`는 Expo 빌드 도구의 `uuid` 전이 의존성에서 moderate 10건을 보고한다. 자동 강제 수정은 Expo 46으로 파괴적 다운그레이드하므로 적용하지 않았고, Expo 상위 릴리스에서 추적한다.
+- `npm audit --omit=dev`는 Expo/Metro·React Native 빌드 체인의 `image-size`와 `uuid` 전이 의존성으로 21건(높음 14, 보통 7)을 보고한다. 정적 웹 런타임 입력 경로가 아닌 빌드 도구 위험이며 비파괴 수정이 없다. 강제 수정은 Expo 53·React Native 0.72로 호환성을 깨는 역행이어서 적용하지 않고 상위 패치를 추적한다. Expo Doctor 20개 검사는 모두 통과했다.
 - 앱 아이콘과 스토어 자산은 승인된 원본 FLICK 자산을 받은 뒤 교체한다.
 - 현재 Windows PowerShell 실행 정책에서는 `npm.ps1`이 차단되므로 명령은 `npm.cmd`로 실행한다.
 - Supabase Free DB는 500MB 초과 시 자동 과금 대신 읽기 전용으로 전환될 수 있다. `npm.cmd run catalog:audit`로 최신 후보 건수와 예상치를 먼저 확인하고 전체 적재는 명시적 승인 전 실행하지 않는다.
