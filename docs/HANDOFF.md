@@ -1,5 +1,14 @@
 # HANDOFF
 
+## 2026-08-10 이메일·비밀번호 계정 구현
+
+- 환영 화면을 Magic Link에서 로그인/회원가입 탭으로 교체했다. 회원가입은 닉네임, 이메일, 비밀번호, 비밀번호 확인을 검증한다.
+- `/reset-password` 복구 경로와 마이 화면의 닉네임·비밀번호 변경을 추가했다. 기존 계정은 비밀번호 재설정으로 기록 손실 없이 전환한다.
+- 로그인 시 원격 `profiles`와 `user_keywords`를 다시 불러와 다른 기기에서도 닉네임과 온보딩 상태를 복원한다.
+- 운영 Supabase에 `202608100001_password_accounts_and_nicknames.sql`을 적용했다. 신규 가입 허용, Email provider, Confirm email 활성 상태를 확인했다.
+- 비밀번호는 Supabase Auth에만 저장되고 사용자 데이터 RLS 및 계정 cascade 삭제 정책은 변경하지 않았다.
+- `npm.cmd run check`: TypeScript, lint, 8개 파일 33개 테스트 통과.
+
 ## 2026-08-07 다음 작업
 
 - 방향이 모바일 반응형 웹/PWA 우선으로 변경되었다. Apple 로그인과 iOS 빌드는 후속 단계로 미룬다.

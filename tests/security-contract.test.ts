@@ -6,6 +6,15 @@ import { describe, expect, it } from 'vitest';
 const read = (path: string) => readFileSync(path, 'utf8');
 
 describe('account authorization contract', () => {
+  it('keeps passwords in Supabase Auth and creates an owner-scoped nickname profile', () => {
+    const accountMigration = read('supabase/migrations/202608100001_password_accounts_and_nicknames.sql');
+
+    expect(accountMigration).toContain('after insert on auth.users');
+    expect(accountMigration).toContain("raw_user_meta_data ->> 'display_name'");
+    expect(accountMigration).toMatch(/security definer[\s\S]*set search_path = public/);
+    expect(accountMigration).not.toMatch(/password\s+(text|varchar)/i);
+  });
+
   it('keeps public records readable only after completion while writes stay owner-only', () => {
     const base = read('supabase/migrations/202608070004_stage3ab_reviews.sql');
     const visibility = read('supabase/migrations/202608070006_review_visibility_core_ai.sql');
