@@ -8,6 +8,8 @@
 - 운영 Supabase에 `202608100001_password_accounts_and_nicknames.sql`을 적용했다. 신규 가입 허용, Email provider, Confirm email 활성 상태를 확인했다.
 - 비밀번호는 Supabase Auth에만 저장되고 사용자 데이터 RLS 및 계정 cascade 삭제 정책은 변경하지 않았다.
 - `npm.cmd run check`: TypeScript, lint, 8개 파일 33개 테스트 통과.
+- GitHub `main` 커밋 `52dcf89`을 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `t0daxxtvns`, 고정 주소는 `https://flick-film-journal--beta.expo.app`이다.
+- 외부 beta에서 로그인/회원가입 탭, 닉네임 필수 안내, 비밀번호 복구 만료 링크 안내를 확인했다.
 
 ## 2026-08-07 다음 작업
 
