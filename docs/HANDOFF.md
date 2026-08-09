@@ -9,6 +9,7 @@
 - 수정 권한은 공개 기록을 비공개로 전환하는 운영 조치만 제공한다. 삭제는 2단계 확인 뒤 실행하며, 모든 조회·권한 변경·운영 조치·삭제를 감사 로그에 기록한다.
 - 비밀번호 조회, 사용자 로그인 대행, 사용자 계정 삭제는 의도적으로 제외했다.
 - `npm.cmd run check`에서 TypeScript, lint, 9개 파일 36개 테스트를 통과했고 `/admin`을 포함한 정적 웹 19개 경로 빌드를 통과했다.
+- GitHub `main` 커밋 `10ddbab`을 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `ri3gaovbdl`, 고정 주소는 `https://flick-film-journal--beta.expo.app`이다. 로그아웃 상태의 `/admin` 직접 접근이 로그인 화면으로 차단되는 것을 확인했다.
 
 ## 2026-08-10 이메일·비밀번호 계정 구현
 
