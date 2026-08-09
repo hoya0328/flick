@@ -12,7 +12,7 @@ import { CoreReviewDraftPanel } from '@/features/reviews/core-review-draft';
 import { ensureCoreQuestions } from '@/features/reviews/core-questions';
 import { LightQuestionnaire } from '@/features/reviews/light-questionnaire';
 import { ensureLightQuestions } from '@/features/reviews/light-questions';
-import { emptyReviewForm, reviewCompletionIssue, reviewExcerpt, type ReviewCompletionField, type ReviewCompletionIssue, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
+import { emptyReviewForm, reviewCompletionIssue, reviewExcerpt, safeSharedReviewPath, type ReviewCompletionField, type ReviewCompletionIssue, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
 import { clearLocalReviewBackup, deleteReview, getDraftForMovie, getReview, listReviews, loadLocalReviewBackup, saveLocalReviewBackup, saveReview, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -83,7 +83,14 @@ export default function RecordScreen() {
       try {
         if (reviewIdParam) {
           const record = await getReview(reviewIdParam, storageMode);
-          if (!record) throw new Error('기록을 찾을 수 없어요.');
+          if (!record) {
+            const sharedPath = safeSharedReviewPath(`/review/${reviewIdParam}`);
+            if (storageMode === 'supabase' && sharedPath) {
+              router.replace({ pathname: '/review/[id]', params: { id: reviewIdParam } });
+              return;
+            }
+            throw new Error('기록을 찾을 수 없어요.');
+          }
           const [backup, movie] = await Promise.all([loadLocalReviewBackup(record.movieId), getMovie(record.movieId)]);
           if (!active) return;
           setMovie(movie);
@@ -307,7 +314,7 @@ export default function RecordScreen() {
       <Pressable accessibilityRole="checkbox" accessibilityState={{ checked: form.spoiler }} onPress={() => change((current) => ({ ...current, spoiler: !current.spoiler }))} style={styles.checkRow}><View style={[styles.checkbox, form.spoiler && styles.checkboxSelected]}><Text style={styles.checkmark}>{form.spoiler ? '✓' : ''}</Text></View><Text style={styles.checkLabel}>스포일러가 포함된 기록이에요</Text></Pressable>
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>공개 범위</Text>
-        <View style={styles.actions}>{([['private', '나만 보기'], ['public', '전체 공개']] as [ReviewVisibility, string][]).map(([value, label]) => <Pressable accessibilityRole="radio" accessibilityState={{ checked: form.visibility === value }} key={value} onPress={() => change((current) => ({ ...current, visibility: value }))} style={[styles.visibility, form.visibility === value && styles.visibilitySelected]}><Text style={[styles.modeTitle, form.visibility === value && styles.modeTitleSelected]}>{label}</Text><Text style={styles.modeCaption}>{value === 'private' ? '내 계정에서만 확인' : '완료 후 Flick 사용자에게 공개'}</Text></Pressable>)}</View>
+        <View style={styles.actions}>{([['private', '나만 보기'], ['public', '전체 공개']] as [ReviewVisibility, string][]).map(([value, label]) => <Pressable accessibilityRole="radio" accessibilityState={{ checked: form.visibility === value }} key={value} onPress={() => change((current) => ({ ...current, visibility: value }))} style={[styles.visibility, form.visibility === value && styles.visibilitySelected]}><Text style={[styles.modeTitle, form.visibility === value && styles.modeTitleSelected]}>{label}</Text><Text style={styles.modeCaption}>{value === 'private' ? '내 계정에서만 확인' : sessionMode === 'supabase' ? '완료 후 Flick 사용자에게 공개' : '데모에서는 이 기기에만 저장'}</Text></Pressable>)}</View>
         <Text style={styles.help}>초안은 선택한 범위와 관계없이 항상 나만 볼 수 있어요.</Text>
       </View>
       <Button label={recordStatus === 'completed' ? '수정 완료' : '기록 완료'} loading={saving} onPress={() => void persist(true)} />

@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -7,9 +7,13 @@ import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { useSession } from '@/features/session/session-provider';
+import { safeSharedReviewPath } from '@/features/reviews/review-logic';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 export default function WelcomeScreen() {
+  const params = useLocalSearchParams<{ returnTo?: string }>();
+  const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
+  const returnTo = safeSharedReviewPath(returnToParam);
   const { backendConfigured, sendMagicLink, startDemo } = useSession();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
@@ -34,7 +38,7 @@ export default function WelcomeScreen() {
     setBusy(true);
     setMessage(null);
     try {
-      await sendMagicLink(email.trim());
+      await sendMagicLink(email.trim(), returnTo);
       setMessage({ tone: 'success', text: '이메일로 로그인 링크를 보냈어요.' });
     } catch (error) {
       setMessage({ tone: 'danger', text: error instanceof Error ? error.message : '로그인 링크를 보내지 못했어요.' });
@@ -50,19 +54,19 @@ export default function WelcomeScreen() {
           <BrandMark />
           <View style={styles.copy}>
             <Text style={styles.title}>영화 감상,{`\n`}어떻게 남겨야 할지{`\n`}막막했다면?</Text>
-            <Text style={styles.body}>감정 키워드로 가볍게 시작하고, 필요할 때 깊이 있게 기록해 보세요.</Text>
+            <Text style={styles.body}>{returnTo ? '공유받은 기록은 로그인 후 읽기 전용으로 볼 수 있어요.' : '감정 키워드로 가볍게 시작하고, 필요할 때 깊이 있게 기록해 보세요.'}</Text>
           </View>
         </View>
 
         {message ? <StateNotice message={message.text} title={message.tone === 'success' ? '확인해 주세요' : '진행할 수 없어요'} tone={message.tone} /> : null}
 
         <View style={styles.actions}>
-          <Button label="데모로 시작하기" loading={busy} onPress={() => void handleDemo()} />
-          <View style={styles.dividerRow}>
+          {!returnTo ? <Button label="데모로 시작하기" loading={busy} onPress={() => void handleDemo()} /> : null}
+          {!returnTo ? <View style={styles.dividerRow}>
             <View style={styles.divider} />
             <Text style={styles.dividerText}>또는</Text>
             <View style={styles.divider} />
-          </View>
+          </View> : null}
           <TextInput
             accessibilityLabel="이메일"
             autoCapitalize="none"

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { emptyReviewForm, isValidWatchedAt, reviewCompletionError, reviewCompletionIssue, reviewExcerpt } from '../src/features/reviews/review-logic';
+import { emptyReviewForm, isValidWatchedAt, publicReviewPath, reviewCompletionError, reviewCompletionIssue, reviewExcerpt, safeSharedReviewPath } from '../src/features/reviews/review-logic';
 
 describe('stage 3A/3B review rules', () => {
   it('rejects impossible and future viewing dates', () => {
@@ -33,6 +33,14 @@ describe('stage 3A/3B review rules', () => {
 
   it('defaults every review to private visibility', () => {
     expect(emptyReviewForm('movie-1').visibility).toBe('private');
+  });
+
+  it('only accepts a UUID-based internal public review return path', () => {
+    const id = 'e9e7874e-8098-4192-8229-8e45f9674d95';
+    expect(publicReviewPath(id)).toBe(`/review/${id}`);
+    expect(safeSharedReviewPath(`/review/${id}`)).toBe(`/review/${id}`);
+    expect(safeSharedReviewPath('/record?reviewId=friend')).toBeUndefined();
+    expect(safeSharedReviewPath('https://evil.example')).toBeUndefined();
   });
 
   it('uses the first meaningful field for list previews', () => {

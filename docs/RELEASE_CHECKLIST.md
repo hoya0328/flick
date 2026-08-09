@@ -20,7 +20,10 @@
 - 320px, 390px, 480px와 데스크톱에서 로그인 → 탐색 → 기록 → 보관함 → 수정 흐름을 확인한다.
 - Magic Link가 운영 HTTPS 주소로 복귀하는지 확인한다.
 - Supabase Edge Function 오류율·429 한도·EAS 배포 상태를 확인한다.
-- 배포 후 고정 beta URL에서 `/welcome`, `/archive`, `/record` 정적 경로를 확인한다.
+- 전체 공개 완료 기록은 다른 계정에서 `/review/[id]` 읽기 전용으로 열리고 입력·수정·삭제 요소가 없는지 확인한다.
+- 비공개·초안·존재하지 않는 기록은 공유 상세에서 내용을 노출하지 않고, 비소유자의 저장·삭제가 RLS로 거부되는지 확인한다.
+- 공유 링크 로그인은 허용된 운영 루트 URL로 복귀한 뒤 원래 `/review/[id]`로 이동하는지 확인한다.
+- 배포 후 고정 beta URL에서 `/welcome`, `/archive`, `/record`, `/review/[id]` 정적 경로를 확인한다.
 
 ## iOS TestFlight
 

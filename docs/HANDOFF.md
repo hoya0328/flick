@@ -52,6 +52,9 @@
 - `delete-account` Edge Function을 운영 Supabase에 배포했다. 인증 없는 POST가 401로 차단되는 것을 확인했으며, 실제 cascade 삭제 검증은 운영 사용자 계정이 아닌 일회용 테스트 계정으로만 진행해야 한다.
 - 4단계 집계 테스트 3개를 추가했고 전체 TypeScript·lint·24개 테스트와 16개 정적 웹 경로 빌드를 통과했다. 로컬 자동 브라우저 검증은 보안 정책이 localhost 재접속을 차단해 수행하지 못했다.
 - 검증 커밋 `02c30c4`를 EAS Hosting `beta`에 배포했다. deployment identifier는 `k7d5knhfu4`, 고정 주소는 `https://flick-film-journal--beta.expo.app`이다. 외부 `/archive`에서 390px 가로 넘침 없음, 캘린더·리포트·빈 상태와 마이 화면의 삭제 이중 확인을 확인했다.
+- 2026-08-10 계정 경계 QA에서 공개 링크가 편집 화면 `/record`를 재사용해 비소유자에게 편집 가능해 보이던 결함을 발견했다. 실제 운영 RLS의 `reviews_update_own`은 `using`과 `with check` 모두 `auth.uid() = user_id`였고 삭제·자식 데이터 쓰기도 소유자 정책이 존재해 서버 원본의 타 계정 수정은 차단된 상태였다.
+- 공개 링크를 `/review/[id]` 읽기 전용 화면으로 분리하고 공유 후 로그인 복귀, 비공개·초안 숨김, 기존 편집 링크의 공개 상세 전환, 데모 기록 외부 공유 차단, 삭제 요청의 소유자 조건·삭제 결과 확인을 추가했다. 회귀 계약 테스트를 포함해 TypeScript·lint·27개 테스트, Expo Doctor 20개 검사, 17개 정적 웹 경로 빌드를 통과했다.
+- 운영 Supabase 정책 화면에서 모든 사용자 테이블의 RLS 활성화, 기록 테이블의 소유자 INSERT/UPDATE/DELETE와 인증 사용자 공개 SELECT 정책을 확인했다. Security Advisor는 오류 0건·경고 1건이며, 경고 상세는 대시보드 응답 지연으로 확인하지 못해 후속 점검 대상으로 남긴다.
 
 ## 현재 상태
 
@@ -59,9 +62,11 @@
 
 ## 다음 권장 작업
 
-1. 일회용 계정에서 `delete-account` cascade 삭제를 검증한다.
-2. Apple Developer 계정·앱 식별자·원본 아이콘을 준비한 뒤 TestFlight 빌드와 핵심 데이터 일치 검증을 진행한다.
-3. 일반 소비자 공개 전 Gemini 무료 등급 데이터 조건을 반영한 이용약관·개인정보 안내를 법률 검토한다.
+1. 서로 다른 일회용 계정 2개로 공개 조회와 타 계정 UPDATE/DELETE 거부를 최종 통합 검증한다.
+2. 일회용 계정에서 `delete-account` cascade 삭제를 검증한다.
+3. Supabase Security Advisor 경고 1건의 상세를 확인하고 필요한 경우 안전한 후속 migration을 적용한다.
+4. Apple Developer 계정·앱 식별자·원본 아이콘을 준비한 뒤 TestFlight 빌드와 핵심 데이터 일치 검증을 진행한다.
+5. 일반 소비자 공개 전 Gemini 무료 등급 데이터 조건을 반영한 이용약관·개인정보 안내를 법률 검토한다.
 
 ## 다음 작업자 주의사항
 

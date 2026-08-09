@@ -82,6 +82,20 @@ export async function getReview(reviewId: string, sessionMode: 'demo' | 'supabas
   return data ? fromRow(data as unknown as ReviewRow) : null;
 }
 
+export async function getPublicReview(reviewId: string): Promise<ReviewRecord | null> {
+  if (!supabase) return null;
+  await currentUserId();
+  const { data, error } = await supabase
+    .from('reviews')
+    .select(reviewSelect)
+    .eq('id', reviewId)
+    .eq('visibility', 'public')
+    .eq('status', 'completed')
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? fromRow(data as unknown as ReviewRow) : null;
+}
+
 export async function getDraftForMovie(movieId: string, sessionMode: 'demo' | 'supabase'): Promise<ReviewRecord | null> {
   if (sessionMode === 'demo') return (await demoRecords()).find((record) => record.movieId === movieId && record.status === 'draft') ?? null;
   if (!supabase) return null;
@@ -121,8 +135,10 @@ export async function deleteReview(reviewId: string, sessionMode: 'demo' | 'supa
     return;
   }
   if (!supabase) throw new Error('기록 서버가 연결되지 않았어요.');
-  const { error } = await supabase.from('reviews').delete().eq('id', reviewId);
+  const userId = await currentUserId();
+  const { data, error } = await supabase.from('reviews').delete().eq('id', reviewId).eq('user_id', userId).select('id');
   if (error) throw new Error(error.message);
+  if (!data?.length) throw new Error('본인의 기록만 삭제할 수 있어요.');
 }
 
 export async function saveLocalReviewBackup(form: ReviewForm, reviewId: string | null, movieTitle: string): Promise<void> {

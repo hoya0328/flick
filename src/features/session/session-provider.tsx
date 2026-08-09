@@ -6,6 +6,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { canCompleteOnboarding } from '@/features/onboarding/keywords';
+import { safeSharedReviewPath } from '@/features/reviews/review-logic';
 
 const DEMO_SESSION_KEY = 'flick.stage1.demo-session';
 const ONBOARDING_KEY = 'flick.stage1.onboarding';
@@ -20,7 +21,7 @@ type SessionContextValue = {
   error: string | null;
   backendConfigured: boolean;
   startDemo: () => Promise<void>;
-  sendMagicLink: (email: string) => Promise<void>;
+  sendMagicLink: (email: string, returnTo?: string) => Promise<void>;
   completeOnboarding: (keywordIds: string[]) => Promise<void>;
   clearSession: () => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -102,14 +103,15 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setMode('demo');
   }, []);
 
-  const sendMagicLink = useCallback(async (email: string) => {
+  const sendMagicLink = useCallback(async (email: string, returnTo?: string) => {
     if (!supabase) {
       throw new Error('Supabase 환경변수를 연결하면 이메일 로그인을 사용할 수 있어요.');
     }
 
+    const safeReturnTo = safeSharedReviewPath(returnTo);
     const { error: authError } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: Linking.createURL('/') },
+      options: { emailRedirectTo: Linking.createURL('/', safeReturnTo ? { queryParams: { returnTo: safeReturnTo } } : undefined) },
     });
     if (authError) throw authError;
   }, []);

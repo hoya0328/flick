@@ -7,7 +7,7 @@ import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { buildMonthCalendar, buildTasteReport, reportShareText, shiftMonth } from '@/features/reports/taste-report';
-import { todayDate } from '@/features/reviews/review-logic';
+import { publicReviewPath, todayDate } from '@/features/reviews/review-logic';
 import { listReviews, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { recordClientIssue } from '@/lib/observability';
@@ -55,7 +55,7 @@ export default function ArchiveScreen() {
   }
 
   async function shareRecord(record: ReviewRecord) {
-    const url = Linking.createURL('/record', { queryParams: { movieId: record.movieId, reviewId: record.id, title: record.movie.title } });
+    const url = Linking.createURL(publicReviewPath(record.id));
     try {
       await Share.share({ message: `${record.movie.title} 감상 기록\n${url}`, title: `${record.movie.title} · FLICK` });
       setMessage('공개 기록 링크의 공유 화면을 열었어요.');
@@ -115,7 +115,7 @@ export default function ArchiveScreen() {
         {!visibleRecords.length ? <Text style={styles.muted}>이 기간에 조건과 맞는 완료 기록이 없어요.</Text> : visibleRecords.map((record) => (
           <View key={record.id} style={styles.recordCard}>
             <View style={styles.flex}><Text style={styles.cardTitle}>{record.movie.title}</Text><Text style={styles.muted}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'} · ★ {record.rating}</Text></View>
-            <View style={styles.cardActions}><Button label="기록 열기" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: record.movieId, reviewId: record.id, title: record.movie.title } })} style={styles.action} variant="secondary" />{record.visibility === 'public' ? <Button label="공개 링크 공유" onPress={() => void shareRecord(record)} style={styles.action} variant="ghost" /> : null}</View>
+            <View style={styles.cardActions}><Button label="기록 열기" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: record.movieId, reviewId: record.id, title: record.movie.title } })} style={styles.action} variant="secondary" />{mode === 'supabase' && record.visibility === 'public' ? <Button label="공개 링크 공유" onPress={() => void shareRecord(record)} style={styles.action} variant="ghost" /> : null}</View>
           </View>
         ))}
       </View>
