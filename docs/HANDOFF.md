@@ -55,7 +55,7 @@
 - 2026-08-10 계정 경계 QA에서 공개 링크가 편집 화면 `/record`를 재사용해 비소유자에게 편집 가능해 보이던 결함을 발견했다. 실제 운영 RLS의 `reviews_update_own`은 `using`과 `with check` 모두 `auth.uid() = user_id`였고 삭제·자식 데이터 쓰기도 소유자 정책이 존재해 서버 원본의 타 계정 수정은 차단된 상태였다.
 - 공개 링크를 `/review/[id]` 읽기 전용 화면으로 분리하고 공유 후 로그인 복귀, 비공개·초안 숨김, 기존 편집 링크의 공개 상세 전환, 데모 기록 외부 공유 차단, 삭제 요청의 소유자 조건·삭제 결과 확인을 추가했다. 회귀 계약 테스트를 포함해 TypeScript·lint·27개 테스트, Expo Doctor 20개 검사, 17개 정적 웹 경로 빌드를 통과했다.
 - 운영 Supabase 정책 화면에서 모든 사용자 테이블의 RLS 활성화, 기록 테이블의 소유자 INSERT/UPDATE/DELETE와 인증 사용자 공개 SELECT 정책을 확인했다. Security Advisor는 오류 0건·경고 1건이며, 경고 상세는 대시보드 응답 지연으로 확인하지 못해 후속 점검 대상으로 남긴다.
-- 로그인 전 공유 상세가 무한 로딩되던 조건 순서도 외부 beta QA에서 발견해 회귀 테스트와 함께 수정했다. 최종 코드 커밋 `128dcce`를 GitHub `main`에 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `39wzuhpaep`이며, 390px·480px에서 가로 넘침과 편집 입력 0개, 로그인 안내와 원래 기록 경로 보존을 확인했다.
+- 로그인 전 공유 상세가 무한 로딩되던 조건 순서도 외부 beta QA에서 발견해 회귀 테스트와 함께 수정했다. 기존 `/record?...` 공유 주소도 로그아웃·데모 상태에서 원래 기록 ID를 보존해 새 읽기 화면으로 전환한다. 최종 코드 커밋 `b88e87a`를 GitHub `main`에 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `nxg1ovnmi7`이며, 390px·480px에서 가로 넘침과 편집 입력 0개, 로그인 안내와 새 공유 경로 보존을 확인했다.
 
 ## 현재 상태
 
