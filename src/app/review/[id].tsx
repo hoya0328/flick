@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
-import { safeSharedReviewPath } from '@/features/reviews/review-logic';
+import { safeSharedReviewPath, shouldWaitForPublicReview } from '@/features/reviews/review-logic';
 import { getPublicReview, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -41,7 +41,7 @@ export default function PublicReviewScreen() {
     }).filter((row) => row.response);
   }, [record]);
 
-  if (sessionStatus === 'loading' || (returnTo && status === 'loading')) {
+  if (shouldWaitForPublicReview(sessionStatus, mode, Boolean(returnTo), status)) {
     return <Screen eyebrow="공개 기록" title="감상 기록"><ActivityIndicator color={colors.primary} size="large" /></Screen>;
   }
 

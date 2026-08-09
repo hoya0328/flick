@@ -42,6 +42,15 @@ export function safeSharedReviewPath(value: string | undefined): `/review/${stri
   return match?.[1] ? publicReviewPath(match[1]) : undefined;
 }
 
+export function shouldWaitForPublicReview(
+  sessionStatus: 'loading' | 'ready' | 'error',
+  sessionMode: 'none' | 'demo' | 'supabase',
+  hasValidPath: boolean,
+  reviewStatus: 'loading' | 'ready' | 'missing' | 'error',
+): boolean {
+  return sessionStatus === 'loading' || (sessionMode === 'supabase' && hasValidPath && reviewStatus === 'loading');
+}
+
 export function isValidWatchedAt(value: string, today = todayDate()): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || value > today) return false;
   const [year, month, day] = value.split('-').map(Number);

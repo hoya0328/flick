@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { emptyReviewForm, isValidWatchedAt, publicReviewPath, reviewCompletionError, reviewCompletionIssue, reviewExcerpt, safeSharedReviewPath } from '../src/features/reviews/review-logic';
+import { emptyReviewForm, isValidWatchedAt, publicReviewPath, reviewCompletionError, reviewCompletionIssue, reviewExcerpt, safeSharedReviewPath, shouldWaitForPublicReview } from '../src/features/reviews/review-logic';
 
 describe('stage 3A/3B review rules', () => {
   it('rejects impossible and future viewing dates', () => {
@@ -41,6 +41,12 @@ describe('stage 3A/3B review rules', () => {
     expect(safeSharedReviewPath(`/review/${id}`)).toBe(`/review/${id}`);
     expect(safeSharedReviewPath('/record?reviewId=friend')).toBeUndefined();
     expect(safeSharedReviewPath('https://evil.example')).toBeUndefined();
+  });
+
+  it('does not leave logged-out or demo viewers on an endless loading state', () => {
+    expect(shouldWaitForPublicReview('ready', 'none', true, 'loading')).toBe(false);
+    expect(shouldWaitForPublicReview('ready', 'demo', true, 'loading')).toBe(false);
+    expect(shouldWaitForPublicReview('ready', 'supabase', true, 'loading')).toBe(true);
   });
 
   it('uses the first meaningful field for list previews', () => {
