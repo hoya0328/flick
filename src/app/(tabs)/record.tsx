@@ -85,7 +85,7 @@ export default function RecordScreen() {
           const record = await getReview(reviewIdParam, storageMode);
           if (!record) {
             const sharedPath = safeSharedReviewPath(`/review/${reviewIdParam}`);
-            if (storageMode === 'supabase' && sharedPath) {
+            if (sharedPath) {
               router.replace({ pathname: '/review/[id]', params: { id: reviewIdParam } });
               return;
             }

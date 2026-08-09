@@ -1,20 +1,25 @@
-import { Redirect, Tabs } from 'expo-router';
+import { Redirect, Tabs, useLocalSearchParams, usePathname } from 'expo-router';
 import { StyleSheet, Text } from 'react-native';
 
 import { colors } from '@/theme/tokens';
 import { LoadingScreen } from '@/components/loading-screen';
 import { useSession } from '@/features/session/session-provider';
+import { safeSharedReviewPath } from '@/features/reviews/review-logic';
 
 function TabGlyph({ label, focused }: { label: string; focused: boolean }) {
   return <Text style={[styles.glyph, focused && styles.glyphFocused]}>{label}</Text>;
 }
 
 export default function TabLayout() {
+  const pathname = usePathname();
+  const params = useLocalSearchParams<{ reviewId?: string }>();
+  const reviewIdParam = Array.isArray(params.reviewId) ? params.reviewId[0] : params.reviewId;
+  const legacyReturnTo = pathname.endsWith('/record') && reviewIdParam ? safeSharedReviewPath(`/review/${reviewIdParam}`) : undefined;
   const { mode, onboardingComplete, status } = useSession();
 
   if (status === 'loading') return <LoadingScreen />;
   if (status === 'error') return <Redirect href="/" />;
-  if (mode === 'none') return <Redirect href="/welcome" />;
+  if (mode === 'none') return <Redirect href={legacyReturnTo ? { pathname: '/welcome', params: { returnTo: legacyReturnTo } } : '/welcome'} />;
   if (!onboardingComplete) return <Redirect href="/onboarding" />;
 
   return (
