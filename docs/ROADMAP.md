@@ -90,7 +90,7 @@
 
 ## 4단계 - 아카이브, 리포트와 출시 준비
 
-상태: 반응형 웹 핵심 완료, 운영 함수·TestFlight·출시 점검 보류 (2026-08-10)
+상태: 반응형 웹 핵심·운영 함수·외부 beta 완료, TestFlight·출시 점검 보류 (2026-08-10)
 
 범위:
 
@@ -110,7 +110,7 @@
 
 보류:
 
-- `delete-account` Edge Function 운영 배포와 일회용 계정 cascade 삭제 검증
+- 일회용 계정 `delete-account` cascade 삭제 검증
 - Apple Developer 계정 기반 TestFlight·iOS 데이터 일치 검증
 - 정식 웹 공개 전 약관·개인정보 법률 검토와 운영 모니터링 연결
 
