@@ -36,6 +36,7 @@ export default function TabLayout() {
           title: '기록',
         }}
       />
+      <Tabs.Screen name="archive" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} label="▦" />, title: '보관함' }} />
       <Tabs.Screen name="profile" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} label="●" />, title: '마이' }} />
     </Tabs>
   );

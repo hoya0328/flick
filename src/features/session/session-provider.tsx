@@ -23,6 +23,7 @@ type SessionContextValue = {
   sendMagicLink: (email: string) => Promise<void>;
   completeOnboarding: (keywordIds: string[]) => Promise<void>;
   clearSession: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   resetOnboarding: () => Promise<void>;
   retry: () => Promise<void>;
 };
@@ -38,6 +39,12 @@ function normalizeStoredKeywords(value: string | null): string[] {
   } catch {
     return [];
   }
+}
+
+async function clearLocalFlickData() {
+  const keys = await AsyncStorage.getAllKeys();
+  const flickKeys = keys.filter((key) => key.startsWith('flick.'));
+  if (flickKeys.length) await AsyncStorage.multiRemove(flickKeys);
 }
 
 export function SessionProvider({ children }: PropsWithChildren) {
@@ -153,12 +160,23 @@ export function SessionProvider({ children }: PropsWithChildren) {
       if (signOutError) throw signOutError;
     }
 
-    await Promise.all([
-      AsyncStorage.removeItem(DEMO_SESSION_KEY),
-      AsyncStorage.removeItem(ONBOARDING_KEY),
-    ]);
+    await clearLocalFlickData();
     setMode('none');
     setSelectedKeywords([]);
+  }, [mode]);
+
+  const deleteAccount = useCallback(async () => {
+    if (mode === 'supabase') {
+      if (!supabase) throw new Error('계정 서버가 연결되지 않았어요.');
+      const { error: deleteError } = await supabase.functions.invoke('delete-account', { body: { confirm: 'DELETE' } });
+      if (deleteError) throw new Error('계정 삭제를 완료하지 못했어요. 잠시 뒤 다시 시도해 주세요.');
+      await supabase.auth.signOut({ scope: 'local' });
+    }
+    await clearLocalFlickData();
+    setMode('none');
+    setSelectedKeywords([]);
+    setError(null);
+    setStatus('ready');
   }, [mode]);
 
   const value = useMemo<SessionContextValue>(
@@ -166,6 +184,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       backendConfigured: isSupabaseConfigured,
       clearSession,
       completeOnboarding,
+      deleteAccount,
       error,
       mode,
       onboardingComplete: canCompleteOnboarding(selectedKeywords),
@@ -176,7 +195,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       startDemo,
       status,
     }),
-    [clearSession, completeOnboarding, error, hydrate, mode, resetOnboarding, selectedKeywords, sendMagicLink, startDemo, status],
+    [clearSession, completeOnboarding, deleteAccount, error, hydrate, mode, resetOnboarding, selectedKeywords, sendMagicLink, startDemo, status],
   );
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
