@@ -53,6 +53,8 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `review_answer_tags` | review_id, question_key, tag_id | 질문별 사용자 선택 태그, 소유자 전용 |
 | `ai_jobs` | user_id, review_id, status, model, token_usage, error_code | 본인 메타데이터, 서버 원문 관리 |
 | `report_snapshots` | user_id, period, metrics, generated_at | 본인 전용 |
+| `admin_access` | user_id, role, view/moderate/delete permission flags | 서버 검증 관리자 전용 |
+| `admin_audit_events` | admin_user_id, action, target, metadata, created_at | 관리자 활동 메타데이터, 관리자 RPC 전용 |
 
 모든 쓰기·수정·삭제는 Supabase RLS로 소유자를 강제한다. `visibility = public`이면서 `status = completed`인 기록과 자식 질문·답변·태그만 인증 사용자에게 읽기를 허용한다. 초안과 비공개 기록은 항상 소유자 전용이며 기본값은 `private`이다.
 
@@ -63,6 +65,9 @@ tests/                   단위·통합·핵심 흐름 테스트
 - Android 배포 시 Google 로그인 검토
 - 클라이언트에 서비스 역할 키를 포함하지 않는다.
 - 계정 삭제 시 사용자 기록·초안·리포트·AI 작업을 삭제하고 영화 공용 캐시는 유지한다.
+- 슈퍼 관리자는 운영 DB에서 기존 인증 사용자와 연결한다. 개인 이메일이나 관리자 목록은 클라이언트 코드에 포함하지 않는다.
+- 관리자 조회·권한 변경·기록 조치는 `security definer` RPC가 현재 계정과 개별 권한을 검사한 뒤 수행한다. 기반 관리자 테이블은 `anon`, `authenticated` 역할에 직접 개방하지 않는다.
+- 기록 수정 권한은 사용자 본문 편집이 아닌 `public`에서 `private`으로의 운영 조치만 허용한다. 삭제는 별도 권한과 화면의 2단계 확인을 모두 요구한다.
 
 ## API 계약
 

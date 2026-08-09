@@ -5,6 +5,7 @@ import { Share, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Button } from '@/components/button';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
+import { getMyAdminAccess } from '@/features/admin/admin-service';
 import { validateNickname, validatePassword, validatePasswordConfirmation } from '@/features/session/account-logic';
 import { getKeywordLabels } from '@/features/onboarding/keywords';
 import { listReviews, type ReviewRecord } from '@/features/reviews/reviews';
@@ -30,6 +31,7 @@ export default function ProfileScreen() {
   const [newPassword, setNewPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [editingPassword, setEditingPassword] = useState(false);
+  const [adminAvailable, setAdminAvailable] = useState(false);
   const [pendingDelete, setPendingDelete] = useState(false);
   const [working, setWorking] = useState(false);
   const [notice, setNotice] = useState<{ title: string; message: string; tone: 'success' | 'danger' | 'warning' } | null>(null);
@@ -42,6 +44,14 @@ export default function ProfileScreen() {
         void recordClientIssue('profile.export-load', caught);
         if (active) setNotice({ title: '데이터 확인이 필요해요', message: '내보낼 기록을 불러오지 못했습니다.', tone: 'warning' });
       });
+    return () => { active = false; };
+  }, [mode]);
+
+  useEffect(() => {
+    let active = true;
+    if (mode === 'supabase') {
+      void getMyAdminAccess().then((access) => { if (active) setAdminAvailable(Boolean(access)); }).catch(() => { if (active) setAdminAvailable(false); });
+    }
     return () => { active = false; };
   }, [mode]);
 
@@ -158,6 +168,7 @@ export default function ProfileScreen() {
       <Text style={styles.label}>선택한 키워드</Text>
       <Text style={styles.value}>{getKeywordLabels(selectedKeywords).join(' · ')}</Text>
       <StateNotice message={backendConfigured ? 'Supabase 계정·기록 서버가 연결되어 있습니다.' : '환경 변수 연결 전까지 기기 안의 데모 데이터만 사용합니다.'} title={mode === 'demo' ? '데모 모드' : '계정 모드'} tone={backendConfigured ? 'success' : 'warning'} />
+      {adminAvailable ? <Button label="Super Admin 콘솔" onPress={() => router.push('/admin' as Href)} /> : null}
       <Button label="취향 키워드 다시 고르기" onPress={() => void handleReset()} variant="secondary" />
       <Button label="나의 아카이브와 리포트" onPress={() => router.push('/archive' as Href)} variant="secondary" />
 
