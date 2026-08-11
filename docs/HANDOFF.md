@@ -9,7 +9,7 @@
 - 운영 DB에서 인증 사용자로 오답→정답 해금과 첫 투표 고정을 트랜잭션 검증했다. 두 번째 투표가 반영되지 않는 집계를 확인한 뒤 검증 데이터는 롤백했다.
 - `npm.cmd run check`: TypeScript, lint, 14개 파일 52개 테스트 통과. `npm.cmd run build:web`: `/taste-insights`, `/experiments`를 포함한 정적 웹 26개 경로 통과.
 - 로컬 화면에서 데이터 부족 설명, 개인화 숨김·복구, 5E 로그인 경계와 콘솔 오류 0건을 확인했다.
-- 외부 배포 정보는 최종 배포 후 이 항목에 기록한다.
+- 기능 커밋 `de4b9fc`를 GitHub `main`에 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `yz76md52w2`, 고정 주소는 `https://flick-film-journal--beta.expo.app`이다. 외부 `/taste-insights`의 설명·개인화 제어와 `/experiments` 로그인 경계를 확인했으며 콘솔 오류는 0건이었다.
 
 ## 2026-08-11 5C 구현
 
