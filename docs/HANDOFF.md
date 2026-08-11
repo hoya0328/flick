@@ -7,7 +7,7 @@
 - 빈 답변은 입력 위치에 안내하고, 정답·오답 후 실제 제목과 다음 행동을 보여준다. 진행률·점수·최종 정답률·문제 수별 기기 최고 점수를 제공한다.
 - 서버·로그인·AI·신규 과금은 사용하지 않는다. 기존 5E 서버 퀴즈와 보상 상태에도 영향을 주지 않는다.
 - 로컬에서 직접 설정 2문제 세션으로 빈 입력→별칭 정답→오답→결과→재도전 흐름과 메인 카드, 콘솔 오류 0건을 확인했다.
-- `npm.cmd run check`: TypeScript, lint, 16개 파일 57개 테스트 통과. `npm.cmd run build:web`: `/emoji-quiz`를 포함한 정적 웹 27개 경로 통과. 외부 배포 정보는 배포 후 이 항목에 기록한다.
+- `npm.cmd run check`: TypeScript, lint, 16개 파일 57개 테스트 통과. `npm.cmd run build:web`: `/emoji-quiz`를 포함한 정적 웹 27개 경로 통과. 기능 커밋 `b1c2cd1`을 GitHub `main`에 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `ovi83ewirq`이며 외부 고유 URL에서 네 가지 문제 수 선택·10문제 시작·입력 화면과 콘솔 오류 0건을 확인했다.
 
 ## 2026-08-11 5D·5E 구현
 
