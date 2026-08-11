@@ -5,6 +5,8 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { BrandMark } from '@/components/brand-mark';
 import { Button } from '@/components/button';
 import { CollectionCard } from '@/components/collection-card';
+import { DiscoveryRankingsView } from '@/components/discovery-rankings';
+import { EditorialCurationCard } from '@/components/editorial-curation-card';
 import { MovieCard } from '@/components/movie-card';
 import { PosterPreferenceDeck } from '@/components/poster-preference-deck';
 import { PublicReviewCard } from '@/components/public-review-card';
@@ -13,6 +15,7 @@ import { StateNotice } from '@/components/state-notice';
 import { listPublicCollections, type CollectionSummary } from '@/features/community/collections-service';
 import { listPublicReviewFeed, setReviewLiked, setReviewSaved, type PublicReviewCard as ReviewCard } from '@/features/community/community-service';
 import { discoverMovies, type DiscoveryResult, recommendationReason, setWantToWatch } from '@/features/discovery/movies';
+import { getDiscoveryRankings, listPublishedCurations, type DiscoveryRankings, type EditorialCuration } from '@/features/discovery/discovery-insights';
 import { getKeywordLabels } from '@/features/onboarding/keywords';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -26,6 +29,8 @@ export default function HomeScreen() {
   const [lightReviews, setLightReviews] = useState<ReviewCard[]>([]);
   const [coreReviews, setCoreReviews] = useState<ReviewCard[]>([]);
   const [collections, setCollections] = useState<CollectionSummary[]>([]);
+  const [rankings, setRankings] = useState<DiscoveryRankings | null>(null);
+  const [curations, setCurations] = useState<EditorialCuration[]>([]);
   const [busyReviewId, setBusyReviewId] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
 
@@ -43,14 +48,18 @@ export default function HomeScreen() {
     if (mode !== 'supabase') { setCommunityStatus('idle'); return; }
     setCommunityStatus('loading');
     try {
-      const [light, core, publicCollections] = await Promise.all([
+      const [light, core, publicCollections, discoveryRankings, publishedCurations] = await Promise.all([
         listPublicReviewFeed('light', null, 4),
         listPublicReviewFeed('core', null, 4),
         listPublicCollections(4),
+        getDiscoveryRankings(),
+        listPublishedCurations(4),
       ]);
       setLightReviews(light);
       setCoreReviews(core);
       setCollections(publicCollections);
+      setRankings(discoveryRankings);
+      setCurations(publishedCurations);
       setCommunityStatus('ready');
     } catch {
       setCommunityStatus('error');
@@ -124,6 +133,10 @@ export default function HomeScreen() {
           {communityStatus === 'error' ? <StateNotice message="영화 추천은 계속 볼 수 있어요. 공개 기록만 다시 불러와 주세요." title="커뮤니티를 불러오지 못했어요" tone="warning" /> : null}
           {communityStatus === 'error' ? <Button label="커뮤니티 다시 불러오기" onPress={() => void loadCommunity()} variant="secondary" /> : null}
           {communityStatus === 'ready' ? <>
+            <View style={styles.feedHeader}><Text style={styles.feedTitle}>최근 7일 FLICK 랭킹</Text><Text style={styles.feedCaption}>WEEKLY</Text></View>
+            {rankings ? <DiscoveryRankingsView rankings={rankings} /> : null}
+            <View style={styles.feedHeader}><Text style={styles.feedTitle}>상황별 편집 큐레이션</Text><Text style={styles.feedCaption}>FLICK EDIT</Text></View>
+            {!curations.length ? <Text style={styles.empty}>출처와 선정 이유가 확인된 큐레이션을 준비하고 있어요.</Text> : curations.map((curation) => <EditorialCurationCard curation={curation} key={curation.curationId} />)}
             <View style={styles.feedHeader}><Text style={styles.feedTitle}>가볍게 기록한 리뷰</Text><Text style={styles.feedCaption}>LIGHT</Text></View>
             {!lightReviews.length ? <Text style={styles.empty}>첫 공개 Light 리뷰를 남겨보세요.</Text> : lightReviews.map((review) => <PublicReviewCard busy={busyReviewId === review.reviewId} key={review.reviewId} onLike={(item) => void toggleReviewLike(item)} onSave={(item) => void toggleReviewSave(item)} review={review} />)}
             <View style={styles.feedHeader}><Text style={styles.feedTitle}>집중 기록 매거진</Text><Text style={styles.feedCaption}>CORE</Text></View>

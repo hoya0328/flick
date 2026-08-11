@@ -17,7 +17,7 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)
   ![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_RLS-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-Live_Data-01B4E4?style=flat-square)
-  ![Tests](https://img.shields.io/badge/Tests-44_Passing-117A55?style=flat-square)
+  ![Tests](https://img.shields.io/badge/Tests-48_Passing-117A55?style=flat-square)
 </div>
 
 ---
@@ -114,6 +114,15 @@ flowchart LR
 - 사용자 컬렉션 생성·수정·삭제, 나만 보기·전체 공개 전환
 - 영화 검색 또는 영화 상세에서 컬렉션에 최대 100편 추가·제외
 - 다른 사용자의 공개 컬렉션 저장과 내 컬렉션 화면 재조회
+
+### 5C 랭킹과 편집 큐레이션
+
+- 최근 7일의 공개 완료 리뷰를 기준으로 인기 영화와 최다 선택 키워드 집계
+- 공개 리뷰 5건 미만이면 순위를 숨기고 표본 부족 이유와 집계 기간 표시
+- 탐색 화면에서 원하는 감정을 고르면 추천 이유와 함께 영화 제안
+- 운영자가 니치 큐레이션을 작성하고 영화를 최대 30편까지 순서대로 편집
+- 전문가 큐레이션은 작성자·원문 출처·게시 권한 확인과 영화 1편 이상을 모두 충족해야 공개
+- 큐레이션 원본과 랭킹 스냅샷은 직접 접근을 막고 인증·관리자 RPC로만 조회·변경
 
 ### 아카이브와 취향 리포트
 
@@ -273,9 +282,9 @@ npm run build:web
 
 - TypeScript strict 검사 통과
 - Expo ESLint 통과
-- Vitest 테스트 44개 통과
+- Vitest 테스트 48개 통과
 - Expo Doctor 20/20 통과
-- 정적 웹 경로 17개 빌드 성공
+- 정적 웹 경로 24개 빌드 성공
 - 운영 Supabase 사용자 테이블 RLS 활성화 확인
 - 공개 기록 화면에서 비소유자 편집 입력 0개 확인
 - 390px·480px 외부 베타 화면 가로 넘침 없음
@@ -291,6 +300,9 @@ npm run build:web
 - [x] **3C 초안** — 키워드 정리와 편집 가능한 AI 리뷰 초안
 - [x] **3C 운영 보호** — 호출 한도, 개인정보 차단, 안전 필터와 감사 메타데이터
 - [x] **4단계 웹** — 캘린더, 취향 리포트, 공유, 내보내기와 계정 삭제 UI
+- [x] **5A** — 공개 기록 피드 기반, 공감·댓글·답글·저장·신고와 관리자 조치
+- [x] **5B** — Light/Core 홈 피드와 사용자 영화 컬렉션
+- [x] **5C** — 최근 7일 랭킹, 감정 탐색, 니치·전문가 편집 큐레이션
 - [x] **외부 베타** — 고정 beta URL, 로그인 복귀와 읽기 전용 공개 기록
 - [ ] **출시 준비** — 일회용 2계정 권한 통합 테스트와 계정 cascade 삭제 검증
 - [ ] **iOS** — Apple 로그인, 원본 앱 아이콘, TestFlight와 App Store 점검
@@ -300,7 +312,9 @@ npm run build:web
 
 - 영화만 지원하며 TV 드라마·시리즈는 아직 지원하지 않습니다.
 - OTT는 제공처 정보이며 FLICK 안에서 콘텐츠를 재생하지 않습니다.
-- 공개 피드, 친구, 팔로우, 댓글, 좋아요는 아직 없습니다.
+- 공개 피드·댓글·공감·저장·컬렉션은 제공하며 친구·팔로우·알림은 아직 없습니다.
+- 랭킹은 공개 완료 리뷰가 최근 7일 동안 5건 이상 모였을 때만 노출됩니다.
+- 전문가 큐레이션은 권리가 확인된 실제 콘텐츠를 운영자가 등록하기 전에는 비어 있습니다.
 - Apple 로그인과 네이티브 앱스토어 배포는 준비 단계입니다.
 - 전체 TMDB 영화 경량 색인 적재는 무료 DB 용량 승인 전까지 보류합니다.
 

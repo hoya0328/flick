@@ -63,6 +63,10 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `movie_collections` | user_id, title, description, visibility | 소유자 전용 쓰기, 공개 컬렉션 RPC 조회 |
 | `movie_collection_items` | collection_id, movie_id, sort_order | 소유자만 추가·제외, 컬렉션당 최대 100편 |
 | `movie_collection_saves` | collection_id, user_id | 공개 컬렉션의 사용자별 1건, RPC 전용 |
+| `discovery_ranking_runs` | period, sample_size, sufficient, refreshed_at | 관리자 생성 집계 스냅샷, 최근 12회 보존 |
+| `discovery_ranking_items` | run_id, kind, rank, count, movie/keyword | 충분한 표본의 영화·키워드 순위, RPC 전용 |
+| `editorial_curations` | kind, title, description, curator/source/rights, status | Super Admin 작성, 공개본만 인증 사용자 조회 |
+| `editorial_curation_items` | curation_id, movie_id, note, sort_order | 관리자 편집, 큐레이션당 최대 30편 |
 
 모든 쓰기·수정·삭제는 Supabase RLS로 소유자를 강제한다. `visibility = public`이면서 `status = completed`인 기록과 자식 질문·답변·태그만 인증 사용자에게 읽기를 허용한다. 초안과 비공개 기록은 항상 소유자 전용이며 기본값은 `private`이다.
 
@@ -98,6 +102,10 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `RPC save/delete_movie_collection` | id, title, description, visibility | 소유자 컬렉션 변경 | validation, ownership |
 | `RPC add_movie_to_collection/remove_movie_from_collection` | collection id, movie id | 중복 없는 영화 연결 변경 | full, ownership, not_found |
 | `RPC set_movie_collection_saved` | collection id, active | 공개 컬렉션 멱등 저장 | not_public, authentication |
+| `RPC get_discovery_rankings` | 없음 | 최근 7일 스냅샷 또는 표본 부족 설명 | authentication |
+| `RPC admin_refresh_discovery_rankings` | period days, minimum reviews | 새 집계 실행 ID | admin_required |
+| `RPC list/get_published_curations` | limit 또는 curation id | 권리 검증된 공개 편집 큐레이션 | authentication, not_found |
+| `RPC admin_*_editorial_curation*` | 큐레이션·영화·출처·상태 | 작성·영화 편집·공개·삭제 | admin_required, rights_required |
 
 클라이언트와 서버는 공유 TypeScript 스키마로 입력·응답을 검증한다. AI 응답은 구조화된 JSON으로 제한하고 저장 전 사용자가 수정·승인한다.
 

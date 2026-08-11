@@ -1,4 +1,4 @@
-import { Redirect, router } from 'expo-router';
+import { type Href, Redirect, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, Switch, Text, View } from 'react-native';
 
@@ -38,6 +38,11 @@ const auditLabels: Record<string, string> = {
   review_deleted: '기록 삭제',
   review_report_dismissed: '신고 기각',
   review_report_made_private: '신고 기록 비공개 전환',
+  discovery_rankings_refreshed: '발견 랭킹 갱신',
+  editorial_curation_saved: '편집 큐레이션 저장',
+  editorial_curation_movie_added: '큐레이션 영화 추가',
+  editorial_curation_movie_removed: '큐레이션 영화 제외',
+  editorial_curation_deleted: '편집 큐레이션 삭제',
 };
 
 const reportLabels: Record<string, string> = {
@@ -164,6 +169,7 @@ export default function AdminScreen() {
       <StateNotice message="초기 상태는 조회 전용입니다. 수정·삭제 권한은 필요한 동안만 켜고 작업 후 다시 끄는 것을 권장합니다." title="서버 검증 관리자" tone="warning" />
       {notice ? <StateNotice {...notice} /> : null}
       <Button label="최신 상태 새로고침" loading={busy} onPress={() => void loadConsole()} variant="secondary" />
+      <Button label="랭킹·편집 큐레이션 관리" onPress={() => router.push('/admin-curations' as Href)} variant="secondary" />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>내 운영 권한</Text>
