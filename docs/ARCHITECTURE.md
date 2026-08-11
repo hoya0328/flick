@@ -55,6 +55,11 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `report_snapshots` | user_id, period, metrics, generated_at | 본인 전용 |
 | `admin_access` | user_id, role, view/moderate/delete permission flags | 서버 검증 관리자 전용 |
 | `admin_audit_events` | admin_user_id, action, target, metadata, created_at | 관리자 활동 메타데이터, 관리자 RPC 전용 |
+| `review_likes` | review_id, user_id, created_at | 공개 완료 기록의 사용자별 1건, RPC 전용 |
+| `review_saves` | review_id, user_id, created_at | 저장한 사용자 전용 관계, RPC 전용 |
+| `review_comments` | review_id, user_id, parent_id, body, status | 공개 완료 기록 댓글, 1단계 답글·본인 삭제 |
+| `review_reports` | review_id, reporter_user_id, reason, status | 사용자·기록당 1건, 관리자 처리 |
+| `product_events` | session_id, event_name, entity, allow-listed metadata | 이메일·본문·사용자 ID 없는 전환 측정 |
 
 모든 쓰기·수정·삭제는 Supabase RLS로 소유자를 강제한다. `visibility = public`이면서 `status = completed`인 기록과 자식 질문·답변·태그만 인증 사용자에게 읽기를 허용한다. 초안과 비공개 기록은 항상 소유자 전용이며 기본값은 `private`이다.
 
@@ -80,6 +85,11 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `POST /functions/v1/generate-core-question` | movie id, prior Q/A | next question | quota, timeout, unavailable |
 | `POST /functions/v1/generate-core-review-draft` | movie id, five Q/A | keywords + editable draft | quota, timeout, invalid_output |
 | `GET /reports/me` | period | deterministic metrics | insufficient_data |
+| `RPC list_public_reviews` | mode, cursor, limit | 공개 기록 카드·반응 집계 | authentication, invalid_mode |
+| `RPC set_review_like/save` | review id, active | 멱등 상태 변경 | not_public, authentication |
+| `RPC add/remove_review_comment` | review id, body, parent | 1단계 댓글·삭제 상태 | invalid_comment, ownership |
+| `RPC report_review` | review id, reason, detail | 중복 없는 열린 신고 | own_review, invalid_reason |
+| `RPC track_product_event` | session, allow-listed event/entity/metadata | 본문 없는 전환 이벤트 | invalid_event |
 
 클라이언트와 서버는 공유 TypeScript 스키마로 입력·응답을 검증한다. AI 응답은 구조화된 JSON으로 제한하고 저장 전 사용자가 수정·승인한다.
 

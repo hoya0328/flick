@@ -8,7 +8,7 @@ import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { buildMonthCalendar, buildTasteReport, reportShareText, shiftMonth } from '@/features/reports/taste-report';
 import { publicReviewPath, todayDate } from '@/features/reviews/review-logic';
-import { listReviews, type ReviewRecord } from '@/features/reviews/reviews';
+import { deleteReview, listReviews, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { recordClientIssue } from '@/lib/observability';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -22,6 +22,9 @@ export default function ArchiveScreen() {
   const [month, setMonth] = useState(todayDate().slice(0, 7));
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'light' | 'core'>('all');
+  const [recordStatus, setRecordStatus] = useState<'all' | 'draft' | 'completed'>('all');
+  const [visibility, setVisibility] = useState<'all' | 'private' | 'public'>('all');
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [message, setMessage] = useState<string | null>(null);
 
@@ -41,9 +44,10 @@ export default function ArchiveScreen() {
   const report = useMemo(() => buildTasteReport(records, todayDate()), [records]);
   const calendar = useMemo(() => buildMonthCalendar(month, records), [month, records]);
   const drafts = records.filter((record) => record.status === 'draft');
-  const visibleRecords = records.filter((record) => record.status === 'completed'
-    && (selectedDate ? record.watchedAt === selectedDate : record.watchedAt.startsWith(month))
-    && (filter === 'all' || record.mode === filter));
+  const visibleRecords = records.filter((record) => (selectedDate ? record.watchedAt === selectedDate : true)
+    && (filter === 'all' || record.mode === filter)
+    && (recordStatus === 'all' || record.status === recordStatus)
+    && (visibility === 'all' || record.visibility === visibility));
   const monthTitle = `${month.slice(0, 4)}년 ${Number(month.slice(5))}월`;
   const maxRatingCount = Math.max(1, ...Object.values(report.ratingCounts));
 
@@ -62,13 +66,25 @@ export default function ArchiveScreen() {
     } catch { setMessage('이 기기에서는 공유 화면을 열지 못했어요.'); }
   }
 
+  async function removeRecord(record: ReviewRecord) {
+    try {
+      await deleteReview(record.id, storageMode);
+      setPendingDeleteId(null);
+      setMessage(`${record.movie.title} 기록을 삭제했어요.`);
+      await load();
+    } catch (error) {
+      void recordClientIssue('archive.delete', error);
+      setMessage('기록을 삭제하지 못했어요. 본인 기록과 연결 상태를 확인해 주세요.');
+    }
+  }
+
   if (status === 'loading') return <Screen eyebrow="나의 FLICK" title="아카이브"><ActivityIndicator color={colors.primary} size="large" /><Text style={styles.muted}>기록과 취향을 정리하고 있어요.</Text></Screen>;
   if (status === 'error') return <Screen eyebrow="나의 FLICK" title="아카이브"><StateNotice message="기록은 변경되지 않았어요. 연결을 확인하고 다시 시도해 주세요." title="아카이브를 불러오지 못했어요" tone="danger" /><Button label="다시 시도" onPress={() => void load()} variant="secondary" /></Screen>;
 
   return (
     <Screen eyebrow="나의 FLICK" title="영화 아카이브">
-      {message ? <StateNotice message={message} title="공유" tone="success" /> : null}
-      {drafts.length ? <StateNotice message={`작성 중인 기록 ${drafts.length}개가 안전하게 보관되어 있어요. 기록 탭에서 이어 쓸 수 있습니다.`} title="이어 쓸 기록이 있어요" tone="warning" /> : null}
+      {message ? <StateNotice message={message} title="기록 관리" tone={message.includes('못했어요') ? 'danger' : 'success'} /> : null}
+      {drafts.length ? <StateNotice message={`작성 중인 기록 ${drafts.length}개가 안전하게 보관되어 있어요. 아래 통합 기록 관리에서 바로 이어 쓸 수 있습니다.`} title="이어 쓸 기록이 있어요" tone="warning" /> : null}
 
       <View style={styles.kpiRow}>
         <View style={styles.kpi}><Text style={styles.kpiValue}>{report.total}</Text><Text style={styles.kpiLabel}>완료 기록</Text></View>
@@ -111,16 +127,28 @@ export default function ArchiveScreen() {
       </View>
 
       <View style={styles.section}>
-        <View style={styles.headingRow}><Text accessibilityRole="header" style={styles.sectionTitle}>{selectedDate ? `${selectedDate} 기록` : `${monthTitle} 기록`}</Text><View style={styles.filters}>{(['all', 'light', 'core'] as const).map((item) => <Pressable accessibilityRole="button" accessibilityState={{ selected: filter === item }} key={item} onPress={() => setFilter(item)} style={[styles.filter, filter === item && styles.filterSelected]}><Text style={[styles.filterText, filter === item && styles.filterTextSelected]}>{item === 'all' ? '전체' : item === 'light' ? 'Light' : 'Core'}</Text></Pressable>)}</View></View>
-        {!visibleRecords.length ? <Text style={styles.muted}>이 기간에 조건과 맞는 완료 기록이 없어요.</Text> : visibleRecords.map((record) => (
+        <Text accessibilityRole="header" style={styles.sectionTitle}>통합 기록 관리</Text>
+        <Text style={styles.muted}>{selectedDate ? `${selectedDate}의 기록만 보고 있어요.` : '모든 날짜의 Light·Core·초안·완료 기록을 한곳에서 관리합니다.'}</Text>
+        <Text style={styles.label}>기록 방식</Text>
+        <View style={styles.filters}>{(['all', 'light', 'core'] as const).map((item) => <FilterButton key={item} label={item === 'all' ? '전체' : item === 'light' ? 'Light' : 'Core'} onPress={() => setFilter(item)} selected={filter === item} />)}</View>
+        <Text style={styles.label}>작성 상태</Text>
+        <View style={styles.filters}>{(['all', 'draft', 'completed'] as const).map((item) => <FilterButton key={item} label={item === 'all' ? '전체' : item === 'draft' ? '작성 중' : '완료'} onPress={() => setRecordStatus(item)} selected={recordStatus === item} />)}</View>
+        <Text style={styles.label}>공개 범위</Text>
+        <View style={styles.filters}>{(['all', 'private', 'public'] as const).map((item) => <FilterButton key={item} label={item === 'all' ? '전체' : item === 'private' ? '나만 보기' : '전체 공개'} onPress={() => setVisibility(item)} selected={visibility === item} />)}</View>
+        {!visibleRecords.length ? <Text style={styles.muted}>조건과 맞는 기록이 없어요.</Text> : visibleRecords.map((record) => (
           <View key={record.id} style={styles.recordCard}>
-            <View style={styles.flex}><Text style={styles.cardTitle}>{record.movie.title}</Text><Text style={styles.muted}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'} · ★ {record.rating}</Text></View>
-            <View style={styles.cardActions}><Button label="기록 열기" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: record.movieId, reviewId: record.id, title: record.movie.title } })} style={styles.action} variant="secondary" />{mode === 'supabase' && record.visibility === 'public' ? <Button label="공개 링크 공유" onPress={() => void shareRecord(record)} style={styles.action} variant="ghost" /> : null}</View>
+            <View style={styles.flex}><Text style={styles.cardTitle}>{record.movie.title}</Text><Text style={styles.muted}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'} · {record.status === 'draft' ? '작성 중' : '완료'} · {record.visibility === 'public' ? '전체 공개' : '나만 보기'} · ★ {record.rating ?? '-'}</Text></View>
+            <View style={styles.cardActions}><Button label={record.status === 'draft' ? '이어 쓰기' : '기록 열기'} onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: record.movieId, reviewId: record.id, title: record.movie.title } })} style={styles.action} variant="secondary" />{mode === 'supabase' && record.status === 'completed' && record.visibility === 'public' ? <Button label="공개 링크 공유" onPress={() => void shareRecord(record)} style={styles.action} variant="ghost" /> : null}</View>
+            {pendingDeleteId === record.id ? <View style={styles.dangerBox}><Text style={styles.dangerText}>이 기록과 연결된 질문·답변·태그를 영구 삭제할까요?</Text><View style={styles.cardActions}><Button label="취소" onPress={() => setPendingDeleteId(null)} style={styles.action} variant="ghost" /><Button label="영구 삭제 확인" onPress={() => void removeRecord(record)} style={styles.action} variant="secondary" /></View></View> : <Button label="기록 삭제" onPress={() => setPendingDeleteId(record.id)} variant="ghost" />}
           </View>
         ))}
       </View>
     </Screen>
   );
+}
+
+function FilterButton({ label, onPress, selected }: { label: string; onPress: () => void; selected: boolean }) {
+  return <Pressable accessibilityRole="button" accessibilityState={{ selected }} onPress={onPress} style={[styles.filter, selected && styles.filterSelected]}><Text style={[styles.filterText, selected && styles.filterTextSelected]}>{label}</Text></Pressable>;
 }
 
 const styles = StyleSheet.create({
@@ -136,4 +164,5 @@ const styles = StyleSheet.create({
   barRow: { alignItems: 'center', flexDirection: 'row', gap: spacing.sm }, barLabel: { ...typography.caption, color: colors.textMuted, width: 30 }, barTrack: { backgroundColor: colors.border, borderRadius: radii.pill, flex: 1, height: 10, overflow: 'hidden' }, barFill: { backgroundColor: colors.primary, borderRadius: radii.pill, height: 10 }, barCount: { ...typography.caption, color: colors.text, textAlign: 'right', width: 18 },
   filters: { flexDirection: 'row', gap: spacing.xs }, filter: { borderColor: colors.border, borderRadius: radii.pill, borderWidth: 1, minHeight: 36, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, filterSelected: { backgroundColor: colors.primary, borderColor: colors.primary }, filterText: { ...typography.caption, color: colors.textMuted }, filterTextSelected: { color: colors.surface, fontWeight: '700' },
   recordCard: { borderColor: colors.border, borderRadius: radii.md, borderWidth: 1, gap: spacing.md, padding: spacing.md }, cardTitle: { ...typography.heading, color: colors.text }, cardActions: { flexDirection: 'row', gap: spacing.sm }, action: { flex: 1 },
+  dangerBox: { backgroundColor: colors.dangerSoft, borderRadius: radii.md, gap: spacing.sm, padding: spacing.md }, dangerText: { ...typography.label, color: colors.danger },
 });

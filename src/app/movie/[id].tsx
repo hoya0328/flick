@@ -6,6 +6,7 @@ import { Button } from '@/components/button';
 import { PosterArt } from '@/components/poster-art';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
+import { trackProductEvent } from '@/features/community/community-service';
 import { getMovie, getWatchlistMovieIds, type Movie, setWantToWatch, yearOf } from '@/features/discovery/movies';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -77,6 +78,11 @@ export default function MovieDetailScreen() {
     }
   };
 
+  const startRecord = () => {
+    void trackProductEvent('record_start', 'movie', movie?.id ?? null, { surface: 'movie_detail', source: 'movie' });
+    if (movie) router.push({ pathname: '/(tabs)/record', params: { movieId: movie.id, title: movie.title } });
+  };
+
   if (status === 'loading') return <Screen><ActivityIndicator color={colors.primary} size="large" /></Screen>;
   if (status === 'error' || !movie) return <Screen title="영화를 찾지 못했어요"><StateNotice message="검색 화면으로 돌아가 다른 영화를 선택해 주세요." title="상세 정보 없음" tone="danger" /><Button label="뒤로 가기" onPress={() => router.back()} /></Screen>;
 
@@ -133,7 +139,7 @@ export default function MovieDetailScreen() {
       <Button label="상세 정보 다시 확인" loading={refreshing} onPress={() => void refreshDetails()} variant="secondary" />
       {message ? <StateNotice message={message} title={message.includes('TMDB') ? '상세 정보' : '보고 싶어요'} tone={message.includes('저장했어요') || message.includes('TMDB') ? 'success' : 'info'} /> : null}
       <Button label={wanted ? '✓ 보고 싶어요에 저장됨' : '+ 보고 싶어요'} loading={saving} onPress={() => void toggleWatchlist()} variant={wanted ? 'secondary' : 'primary'} />
-      <Button label="이 영화 감상 기록하기" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: movie.id, title: movie.title } })} variant="secondary" />
+      <Button label="이 영화 감상 기록하기" onPress={startRecord} variant="secondary" />
       <Button label="데이터 출처와 크레딧" onPress={() => router.push('/credits')} variant="ghost" />
     </Screen>
   );

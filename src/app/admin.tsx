@@ -10,13 +10,16 @@ import {
   deleteAdminReview,
   getMyAdminAccess,
   listAdminAuditEvents,
+  listAdminReviewReports,
   listAdminReviews,
   listAdminUsers,
   makeAdminReviewPrivate,
+  resolveAdminReviewReport,
   setMyAdminPermissions,
   type AdminAccess,
   type AdminAuditEvent,
   type AdminReview,
+  type AdminReviewReport,
   type AdminUser,
 } from '@/features/admin/admin-service';
 import { useSession } from '@/features/session/session-provider';
@@ -33,6 +36,16 @@ const auditLabels: Record<string, string> = {
   reviews_viewed: '기록 목록 조회',
   review_made_private: '공개 기록 비공개 전환',
   review_deleted: '기록 삭제',
+  review_report_dismissed: '신고 기각',
+  review_report_made_private: '신고 기록 비공개 전환',
+};
+
+const reportLabels: Record<string, string> = {
+  spoiler: '스포일러 표시 누락',
+  harassment: '괴롭힘·혐오 표현',
+  personal_info: '개인정보 노출',
+  copyright: '저작권 문제',
+  other: '기타',
 };
 
 export default function AdminScreen() {
@@ -40,6 +53,7 @@ export default function AdminScreen() {
   const [access, setAccess] = useState<AdminAccess | null | undefined>(undefined);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [reviews, setReviews] = useState<AdminReview[]>([]);
+  const [reports, setReports] = useState<AdminReviewReport[]>([]);
   const [events, setEvents] = useState<AdminAuditEvent[]>([]);
   const [busy, setBusy] = useState(false);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -52,13 +66,15 @@ export default function AdminScreen() {
       const nextAccess = await getMyAdminAccess();
       setAccess(nextAccess);
       if (!nextAccess) return;
-      const [nextUsers, nextReviews, nextEvents] = await Promise.all([
+      const [nextUsers, nextReviews, nextReports, nextEvents] = await Promise.all([
         nextAccess.canViewUsers ? listAdminUsers() : Promise.resolve([]),
         nextAccess.canViewReviews ? listAdminReviews() : Promise.resolve([]),
+        nextAccess.canModerateReviews ? listAdminReviewReports() : Promise.resolve([]),
         listAdminAuditEvents(),
       ]);
       setUsers(nextUsers);
       setReviews(nextReviews);
+      setReports(nextReports);
       setEvents(nextEvents);
     } catch (caught) {
       setNotice({ title: '관리자 정보를 불러오지 못했어요', message: caught instanceof Error ? caught.message : '잠시 후 다시 시도해 주세요.', tone: 'danger' });
@@ -110,6 +126,22 @@ export default function AdminScreen() {
       setNotice({ title: '기록 삭제 완료', message: '관련 질문과 태그도 함께 삭제했으며 감사 로그를 남겼습니다.', tone: 'success' });
     } catch (caught) {
       setNotice({ title: '기록을 삭제하지 못했어요', message: caught instanceof Error ? caught.message : '잠시 후 다시 시도해 주세요.', tone: 'danger' });
+      setBusy(false);
+    }
+  };
+
+  const handleReport = async (reportId: string, action: 'dismiss' | 'make_private') => {
+    setBusy(true);
+    try {
+      await resolveAdminReviewReport(reportId, action);
+      await loadConsole();
+      setNotice({
+        title: action === 'make_private' ? '신고 기록 비공개 전환 완료' : '신고 기각 완료',
+        message: '처리 결과와 관리자 감사 로그를 남겼습니다.',
+        tone: 'success',
+      });
+    } catch (caught) {
+      setNotice({ title: '신고를 처리하지 못했어요', message: caught instanceof Error ? caught.message : '잠시 후 다시 시도해 주세요.', tone: 'danger' });
       setBusy(false);
     }
   };
@@ -175,6 +207,23 @@ export default function AdminScreen() {
       </View>
 
       <View style={styles.section}>
+        <Text style={styles.sectionTitle}>검토할 신고 {reports.length}건</Text>
+        {!access.canModerateReviews ? <Text style={styles.help}>기록 수정 권한을 켜면 신고를 검토할 수 있습니다.</Text> : reports.length ? reports.map((report) => (
+          <View key={report.reportId} style={styles.card}>
+            <Text style={styles.cardTitle}>{report.movieTitle}</Text>
+            <Text style={styles.help}>작성자 {report.authorDisplayName} · 신고자 {report.reporterDisplayName}</Text>
+            <Text style={styles.body}>{reportLabels[report.reason] ?? report.reason}</Text>
+            {report.detail ? <Text style={styles.preview}>{report.detail}</Text> : null}
+            <Text style={styles.help}>{formatDate(report.createdAt)}</Text>
+            <View style={styles.actionRow}>
+              <Button label="신고 기각" onPress={() => void handleReport(report.reportId, 'dismiss')} style={styles.action} variant="ghost" />
+              <Button label="기록 비공개 + 처리" onPress={() => void handleReport(report.reportId, 'make_private')} style={styles.action} variant="secondary" />
+            </View>
+          </View>
+        )) : <Text style={styles.help}>현재 검토할 신고가 없습니다.</Text>}
+      </View>
+
+      <View style={styles.section}>
         <Text style={styles.sectionTitle}>최근 관리자 활동</Text>
         {events.length ? events.map((event) => (
           <View key={event.eventId} style={styles.auditRow}>
@@ -213,4 +262,6 @@ const styles = StyleSheet.create({
   dangerBox: { backgroundColor: colors.dangerSoft, borderRadius: radii.md, gap: spacing.sm, padding: spacing.md },
   dangerText: { ...typography.label, color: colors.danger },
   auditRow: { borderBottomColor: colors.border, borderBottomWidth: StyleSheet.hairlineWidth, gap: spacing.xs, paddingVertical: spacing.sm },
+  actionRow: { flexDirection: 'row', gap: spacing.sm },
+  action: { flex: 1 },
 });

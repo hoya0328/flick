@@ -30,7 +30,8 @@ describe('account authorization contract', () => {
     const archive = read('src/app/(tabs)/archive.tsx');
 
     expect(viewer).toContain('getPublicReview');
-    expect(viewer).not.toMatch(/saveReview|deleteReview|TextInput/);
+    expect(viewer).not.toMatch(/saveReview|deleteReview/);
+    expect(viewer).toContain('기록 본문은 작성자만 수정·삭제');
     expect(archive).toContain('publicReviewPath(record.id)');
     expect(archive).not.toContain("Linking.createURL('/record'");
   });

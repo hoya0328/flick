@@ -39,6 +39,18 @@ export type AdminAuditEvent = {
   createdAt: string;
 };
 
+export type AdminReviewReport = {
+  reportId: string;
+  reviewId: string;
+  movieTitle: string;
+  authorDisplayName: string;
+  reporterDisplayName: string;
+  reason: string;
+  detail: string;
+  status: string;
+  createdAt: string;
+};
+
 type AccessRow = {
   role: 'super_admin';
   can_view_users: boolean;
@@ -127,6 +139,27 @@ export async function listAdminAuditEvents(): Promise<AdminAuditEvent[]> {
     targetId: typeof row.target_id === 'string' ? row.target_id : null,
     createdAt: String(row.created_at),
   }));
+}
+
+export async function listAdminReviewReports(): Promise<AdminReviewReport[]> {
+  const { data, error } = await client().rpc('admin_list_review_reports', { p_limit: 50 });
+  if (error) throw adminError(error);
+  return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+    reportId: String(row.report_id),
+    reviewId: String(row.review_id),
+    movieTitle: String(row.movie_title ?? '영화 정보 없음'),
+    authorDisplayName: String(row.author_display_name ?? 'FLICK 사용자'),
+    reporterDisplayName: String(row.reporter_display_name ?? 'FLICK 사용자'),
+    reason: String(row.reason),
+    detail: String(row.detail ?? ''),
+    status: String(row.status),
+    createdAt: String(row.created_at),
+  }));
+}
+
+export async function resolveAdminReviewReport(reportId: string, action: 'dismiss' | 'make_private') {
+  const { error } = await client().rpc('admin_resolve_review_report', { p_report_id: reportId, p_action: action });
+  if (error) throw adminError(error);
 }
 
 export async function makeAdminReviewPrivate(reviewId: string) {

@@ -17,7 +17,7 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)
   ![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_RLS-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-Live_Data-01B4E4?style=flat-square)
-  ![Tests](https://img.shields.io/badge/Tests-36_Passing-117A55?style=flat-square)
+  ![Tests](https://img.shields.io/badge/Tests-40_Passing-117A55?style=flat-square)
 </div>
 
 ---
@@ -98,6 +98,14 @@ flowchart LR
 - 초기값은 조회 전용이며 수정·삭제 권한은 명시적으로 켠 동안만 동작
 - 사용자 작성문 직접 편집, 비밀번호 열람, 로그인 대행은 제공하지 않음
 - 조회·권한 변경·비공개 전환·삭제를 감사 로그로 기록
+
+### 5A 공개 콘텐츠 기반
+
+- 모든 날짜의 Light/Core·초안/완료·공개범위를 한곳에서 관리
+- 공개 기록에서 공감·저장, 500자 댓글과 한 단계 답글 제공
+- 사용자별 중복 좋아요·저장·신고 방지와 본인 댓글 삭제
+- 관리자 신고 기각 또는 기록 비공개 전환과 감사 로그
+- 이메일·본문·사용자 ID 없이 공개 기록→영화 상세→새 기록 전환 측정
 
 ### 아카이브와 취향 리포트
 
@@ -257,7 +265,7 @@ npm run build:web
 
 - TypeScript strict 검사 통과
 - Expo ESLint 통과
-- Vitest 테스트 36개 통과
+- Vitest 테스트 40개 통과
 - Expo Doctor 20/20 통과
 - 정적 웹 경로 17개 빌드 성공
 - 운영 Supabase 사용자 테이블 RLS 활성화 확인
