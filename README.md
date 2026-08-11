@@ -17,7 +17,7 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)
   ![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_RLS-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-Live_Data-01B4E4?style=flat-square)
-  ![Tests](https://img.shields.io/badge/Tests-52_Passing-117A55?style=flat-square)
+  ![Tests](https://img.shields.io/badge/Tests-57_Passing-117A55?style=flat-square)
 </div>
 
 ---
@@ -139,6 +139,14 @@ flowchart LR
 - 선택지가 고정된 주간 투표와 사용자별 첫 응답 1회 제한
 - 퀴즈·투표 원본 테이블은 클라이언트에 직접 개방하지 않고 인증 RPC만 허용
 - 범용 글쓰기·자유 텍스트 AI·유료 API 없이 무료 베타 범위에서 운영
+
+### 이모지 영화 미니게임
+
+- 메인 화면의 작은 카드에서 로그인 없이 바로 시작
+- 직접 만든 이모지 힌트 100문제와 한 세션 내 중복 없는 무작위 출제
+- 10·30·50문제 프리셋 또는 1~100문제 직접 설정
+- 띄어쓰기·문장부호와 등록된 한국어·영문 별칭을 허용하는 제목 판정
+- 문제별 정답·오답 피드백, 진행률·최종 정답률과 문제 수별 기기 최고 점수 저장
 
 ### 아카이브와 취향 리포트
 
@@ -298,9 +306,9 @@ npm run build:web
 
 - TypeScript strict 검사 통과
 - Expo ESLint 통과
-- Vitest 테스트 52개 통과
+- Vitest 테스트 57개 통과
 - Expo Doctor 20/20 통과
-- 정적 웹 경로 26개 빌드 성공
+- 정적 웹 경로 27개 빌드 성공
 - 운영 Supabase 사용자 테이블 RLS 활성화 확인
 - 공개 기록 화면에서 비소유자 편집 입력 0개 확인
 - 390px·480px 외부 베타 화면 가로 넘침 없음
@@ -321,6 +329,7 @@ npm run build:web
 - [x] **5C** — 최근 7일 랭킹, 감정 탐색, 니치·전문가 편집 큐레이션
 - [x] **5D** — 설명 가능한 취향 유형·감상 패턴·다시보기·취향 밖 추천과 개인화 숨김
 - [x] **5E** — 서버 판정 영화 퀴즈·히든 블록 보상과 사용자별 1회 투표
+- [x] **이모지 미니게임** — 100문제, 10·30·50·직접 설정, 결과·최고 점수
 - [x] **외부 베타** — 고정 beta URL, 로그인 복귀와 읽기 전용 공개 기록
 - [ ] **출시 준비** — 일회용 2계정 권한 통합 테스트와 계정 cascade 삭제 검증
 - [ ] **iOS** — Apple 로그인, 원본 앱 아이콘, TestFlight와 App Store 점검

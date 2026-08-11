@@ -1,6 +1,6 @@
 import { type Href, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BrandMark } from '@/components/brand-mark';
 import { Button } from '@/components/button';
@@ -120,6 +120,11 @@ export default function HomeScreen() {
         </View>
       </View>
 
+      <Pressable accessibilityRole="button" onPress={() => router.push('/emoji-quiz' as Href)} style={({ pressed }) => [styles.miniGame, pressed && styles.miniGamePressed]}>
+        <View style={styles.miniGameCopy}><Text style={styles.miniGameLabel}>1분 미니게임 · 100 MOVIES</Text><Text style={styles.miniGameTitle}>🎬 이모지로 영화 맞히기</Text><Text style={styles.miniGameBody}>10·30·50문제 또는 원하는 만큼 골라 도전해 보세요.</Text></View>
+        <Text style={styles.miniGameArrow}>›</Text>
+      </Pressable>
+
       {result?.notice ? <StateNotice message={result.notice} title="안정적인 영화 목록" tone="warning" /> : null}
       {actionMessage ? <StateNotice message={actionMessage} title="보고 싶어요" tone={actionMessage.includes('저장했어요') ? 'success' : 'info'} /> : null}
 
@@ -187,4 +192,11 @@ const styles = StyleSheet.create({
   feedTitle: { ...typography.heading, color: colors.text },
   feedCaption: { ...typography.caption, color: colors.primary, fontWeight: '800', letterSpacing: 1 },
   empty: { ...typography.caption, backgroundColor: colors.surface, borderRadius: radii.md, color: colors.textMuted, padding: spacing.lg },
+  miniGame: { alignItems: 'center', backgroundColor: colors.text, borderRadius: radii.lg, flexDirection: 'row', gap: spacing.md, padding: spacing.lg },
+  miniGamePressed: { opacity: 0.88, transform: [{ scale: 0.99 }] },
+  miniGameCopy: { flex: 1, gap: spacing.xs },
+  miniGameLabel: { ...typography.caption, color: '#FF9AAA', fontWeight: '800', letterSpacing: 0.5 },
+  miniGameTitle: { ...typography.heading, color: colors.surface },
+  miniGameBody: { ...typography.caption, color: '#D9DCE1' },
+  miniGameArrow: { color: colors.surface, fontSize: 34, lineHeight: 38 },
 });
