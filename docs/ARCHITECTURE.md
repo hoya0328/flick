@@ -60,6 +60,9 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `review_comments` | review_id, user_id, parent_id, body, status | 공개 완료 기록 댓글, 1단계 답글·본인 삭제 |
 | `review_reports` | review_id, reporter_user_id, reason, status | 사용자·기록당 1건, 관리자 처리 |
 | `product_events` | session_id, event_name, entity, allow-listed metadata | 이메일·본문·사용자 ID 없는 전환 측정 |
+| `movie_collections` | user_id, title, description, visibility | 소유자 전용 쓰기, 공개 컬렉션 RPC 조회 |
+| `movie_collection_items` | collection_id, movie_id, sort_order | 소유자만 추가·제외, 컬렉션당 최대 100편 |
+| `movie_collection_saves` | collection_id, user_id | 공개 컬렉션의 사용자별 1건, RPC 전용 |
 
 모든 쓰기·수정·삭제는 Supabase RLS로 소유자를 강제한다. `visibility = public`이면서 `status = completed`인 기록과 자식 질문·답변·태그만 인증 사용자에게 읽기를 허용한다. 초안과 비공개 기록은 항상 소유자 전용이며 기본값은 `private`이다.
 
@@ -90,6 +93,11 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `RPC add/remove_review_comment` | review id, body, parent | 1단계 댓글·삭제 상태 | invalid_comment, ownership |
 | `RPC report_review` | review id, reason, detail | 중복 없는 열린 신고 | own_review, invalid_reason |
 | `RPC track_product_event` | session, allow-listed event/entity/metadata | 본문 없는 전환 이벤트 | invalid_event |
+| `RPC list_public/my/saved_collections` | limit 또는 없음 | 권한별 컬렉션 카드·집계 | authentication |
+| `RPC get/list_movie_collection_items` | collection id | 공개 또는 소유 컬렉션과 영화 | not_found, authentication |
+| `RPC save/delete_movie_collection` | id, title, description, visibility | 소유자 컬렉션 변경 | validation, ownership |
+| `RPC add_movie_to_collection/remove_movie_from_collection` | collection id, movie id | 중복 없는 영화 연결 변경 | full, ownership, not_found |
+| `RPC set_movie_collection_saved` | collection id, active | 공개 컬렉션 멱등 저장 | not_public, authentication |
 
 클라이언트와 서버는 공유 TypeScript 스키마로 입력·응답을 검증한다. AI 응답은 구조화된 JSON으로 제한하고 저장 전 사용자가 수정·승인한다.
 

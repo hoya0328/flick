@@ -17,7 +17,7 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)
   ![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_RLS-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-Live_Data-01B4E4?style=flat-square)
-  ![Tests](https://img.shields.io/badge/Tests-40_Passing-117A55?style=flat-square)
+  ![Tests](https://img.shields.io/badge/Tests-44_Passing-117A55?style=flat-square)
 </div>
 
 ---
@@ -106,6 +106,14 @@ flowchart LR
 - 사용자별 중복 좋아요·저장·신고 방지와 본인 댓글 삭제
 - 관리자 신고 기각 또는 기록 비공개 전환과 감사 로그
 - 이메일·본문·사용자 ID 없이 공개 기록→영화 상세→새 기록 전환 측정
+
+### 5B 읽고 반응하는 피드와 컬렉션
+
+- 홈에서 공개 Light 리뷰 카드와 Core 매거진을 구분해 탐색
+- 피드와 상세에서 공감·댓글·답글·저장 후 영화 상세로 이동
+- 사용자 컬렉션 생성·수정·삭제, 나만 보기·전체 공개 전환
+- 영화 검색 또는 영화 상세에서 컬렉션에 최대 100편 추가·제외
+- 다른 사용자의 공개 컬렉션 저장과 내 컬렉션 화면 재조회
 
 ### 아카이브와 취향 리포트
 
@@ -265,7 +273,7 @@ npm run build:web
 
 - TypeScript strict 검사 통과
 - Expo ESLint 통과
-- Vitest 테스트 40개 통과
+- Vitest 테스트 44개 통과
 - Expo Doctor 20/20 통과
 - 정적 웹 경로 17개 빌드 성공
 - 운영 Supabase 사용자 테이블 RLS 활성화 확인

@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { type Href, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -139,6 +139,7 @@ export default function MovieDetailScreen() {
       <Button label="상세 정보 다시 확인" loading={refreshing} onPress={() => void refreshDetails()} variant="secondary" />
       {message ? <StateNotice message={message} title={message.includes('TMDB') ? '상세 정보' : '보고 싶어요'} tone={message.includes('저장했어요') || message.includes('TMDB') ? 'success' : 'info'} /> : null}
       <Button label={wanted ? '✓ 보고 싶어요에 저장됨' : '+ 보고 싶어요'} loading={saving} onPress={() => void toggleWatchlist()} variant={wanted ? 'secondary' : 'primary'} />
+      <Button label="내 컬렉션에 담기" onPress={() => router.push(`/collections?movieId=${encodeURIComponent(movie.id)}&title=${encodeURIComponent(movie.title)}` as Href)} variant="secondary" />
       <Button label="이 영화 감상 기록하기" onPress={startRecord} variant="secondary" />
       <Button label="데이터 출처와 크레딧" onPress={() => router.push('/credits')} variant="ghost" />
     </Screen>
