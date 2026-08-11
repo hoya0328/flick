@@ -17,13 +17,13 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)
   ![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_RLS-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-Live_Data-01B4E4?style=flat-square)
-  ![Tests](https://img.shields.io/badge/Tests-48_Passing-117A55?style=flat-square)
+  ![Tests](https://img.shields.io/badge/Tests-52_Passing-117A55?style=flat-square)
 </div>
 
 ---
 
 > [!NOTE]
-> 현재 버전은 모바일 반응형 웹 외부 베타입니다. 이메일 계정으로 로그인하면 영화 탐색부터 Light/Core 기록, AI 초안, 아카이브, 취향 리포트와 읽기 전용 공유까지 실제로 테스트할 수 있습니다.
+> 현재 버전은 모바일 반응형 웹 외부 베타입니다. 이메일 계정으로 로그인하면 영화 탐색부터 Light/Core 기록, AI 초안, 커뮤니티, 설명 가능한 취향 인사이트와 참여형 실험까지 실제로 테스트할 수 있습니다.
 
 ## 서비스 한눈에 보기
 
@@ -123,6 +123,22 @@ flowchart LR
 - 운영자가 니치 큐레이션을 작성하고 영화를 최대 30편까지 순서대로 편집
 - 전문가 큐레이션은 작성자·원문 출처·게시 권한 확인과 영화 1편 이상을 모두 충족해야 공개
 - 큐레이션 원본과 랭킹 스냅샷은 직접 접근을 막고 인증·관리자 RPC로만 조회·변경
+
+### 5D 설명 가능한 취향 인사이트
+
+- 완료 기록 3편부터 선택 태그와 키워드로 감정·분위기·장면·여운 신호를 계산
+- 가장 강한 신호와 실제 근거를 함께 제시하고 데이터가 적을 때는 유형을 단정하지 않음
+- 별점 4점 이상 기록을 현재 취향과의 겹침·감상 시점으로 정렬한 다시보기 추천
+- 현재 선택 취향과 거리가 있는 방향을 이유와 함께 제안해 필터 버블 완화
+- 리뷰 본문과 AI 호출 없이 기기에서 결정적으로 계산하며 개인화 결과를 숨기고 다시 켤 수 있음
+
+### 5E 참여형 실험
+
+- 로그인 사용자용 영화 퀴즈 3개와 정답별 히든 컬러 블록 해금
+- 정답은 서버에만 두고 사용자별 최대 3회 시도와 해금 상태를 RPC에서 판정
+- 선택지가 고정된 주간 투표와 사용자별 첫 응답 1회 제한
+- 퀴즈·투표 원본 테이블은 클라이언트에 직접 개방하지 않고 인증 RPC만 허용
+- 범용 글쓰기·자유 텍스트 AI·유료 API 없이 무료 베타 범위에서 운영
 
 ### 아카이브와 취향 리포트
 
@@ -282,9 +298,9 @@ npm run build:web
 
 - TypeScript strict 검사 통과
 - Expo ESLint 통과
-- Vitest 테스트 48개 통과
+- Vitest 테스트 52개 통과
 - Expo Doctor 20/20 통과
-- 정적 웹 경로 24개 빌드 성공
+- 정적 웹 경로 26개 빌드 성공
 - 운영 Supabase 사용자 테이블 RLS 활성화 확인
 - 공개 기록 화면에서 비소유자 편집 입력 0개 확인
 - 390px·480px 외부 베타 화면 가로 넘침 없음
@@ -303,6 +319,8 @@ npm run build:web
 - [x] **5A** — 공개 기록 피드 기반, 공감·댓글·답글·저장·신고와 관리자 조치
 - [x] **5B** — Light/Core 홈 피드와 사용자 영화 컬렉션
 - [x] **5C** — 최근 7일 랭킹, 감정 탐색, 니치·전문가 편집 큐레이션
+- [x] **5D** — 설명 가능한 취향 유형·감상 패턴·다시보기·취향 밖 추천과 개인화 숨김
+- [x] **5E** — 서버 판정 영화 퀴즈·히든 블록 보상과 사용자별 1회 투표
 - [x] **외부 베타** — 고정 beta URL, 로그인 복귀와 읽기 전용 공개 기록
 - [ ] **출시 준비** — 일회용 2계정 권한 통합 테스트와 계정 cascade 삭제 검증
 - [ ] **iOS** — Apple 로그인, 원본 앱 아이콘, TestFlight와 App Store 점검

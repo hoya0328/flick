@@ -1,5 +1,5 @@
 import * as Linking from 'expo-linking';
-import { router, useFocusEffect } from 'expo-router';
+import { type Href, router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, Share, StyleSheet, Text, View } from 'react-native';
 
@@ -124,6 +124,7 @@ export default function ArchiveScreen() {
         <Text style={styles.body}>Light {report.modeCounts.light}편 · Core {report.modeCounts.core}편</Text>
         <Text style={styles.label}>별점 분포</Text>
         {[5, 4, 3, 2, 1].map((rating) => { const count = report.ratingCounts[rating as 1 | 2 | 3 | 4 | 5]; return <View accessibilityLabel={`${rating}점 ${count}편`} key={rating} style={styles.barRow}><Text style={styles.barLabel}>★ {rating}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: `${(count / maxRatingCount) * 100}%` }]} /></View><Text style={styles.barCount}>{count}</Text></View>; })}
+        <Button label="5D 취향 인사이트 자세히 보기" onPress={() => router.push('/taste-insights' as Href)} variant="secondary" />
       </View>
 
       <View style={styles.section}>

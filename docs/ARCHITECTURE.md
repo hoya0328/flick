@@ -67,6 +67,10 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `discovery_ranking_items` | run_id, kind, rank, count, movie/keyword | 충분한 표본의 영화·키워드 순위, RPC 전용 |
 | `editorial_curations` | kind, title, description, curator/source/rights, status | Super Admin 작성, 공개본만 인증 사용자 조회 |
 | `editorial_curation_items` | curation_id, movie_id, note, sort_order | 관리자 편집, 큐레이션당 최대 30편 |
+| `experiment_quizzes` | id, question, options, correct_option, reward | 고정 베타 문제, 서버 RPC 전용 정답 |
+| `user_quiz_progress` | quiz_id, user_id, attempts, unlocked_at | 사용자별 최대 3회 시도와 해금 상태 |
+| `interactive_polls` | id, title, question, options, status | 고정 선택지 활성 투표, RPC 조회 |
+| `interactive_poll_votes` | poll_id, user_id, option_key | 사용자·투표당 첫 응답 1건, RPC 전용 |
 
 모든 쓰기·수정·삭제는 Supabase RLS로 소유자를 강제한다. `visibility = public`이면서 `status = completed`인 기록과 자식 질문·답변·태그만 인증 사용자에게 읽기를 허용한다. 초안과 비공개 기록은 항상 소유자 전용이며 기본값은 `private`이다.
 
@@ -106,6 +110,8 @@ tests/                   단위·통합·핵심 흐름 테스트
 | `RPC admin_refresh_discovery_rankings` | period days, minimum reviews | 새 집계 실행 ID | admin_required |
 | `RPC list/get_published_curations` | limit 또는 curation id | 권리 검증된 공개 편집 큐레이션 | authentication, not_found |
 | `RPC admin_*_editorial_curation*` | 큐레이션·영화·출처·상태 | 작성·영화 편집·공개·삭제 | admin_required, rights_required |
+| `RPC list/answer_experiment_quiz*` | 없음 또는 quiz/option | 진행 상태 조회·서버 정답 판정·해금 | authentication, locked, invalid_option |
+| `RPC list/vote_interactive_poll*` | 없음 또는 poll/option | 집계·내 선택 조회 또는 첫 응답 저장 | authentication, invalid_option |
 
 클라이언트와 서버는 공유 TypeScript 스키마로 입력·응답을 검증한다. AI 응답은 구조화된 JSON으로 제한하고 저장 전 사용자가 수정·승인한다.
 
@@ -118,6 +124,10 @@ Core 리뷰 초안 함수도 Supabase JWT와 영화 ID를 검증하고 Q1~Q5의 
 `ai_usage_events`에는 기능, 성공·실패 상태, 오류 코드, 모델, 토큰 수, 소요시간만 저장한다. 프롬프트·답변·생성 본문은 저장하지 않으며 각 사용자의 다음 호출 시 30일이 지난 이벤트를 삭제한다. RLS로 사용자는 자신의 메타데이터만 읽을 수 있고 쓰기는 서버 역할 RPC에만 허용한다.
 
 4단계 MVP 리포트는 별도 AI·DB 스냅샷 없이 사용자의 완료 기록에서 결정적으로 계산한다. 완료 편수, 월별 기록, 평균 별점, 별점 분포, Light/Core 비율과 감정 TOP 3를 같은 규칙으로 웹·앱에서 생성한다. `report_snapshots`는 기록량 증가로 조회 비용이 확인될 때만 도입한다.
+
+5D 개인화도 별도 서버 스냅샷이나 AI 없이 완료 기록의 키워드·질문 태그·별점·기록 시점에서 결정적으로 계산한다. 완료 기록 3편 전에는 유형을 만들지 않으며 개인화 숨김은 기록 삭제와 분리된 기기 설정이다.
+
+5E 퀴즈·투표 원본 테이블은 클라이언트 역할에 직접 열지 않는다. 정답 판정·시도 제한·해금과 첫 투표 고정은 `security definer` RPC가 `auth.uid()`를 기준으로 강제하고, 클라이언트에는 정답 값을 반환하지 않는다.
 
 ## 반응형·접근성
 

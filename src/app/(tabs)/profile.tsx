@@ -171,6 +171,8 @@ export default function ProfileScreen() {
       {adminAvailable ? <Button label="Super Admin 콘솔" onPress={() => router.push('/admin' as Href)} /> : null}
       <Button label="취향 키워드 다시 고르기" onPress={() => void handleReset()} variant="secondary" />
       <Button label="나의 아카이브와 리포트" onPress={() => router.push('/archive' as Href)} variant="secondary" />
+      <Button label="취향 인사이트와 다시보기" onPress={() => router.push('/taste-insights' as Href)} variant="secondary" />
+      <Button label="FLICK 영화 취향 실험실" onPress={() => router.push('/experiments' as Href)} variant="secondary" />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>내 데이터 관리</Text>

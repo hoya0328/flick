@@ -144,6 +144,7 @@ export default function HomeScreen() {
             <View style={styles.feedHeader}><Text style={styles.feedTitle}>사용자 영화 컬렉션</Text><Text style={styles.feedCaption}>COLLECTION</Text></View>
             {!collections.length ? <Text style={styles.empty}>아직 공개된 컬렉션이 없어요. 첫 영화 묶음을 만들어보세요.</Text> : collections.map((collection) => <CollectionCard collection={collection} key={collection.collectionId} />)}
             <Button label="내 컬렉션 만들기·관리" onPress={() => router.push('/collections' as Href)} variant="secondary" />
+            <Button label="FLICK 영화 취향 실험실" onPress={() => router.push('/experiments' as Href)} variant="secondary" />
           </> : null}
         </View>
       ) : <StateNotice message="공개 리뷰와 컬렉션은 이메일 계정으로 로그인하면 볼 수 있어요." title="커뮤니티 미리보기" tone="info" />}
