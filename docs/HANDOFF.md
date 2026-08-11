@@ -9,7 +9,7 @@
 - 원본 테이블의 `anon`, `authenticated` 직접 권한을 회수했다. 실제 관리자 계정으로 첫 랭킹 스냅샷 생성이 성공했고 비관리자 관리자 RPC 호출은 `admin_required`로 차단됐다.
 - `npm.cmd run check`: TypeScript, lint, 12개 파일 48개 테스트 통과. `npm.cmd run build:web`: `/admin-curations`, `/curation/[id]`를 포함한 정적 웹 24개 경로 통과.
 - 로컬 390×844에서 감정 선택→추천 이유 노출과 가로 넘침 0px를 확인했다. 비로그인 `/admin-curations`는 `/welcome`으로 복귀하고 큐레이션 상세는 로그인 안내만 제공한다.
-- 이번 작업은 운영 DB 적용과 GitHub 인수까지만 수행하며 EAS Hosting 외부 베타에는 배포하지 않는다. 기존 고정 주소는 5B 배포 `yrykwqtxbe`를 유지한다.
+- 기능 커밋 `aefa732`를 GitHub `main`에 push하고 EAS Hosting `beta`에 배포했다. deployment identifier는 `wsufsqvier`, 고정 주소는 `https://flick-film-journal--beta.expo.app`이다. 외부 390×844에서 감정 선택→추천 이유, 가로 넘침 0px, 콘솔 오류 0건과 `/admin-curations` 비로그인 차단을 확인했다.
 
 ## 2026-08-11 5B 구현과 외부 배포
 

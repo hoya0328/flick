@@ -26,7 +26,8 @@
 - Never commit secrets, local environment files, dependencies, caches, builds, logs, or archives.
 - Preserve deployment IDs exactly if hosting metadata is added later.
 - Match validation to risk; setup-only work requires JSON parsing, workspace checks, Git diff/status, and focused configuration checks.
-- Deploy or push only when explicitly requested and an authorized target already exists.
+- A user request to develop or continue developing FLICK includes focused validation, GitHub push, and deployment to the existing EAS Hosting `beta` alias unless the user explicitly excludes publication.
+- Never create or switch a deployment target implicitly. Stop and report before any paid deployment requirement or when the authorized existing target is unavailable.
 
 ## Continuity
 
