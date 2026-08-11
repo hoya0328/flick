@@ -17,7 +17,7 @@
   ![TypeScript](https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white)
   ![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_RLS-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-Live_Data-01B4E4?style=flat-square)
-  ![Tests](https://img.shields.io/badge/Tests-57_Passing-117A55?style=flat-square)
+  ![Tests](https://img.shields.io/badge/Tests-58_Passing-117A55?style=flat-square)
 </div>
 
 ---
@@ -147,6 +147,7 @@ flowchart LR
 - 10·30·50문제 프리셋 또는 1~100문제 직접 설정
 - 띄어쓰기·문장부호와 등록된 한국어·영문 별칭을 허용하는 제목 판정
 - 문제별 정답·오답 피드백, 진행률·최종 정답률과 문제 수별 기기 최고 점수 저장
+- 구형 Windows 웹에서도 빈 네모가 나오지 않도록 호환성이 확인된 이모지 조합 사용
 
 ### 아카이브와 취향 리포트
 
@@ -306,7 +307,7 @@ npm run build:web
 
 - TypeScript strict 검사 통과
 - Expo ESLint 통과
-- Vitest 테스트 57개 통과
+- Vitest 테스트 58개 통과
 - Expo Doctor 20/20 통과
 - 정적 웹 경로 27개 빌드 성공
 - 운영 Supabase 사용자 테이블 RLS 활성화 확인

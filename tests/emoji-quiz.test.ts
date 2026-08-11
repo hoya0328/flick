@@ -10,6 +10,12 @@ describe('emoji movie quiz', () => {
     expect(new Set(emojiQuizQuestions.map((question) => question.title)).size).toBe(100);
   });
 
+  it('avoids emoji known to render as blank boxes on older Windows browsers', () => {
+    const unsupported = ['🪨', '🪄', '🪞', '🪱', '🪤', '🪖', '🪦', '🫰', '🫏', '🪽', '🧸', '🧬', '🧱', '🧭', '🦾', '🦝', '🧵', '🧪', '🧽', '🐈‍⬛'];
+    const allClues = emojiQuizQuestions.map((question) => question.emoji).join(' ');
+    unsupported.forEach((emoji) => expect(allClues).not.toContain(emoji));
+  });
+
   it('accepts spacing, punctuation and declared aliases only', () => {
     const question = emojiQuizQuestions.find((item) => item.id === 'q006')!;
     expect(normalizeMovieAnswer(' 어벤져스: 엔드게임 ')).toBe('어벤져스엔드게임');
