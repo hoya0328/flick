@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/assets/portfolio-banner.svg" width="100%" alt="FLICK — 발견은 가볍게, 감상은 오래 남도록" />
+  <img src="./docs/assets/portfolio-banner.png" width="100%" alt="FLICK — 발견은 가볍게, 감상은 오래 남도록" />
 </p>
 
 <p align="center">
@@ -26,7 +26,7 @@ FLICK은 이 사이의 간격을 줄이는 서비스입니다. 지금의 감정�
 ## 브랜드와 사용 경험
 
 <p align="center">
-  <img src="./docs/assets/flick-github-banner.svg" width="100%" alt="FLICK 기존 브랜드 비주얼 — 감정 키워드와 영화 기록 카드" />
+  <img src="./docs/assets/flick-github-banner.png" width="100%" alt="FLICK 기존 브랜드 비주얼 — 감정 키워드와 영화 기록 카드" />
   <br />
   <sub>초록색 포트폴리오 테마와 함께, FLICK 고유의 코랄 컬러와 영화 카드 비주얼을 유지했습니다. 위 이미지는 브랜드 소개 아트입니다.</sub>
 </p>
