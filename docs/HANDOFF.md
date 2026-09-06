@@ -180,7 +180,7 @@
 
 - Supabase 웹 함수 편집기의 배포 요청은 서버 500 오류를 반환해 CLI로 배포했다. 배포용 1일 개인 액세스 토큰은 배포 직후 폐기했다.
 - Apple Developer 계정이 없어 iOS 네이티브 빌드는 실행하지 않았다.
-- `npm audit --omit=dev`는 Expo/Metro·React Native 빌드 체인의 `image-size`와 `uuid` 전이 의존성으로 21건(높음 14, 보통 7)을 보고한다. 정적 웹 런타임 입력 경로가 아닌 빌드 도구 위험이며 비파괴 수정이 없다. 강제 수정은 Expo 53·React Native 0.72로 호환성을 깨는 역행이어서 적용하지 않고 상위 패치를 추적한다. Expo Doctor 20개 검사는 모두 통과했다.
+- `npm audit --omit=dev`의 비파괴 업데이트로 취약점 수를 20건에서 17건(높음 4, 보통 13)으로 줄였다. 남은 항목은 Expo/Metro·React Native 빌드 체인의 `image-size`, `decode-uri-component`, `uuid` 전이 의존성이며 강제 수정은 Expo 호환성을 깨는 역행을 제안해 적용하지 않았다. 정적 웹 런타임 입력 경로가 아닌 빌드 도구 위험으로 추적하며 Expo 상위 패치를 기다린다.
 - 앱 아이콘과 스토어 자산은 승인된 원본 FLICK 자산을 받은 뒤 교체한다.
 - 현재 Windows PowerShell 실행 정책에서는 `npm.ps1`이 차단되므로 명령은 `npm.cmd`로 실행한다.
 - Supabase Free DB는 500MB 초과 시 자동 과금 대신 읽기 전용으로 전환될 수 있다. `npm.cmd run catalog:audit`로 최신 후보 건수와 예상치를 먼저 확인하고 전체 적재는 명시적 승인 전 실행하지 않는다.
