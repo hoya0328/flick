@@ -1,0 +1,17 @@
+name: Feature request
+description: Suggest a product improvement.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: user_problem
+    attributes:
+      label: User problem
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome and success signal
+    validations:
+      required: true

@@ -18,6 +18,7 @@
   ![Supabase](https://img.shields.io/badge/Supabase-Auth_%26_RLS-3FCF8E?style=flat-square&logo=supabase&logoColor=white)
   ![TMDB](https://img.shields.io/badge/TMDB-Live_Data-01B4E4?style=flat-square)
   ![Tests](https://img.shields.io/badge/Tests-58_Passing-117A55?style=flat-square)
+  [![CI](https://github.com/hoya0328/flick/actions/workflows/ci.yml/badge.svg)](https://github.com/hoya0328/flick/actions/workflows/ci.yml)
 </div>
 
 ---
@@ -366,6 +367,12 @@ npm run build:web
 FLICK는 기능을 많이 나열하는 대신, **발견 → 감상 → 기록 → 회고 → 재발견**의 제품 루프를 실제 외부 사용자가 경험할 수 있게 만드는 데 집중했습니다.
 
 기획 문서와 화면 구성에서 출발해 반응형 UI, 사용자별 데이터 권한, 외부 영화 API, AI 비용·안전 경계, 운영 가능한 배포와 QA까지 하나의 제품 흐름으로 연결한 프로젝트입니다.
+
+## 저장소 정책
+
+- 버그와 개선 제안은 GitHub Issues에서 받습니다.
+- 개인정보·계정 격리·비밀정보 문제는 [보안 정책](./SECURITY.md)에 따라 비공개로 알려주세요.
+- 별도 오픈소스 라이선스가 없으며 포트폴리오 열람 목적으로 공개합니다.
 
 ---
 
