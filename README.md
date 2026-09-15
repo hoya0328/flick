@@ -1,11 +1,11 @@
 <p align="center">
-  <img src="./docs/assets/portfolio-banner.png" width="100%" alt="FLICK — 발견은 가볍게, 감상은 오래 남도록" />
+  <img src="./docs/assets/portfolio-banner.png" width="100%" alt="FLICK | 영화는 끝나도, 감상은 남도록. 공개 웹 베타의 취향 선택 화면" />
 </p>
 
 <p align="center">
-  <a href="https://flick-film-journal--beta.expo.app"><img src="https://img.shields.io/badge/Try_FLICK-Web_Beta-167452?style=flat-square" alt="웹 베타 사용하기" /></a>
-  <img src="https://img.shields.io/badge/Expo-React_Native-315b46?style=flat-square" alt="Expo와 React Native" />
-  <img src="https://img.shields.io/badge/TypeScript-Strict-658c36?style=flat-square" alt="TypeScript strict" />
+  <a href="https://flick-film-journal--beta.expo.app"><img src="https://img.shields.io/badge/Try_FLICK-Web_Beta-E82E50?style=flat-square" alt="웹 베타 사용하기" /></a>
+  <img src="https://img.shields.io/badge/Expo-React_Native-28232A?style=flat-square" alt="Expo와 React Native" />
+  <img src="https://img.shields.io/badge/TypeScript-Strict-B6203C?style=flat-square" alt="TypeScript strict" />
   <a href="https://github.com/hoya0328/flick/actions/workflows/ci.yml"><img src="https://github.com/hoya0328/flick/actions/workflows/ci.yml/badge.svg" alt="CI 검사 상태" /></a>
 </p>
 
@@ -15,20 +15,31 @@
 
 [웹 베타 사용해 보기](https://flick-film-journal--beta.expo.app) · [화면 구성](docs/SCREEN_STRUCTURE.md) · [아키텍처](docs/ARCHITECTURE.md) · [로드맵](docs/ROADMAP.md)
 
+## Project Snapshot
+
+| 항목 | 내용 |
+| :--- | :--- |
+| **프로젝트 형태** | HOYA 개인 프로젝트 · 반응형 웹 베타 |
+| **담당 범위** | 제품 흐름·기록 모드 기획, Expo 앱·웹 구현, 인증·데이터 설계, 외부 API 연동과 문서화 |
+| **핵심 설계** | Light/Core 기록, 사용자 검토형 AI 보조, 비공개 기본값과 데이터 접근 정책 |
+| **검증 과제** | 계정 간 접근 경계·계정 삭제의 최종 통합 검증, 네이티브 배포 준비 |
+
+AI 개발 도구를 구현과 검토에 활용했습니다. 제품 안의 AI 기능은 별도로 동의를 받아 질문과 초안 정리를 보조하며, 기록 확정은 사용자가 결정합니다.
+
 ## 프로젝트를 시작한 이유
 
-좋은 영화를 보고도 시간이 지나면 줄거리보다 그날의 기분이 먼저 떠오르곤 합니다. 별점과 한 줄만 남기기에는 아쉽지만, 매번 정돈된 리뷰를 쓰는 일은 부담스러웠습니다.
+영화 감상을 남길 때 별점만으로는 맥락이 부족하고, 긴 리뷰를 작성하기에는 부담이 큽니다. 기록 방식의 부담을 낮추면서 그날의 감정과 개인의 시선을 보존하는 방법을 고민했습니다.
 
 FLICK은 이 사이의 간격을 줄이는 서비스입니다. 지금의 감정에 맞는 영화를 발견하고, 짧게 남기거나 깊게 생각할 수 있는 기록 방식을 선택하게 했습니다. 쌓인 기록은 캘린더와 취향 리포트로 돌아와 다음 영화를 고르는 단서가 됩니다.
 
-**더 많은 리뷰를 쓰게 하는 것보다, 내 감상을 무리 없이 남기고 다시 꺼내보게 하는 것**을 중요하게 생각했습니다.
+제품의 기준은 **부담 없이 기록을 시작하고, 쌓인 감상을 다음 발견으로 연결하는 것**입니다.
 
-## 브랜드와 사용 경험
+## 실제 사용 화면
 
 <p align="center">
-  <img src="./docs/assets/flick-github-banner.png" width="100%" alt="FLICK 기존 브랜드 비주얼 — 감정 키워드와 영화 기록 카드" />
+  <img src="./docs/assets/product-onboarding.png" width="480" alt="FLICK 공개 웹 베타에서 감정 키워드를 선택하는 첫 취향 설정 화면" />
   <br />
-  <sub>초록색 포트폴리오 테마와 함께, FLICK 고유의 코랄 컬러와 영화 카드 비주얼을 유지했습니다. 위 이미지는 브랜드 소개 아트입니다.</sub>
+  <sub>공개 웹 베타의 데모 진입 후 첫 취향 설정 화면입니다. 2026-09-15 촬영.</sub>
 </p>
 
 ## 발견부터 재발견까지
@@ -80,8 +91,8 @@ flowchart TD
     F --> G["Gemini · 질문과 초안 보조"]
     G --> R["사용자 검토 · 수정 · 완료"]
     R --> D
-    style F fill:#14532d,color:#f0fdf4,stroke:#86efac
-    style R fill:#ecfccb,color:#1a2e05,stroke:#65a30d
+    style F fill:#e82e50,color:#ffffff,stroke:#b6203c
+    style R fill:#fff2f5,color:#28232a,stroke:#e82e50
 ```
 
 | 영역 | 기술과 선택 배경 |
