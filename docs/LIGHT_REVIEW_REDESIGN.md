@@ -32,6 +32,7 @@
 
 - TypeScript, ESLint, Vitest와 정적 웹 빌드.
 - 402×875 브라우저에서 선택창·질문 변경·3개 제한·직접 입력·건너뛰기·진행 로딩·대표 5개 제한·본문 편집·완료 저장·재열기 확인.
+- 기존 beta 외부 주소에서 최종 번들 일치, 모드 선택, 실제 드래그로 4.5→3.0점과 문구 변경, 다섯 질문의 다음/건너뛰기를 확인했다. 배포 ID는 `887dbhy3g1`이다.
 - 운영 SQL 트랜잭션 QA: 0.5점·5개 skipped 저장, 비정상 별점·빈 기록 거부, 비소유자 private 읽기/수정 차단. `supabase/tests/figma_light_review.sql`의 테스트 쓰기는 전부 rollback.
 - 원본 아이콘은 `assets/figma-review/`에 SVG 원본과 4x PNG를 보관한다. 영화 포스터는 실제 선택한 영화 데이터로 표시한다.
 - GitHub 태그 `rollback/review-before-figma-2026-10-23`는 변경 전 `ea014b4`를 보존한다. 이전 EAS 배포는 `vtqvwsek5r`이다. UI 롤백 시 새 DB 컬럼·RPC는 삭제하지 않아 새 기록을 보존한다.

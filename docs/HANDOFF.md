@@ -8,6 +8,8 @@
 - AI Studio의 Klick 프로젝트가 무료 등급임을 확인했으며 결제 연결이나 요금제 변경은 하지 않았다. 무료 초안은 Core와 일 5회·분 2회 한도를 공유한다.
 - 변경 전 GitHub 태그: `rollback/review-before-figma-2026-10-23` (`ea014b4`). 이전 EAS deployment `vtqvwsek5r`는 유지한다. DB를 삭제하는 롤백은 금지한다.
 - 검증: typecheck·lint·18개 파일 71개 테스트·30개 웹 경로 빌드 통과. 402px에서 대표 키워드 추가/제거·3개/5개 제한·직접 입력·본문 편집·완료→보관함→재열기·새로고침 복원을 확인했다. 반점 별점도 취향 리포트 분포에 포함한다. 증거 PNG 2개는 공개 GitHub에 올리지 않고 로컬 `docs/assets/light-review-*-2026-10-23.png`에만 보관한다.
+- 코드 커밋 `bcd6453`을 GitHub main에 push하고 EAS beta에 배포했다. deployment `887dbhy3g1`, 고정 주소 `https://flick-film-journal--beta.expo.app`, 최종 번들 `entry-b2cceda4007401e1af6502834884e1a0.js`이다. 외부 주소의 하단 모드 선택→새 Light 경로를 확인했다. AI 함수의 비인증 요청은 401로 차단된다.
+- 외부 beta의 402px 화면에서 실제 별점 드래그·평가 문구 변경→Q1 선택/Q2~Q5 건너뛰기→종합→작성 완료→보관함 저장→기록 재열기도 확인했다. 임시 뷰포트 설정은 해제했다. 실제 Gemini 성공 응답 확인만 로그인 후 추가 QA 대상으로 남긴다.
 
 
 ## 2026-10-23 Figma 홈 리디자인
