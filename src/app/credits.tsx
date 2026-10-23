@@ -13,6 +13,8 @@ export default function CreditsScreen() {
       <Text style={styles.notice}>{tmdbAttribution}</Text>
       <Text style={styles.body}>한국 OTT 스트리밍·대여·구매 가능 정보는 TMDB와 JustWatch를 통해 제공될 수 있습니다. OTT 정보 제공: JustWatch.</Text>
       <Text style={styles.body}>TMDB 연결이 불안정할 때는 마지막으로 저장된 캐시 또는 검증용 목록을 표시하며, 화면에 해당 상태를 안내합니다.</Text>
+      <Text style={styles.body}>UI 폰트: Pretendard · Inter (SIL OFL). 전문가 태그의 SVG 이모지: Twemoji, Copyright Twitter, Inc. and other contributors, CC BY 4.0. 원본 색상·형태를 유지하며 크기만 조절했습니다.</Text>
+      <Button label="Twemoji 출처 · CC BY 4.0" onPress={() => void Linking.openURL('https://github.com/twitter/twemoji/blob/master/LICENSE-GRAPHICS')} variant="secondary" />
       <Button label="TMDB 웹사이트 열기" onPress={() => void Linking.openURL('https://www.themoviedb.org')} variant="secondary" />
       <Button label="← 돌아가기" onPress={() => router.back()} variant="ghost" />
     </Screen>

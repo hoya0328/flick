@@ -2,6 +2,8 @@
 
 ## 현재 작업 환경 · 2026-10-23
 
+- Figma 홈·Light 화면의 세부 치수와 벡터 UI 기준은 [UI_FIDELITY.md](UI_FIDELITY.md). 402px 캔버스, 원본 SVG, 로컬 Pretendard/Inter와 필수 개인정보/복구 안내를 보존한다.
+
 - Light 리뷰는 Figma `2:453` 기반 단계형 `/light-record`로 변경한다. [리뷰 리디자인 계약](LIGHT_REVIEW_REDESIGN.md)에 저장·건너뛰기·AI·롤백 기준을 기록했다. Core는 기존 편집기를 유지한다.
 
 - 현 작업 폴더: `C:\Users\letsh\Documents\ChatGPT\Flick` (과거 `Click` 폴더와 구분).

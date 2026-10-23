@@ -2,22 +2,23 @@ import type { PropsWithChildren, ReactNode } from 'react';
 import { Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 
 import { Button } from '@/components/button';
-import { homeAssets } from '@/features/home/design-assets';
+import { DesignVector } from '@/components/design-vector';
+import type { VectorName } from '@/features/design/vector-assets';
 
 export const homeTheme = { accent: '#F8233C', ink: '#0A0A0A', muted: '#888888', subtle: '#F3F4F6', radius: 20, inset: 21 } as const;
 export const homeFont = Platform.OS === 'web' ? 'Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' : undefined;
 
-export function HomeIcon({ name, width = 20, height = width, tint }: { name: keyof typeof homeAssets; width?: number; height?: number; tint?: string }) {
-  return <Image accessible={false} resizeMode="contain" source={homeAssets[name]} tintColor={tint} style={{ width, height }} />;
+export function HomeIcon({ name, width = 20, height = width, tint }: { name: VectorName; width?: number; height?: number; tint?: string }) {
+  return <DesignVector name={name} width={width} height={height} tint={tint} />;
 }
 
-export function HomeSection({ children, title, onMore, caption, moreLabel }: PropsWithChildren<{ title: ReactNode; onMore?: () => void; caption?: string; moreLabel?: string }>) {
-  return <View style={styles.section}>
+export function HomeSection({ children, title, onMore, caption, moreLabel, first = false }: PropsWithChildren<{ title: ReactNode; onMore?: () => void; caption?: string; moreLabel?: string; first?: boolean }>) {
+  return <View style={[styles.section, first && { marginTop: 58.868 }]}>
     <View style={styles.headingRow}>
-      <Text accessibilityRole="header" style={styles.heading}>{title}</Text>
+      <Text accessibilityRole="header" accessibilityHint={caption} style={styles.heading}>{title}</Text>
       {onMore ? <Pressable accessibilityRole="button" accessibilityLabel={moreLabel ?? `${typeof title === 'string' ? title : '섹션'} 더보기`} hitSlop={8} onPress={onMore} style={styles.more}><HomeIcon name="chevron" width={7} height={14} /></Pressable> : null}
     </View>
-    {caption ? <Text style={styles.caption}>{caption}</Text> : null}
+    {caption ? <Pressable accessibilityRole="button" accessibilityLabel={caption} onPress={() => onMore?.()} style={styles.captionInfo}><DesignVector name="info" width={14} /></Pressable> : null}
     {children}
   </View>;
 }
@@ -52,10 +53,10 @@ export const homeText = StyleSheet.create({
 
 const styles = StyleSheet.create({
   section: { gap: 20, marginTop: 50 },
-  headingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: homeTheme.inset, gap: 4 },
-  heading: { color: homeTheme.ink, flexShrink: 1, fontFamily: homeFont, fontSize: 20, fontWeight: '600', letterSpacing: -0.2, lineHeight: 26 },
-  more: { minWidth: 32, minHeight: 32, alignItems: 'flex-end', justifyContent: 'center' },
-  caption: { ...homeText.muted, paddingHorizontal: homeTheme.inset, marginTop: -16 },
+  headingRow: { minHeight: 21, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: homeTheme.inset, gap: 4 },
+  heading: { marginVertical: -1.5, color: homeTheme.ink, flexShrink: 1, fontFamily: Platform.OS === 'web' ? 'Inter, Pretendard, sans-serif' : homeFont, fontSize: 20, fontWeight: '600', letterSpacing: -0.2, lineHeight: 24 },
+  more: { width: 32, height: 21, alignItems: 'flex-end', justifyContent: 'center' },
+  captionInfo: { position: 'absolute', right: 53, top: 3, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
   rail: { paddingHorizontal: homeTheme.inset, gap: 8, alignItems: 'flex-start' },
   railViewport: { flexGrow: 0 },
   placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#28232D' },

@@ -10,8 +10,8 @@ export function ReviewKeywords({ keywords, concealed = false }: { keywords: unkn
   return <View accessibilityLabel="대표 키워드" style={styles.tags}>{words.map((word, index) => <View key={word} style={[styles.tag, { backgroundColor: chipColors[index] }]}><Text style={styles.text}>{word}</Text></View>)}</View>;
 }
 const styles = StyleSheet.create({
-  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 16, minHeight: 24 },
+  tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 7, marginTop: 17.231, minHeight: 24 },
   tag: { borderRadius: 18, paddingHorizontal: 9, minHeight: 24, justifyContent: 'center' },
-  text: { fontFamily: homeFont, fontSize: 11, lineHeight: 16, color: 'white' },
+  text: { fontFamily: homeFont, fontSize: 12, lineHeight: 18, color: 'white' },
   concealed: { fontFamily: homeFont, color: '#99A1AF', fontSize: 11, lineHeight: 17, marginTop: 8 },
 });

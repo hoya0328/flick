@@ -50,7 +50,7 @@ export function PosterPreferenceDeck({ movies, onLike }: PosterPreferenceDeckPro
   const rotate = position.x.interpolate({ inputRange: [-220, 0, 220], outputRange: ['-7deg', '0deg', '7deg'] });
 
   return <View accessibilityLabel="영화 포스터 추천. 왼쪽으로 넘기고 오른쪽으로 보고 싶어요에 저장할 수 있습니다." style={styles.section}>
-    <View style={styles.backCard} />
+    <View style={styles.backCardFar} /><View style={styles.backCard} />
     <Animated.View {...panResponder.panHandlers} style={[styles.posterWrap, { transform: [{ translateX: position.x }, { translateY: position.y }, { rotate }] }]}>
       <Pressable accessibilityRole="button" accessibilityLabel={movie ? `${movie.title} 영화 상세 보기` : '이터널 선샤인 디자인 예시, 영화 검색'} onPress={openMovie} style={styles.artwork}>
         {movie ? <PosterArt fullBleed movie={movie} style={styles.poster} /> : <Image accessibilityLabel="이터널 선샤인 디자인 예시 포스터" resizeMode="cover" source={homeAssets.hero} style={styles.poster} />}
@@ -72,8 +72,9 @@ export function PosterPreferenceDeck({ movies, onLike }: PosterPreferenceDeckPro
 }
 
 const styles = StyleSheet.create({
-  section: { marginLeft: 21, marginRight: 13, marginTop: 29, paddingRight: 8 },
-  backCard: { backgroundColor: homeTheme.accent, position: 'absolute', right: 0, width: '90%', top: '6.5%', height: '87.4%', borderRadius: 20 },
+  section: { marginLeft: 21, marginRight: 13, marginTop: 37, paddingRight: 8 },
+  backCardFar: { backgroundColor: '#FBCAD1', position: 'absolute', right: -8, width: '91%', top: '13.28%', height: '73.77%', borderRadius: 20 },
+  backCard: { backgroundColor: homeTheme.accent, position: 'absolute', right: 0, width: '90%', top: '6.46%', height: '87.41%', borderRadius: 20 },
   posterWrap: { position: 'relative', aspectRatio: 360 / 557.132, width: '100%' },
   artwork: { flex: 1, overflow: 'hidden', borderRadius: 20 },
   poster: { borderRadius: 20, height: '100%', width: '100%', maxHeight: undefined, aspectRatio: undefined, padding: 0 },

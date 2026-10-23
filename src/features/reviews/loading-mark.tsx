@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing, Image, Platform } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, Platform } from 'react-native';
+
+import { DesignVector } from '@/components/design-vector';
 
 // Original Figma node 2:1081 export, not a reconstruction of its rotated pieces.
 export function LoadingMark() {
@@ -23,6 +25,6 @@ export function LoadingMark() {
   }, [turn]);
 
   return <Animated.View accessibilityLabel="키워드 정리 중" style={{ width: 94, height: 94, flexShrink: 0, alignItems: 'center', justifyContent: 'center', transformOrigin: 'center', transform: [{ rotate: turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }}>
-    <Image accessible={false} source={require('../../../assets/figma-review/loading-logo.png')} resizeMode="contain" style={{ width: 94, height: 94 }} />
+    <DesignVector name="loadingLogo" />
   </Animated.View>;
 }

@@ -1,8 +1,9 @@
 import { type Href, router } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { DesignVector } from '@/components/design-vector';
 import { Button } from '@/components/button';
 import { HomeExpertCard, HomeMagazineCard, HomeReviewCard, previewKeywords, previewMovies } from '@/components/home-content-cards';
 import { HomeIcon, HomeInfoDialog, HomePicture, HomeRail, HomeSection, homeFont, homeText, homeTheme } from '@/components/home-ui';
@@ -11,7 +12,6 @@ import { StateNotice } from '@/components/state-notice';
 import { listPublicReviewFeed, setReviewLiked, type PublicReviewCard as ReviewCard } from '@/features/community/community-service';
 import { discoverMovies, type DiscoveryResult, setWantToWatch } from '@/features/discovery/movies';
 import { getDiscoveryRankings, listPublishedCurations, type DiscoveryRankings, type EditorialCuration } from '@/features/discovery/discovery-insights';
-import { homeAssets } from '@/features/home/design-assets';
 import { hasCurrentRankings, keywordRows, movieRating } from '@/features/home/home-model';
 import { getKeywordLabels } from '@/features/onboarding/keywords';
 import { useSession } from '@/features/session/session-provider';
@@ -19,7 +19,7 @@ import { useSession } from '@/features/session/session-provider';
 export default function HomeScreen() {
   const { mode, selectedKeywords } = useSession();
   const { width } = useWindowDimensions();
-  const contentWidth = Math.min(width, 560);
+  const contentWidth = Math.min(width, 402);
   const reviewWidth = Math.min(contentWidth - 42, 359);
   const [result, setResult] = useState<DiscoveryResult | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -95,8 +95,8 @@ export default function HomeScreen() {
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
       <View style={styles.page} testID="figma-home">
         <View style={styles.header}>
-          <Image accessibilityLabel="FLICK 심볼" source={homeAssets.symbol} style={styles.symbol} />
-          <Image accessibilityLabel="FLICK" accessibilityRole="header" resizeMode="contain" source={homeAssets.wordmark} style={styles.wordmark} />
+          <DesignVector label="FLICK 심볼" name="symbol" width={28} />
+          <DesignVector label="FLICK" name="wordmark" width={116.4} height={22} style={styles.wordmark} />
           <View style={styles.headerActions}>
             <Pressable accessibilityRole="button" accessibilityLabel="알림" onPress={() => setInfo({ title: '알림', body: '새 알림이 없습니다. 알림 수신 기능은 준비 중이에요.' })} style={styles.headerButton}><HomeIcon name="bell" width={23} height={25} /></Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="메시지" onPress={() => setInfo({ title: '메시지', body: '메시지 기능은 준비 중이에요. 지금은 공개 리뷰의 댓글로 감상을 나눌 수 있어요.' })} style={styles.headerButton}><HomeIcon name="message" width={27} height={25} /></Pressable>
@@ -108,7 +108,7 @@ export default function HomeScreen() {
         {status === 'error' ? <View style={styles.notice}><StateNotice title="영화를 불러오지 못했어요" message="네트워크를 확인한 뒤 다시 시도해 주세요." tone="warning" /><Button label="영화 다시 불러오기" onPress={() => void load()} variant="secondary" /></View> : null}
         {actionMessage ? <Pressable accessibilityRole="button" accessibilityLabel="안내 닫기" onPress={() => setActionMessage(null)} style={styles.notice}><Text accessibilityLiveRegion="polite" style={homeText.body}>{actionMessage} ×</Text></Pressable> : null}
 
-        <HomeSection title={<>이번 주 <Text style={homeText.accent}>플리커</Text> Top 10 영화</>} moreLabel="주간 영화 랭킹 더보기" onMore={() => openFeed('rankings')} caption={rankCaption}>
+        <HomeSection first title={<>이번 주 <Text style={homeText.accent}>플리커</Text> Top 10 영화</>} moreLabel="주간 영화 랭킹 더보기" onMore={() => openFeed('rankings')} caption={rankCaption}>
           <HomeRail label="이번 주 영화, 가로로 스크롤">
             {rankedMovies.length ? rankedMovies.map((movie) => <Pressable accessibilityRole="button" accessibilityLabel={`${movie.rank}위 ${movie.title}, 최근 공개 리뷰 ${movie.score}편`} key={movie.movieId} onPress={() => router.push(`/movie/${movie.movieId}` as Href)} style={styles.movieCard}>
               <HomePicture source={movie.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${movie.posterPath}` } : null} label={movie.title} width={140} height={200} />
@@ -131,7 +131,7 @@ export default function HomeScreen() {
 
         <HomeSection title={<>이번 주 <Text style={homeText.accent}>플리커</Text> 키워드</>} moreLabel="주간 키워드 더보기" onMore={() => openFeed('rankings')}>
           <HomeRail label="플리커 키워드 두 줄, 가로로 스크롤">
-            <View style={styles.keywordRows}>{keywordRows(keywordItems.length ? keywordItems : previewKeywords.map((label) => ({ key: label, label, score: 0 }))).map((row, index) => <View key={index} style={styles.keywordRow}>{row.map((keyword, itemIndex) => <Pressable accessibilityRole="button" accessibilityLabel={`${keyword.label} 키워드 ${keywordItems.length ? keyword.score + '회 선택' : '디자인 예시'}`} key={keyword.key} onPress={() => setInfo({ title: keyword.label, body: keywordItems.length ? `최근 7일 공개 완료 기록에서 ${keyword.score}회 선택됐어요. 영화 탐색 화면에서 감정과 분위기에 맞는 영화를 찾아보세요.` : '주간 키워드를 집계할 공개 기록이 더 필요해요. 지금 보이는 키워드는 디자인 예시이며 사용 횟수는 만들지 않습니다.' })} style={[styles.keyword, index === 0 && styles.keywordPrimary]}><Text style={[styles.keywordLabel, index === 0 && styles.keywordLight]}>{keyword.label}</Text><Text style={[styles.keywordCount, index === 0 && styles.keywordLight]}>{keywordItems.length ? keyword.score.toLocaleString('ko-KR') : itemIndex === 0 ? '예시' : '—'}</Text></Pressable>)}</View>)}</View>
+            <View style={styles.keywordRows}>{keywordRows(keywordItems.length ? keywordItems : previewKeywords.map((label) => ({ key: label, label, score: 0 }))).map((row, index) => <View key={index} style={styles.keywordRow}>{row.map((keyword, itemIndex) => <Pressable accessibilityRole="button" accessibilityLabel={`${keyword.label} 키워드 ${keywordItems.length ? keyword.score + '회 선택' : '디자인 예시'}`} key={keyword.key} onPress={() => setInfo({ title: keyword.label, body: keywordItems.length ? `최근 7일 공개 완료 기록에서 ${keyword.score}회 선택됐어요. 영화 탐색 화면에서 감정과 분위기에 맞는 영화를 찾아보세요.` : '주간 키워드를 집계할 공개 기록이 더 필요해요. 지금 보이는 키워드는 디자인 예시이며 사용 횟수는 만들지 않습니다.' })} style={[styles.keyword, index === 0 && (itemIndex < 3 ? styles.keywordPrimary : styles.keywordOutline)]}><Text style={[styles.keywordLabel, index === 0 && (itemIndex < 3 ? styles.keywordLight : styles.keywordPink)]}>{keyword.label}</Text><Text style={[styles.keywordCount, index === 0 && (itemIndex < 3 ? styles.keywordLight : styles.keywordPink)]}>{keywordItems.length ? keyword.score.toLocaleString('ko-KR') : itemIndex === 0 ? '예시' : '—'}</Text></Pressable>)}</View>)}</View>
           </HomeRail>
         </HomeSection>
 
@@ -174,15 +174,15 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   safeArea: { backgroundColor: '#FFFFFF', flex: 1 },
   scroll: { flexGrow: 1 },
-  page: { alignSelf: 'center', backgroundColor: '#FFFFFF', maxWidth: 560, width: '100%', paddingTop: 28, paddingBottom: 40, overflow: 'hidden' },
-  header: { marginHorizontal: 21, minHeight: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  page: { alignSelf: 'center', backgroundColor: '#FFFFFF', maxWidth: 402, width: '100%', paddingTop: 28, paddingBottom: 40, overflow: 'hidden' },
+  header: { marginHorizontal: 21, height: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   symbol: { width: 28, height: 28 },
   wordmark: { position: 'absolute', width: 116.4, height: 22, left: '50%', marginLeft: -58.2 },
   headerActions: { flexDirection: 'row', gap: 0 },
-  headerButton: { minWidth: 36, minHeight: 40, alignItems: 'center', justifyContent: 'center' },
+  headerButton: { minWidth: 36, height: 28, alignItems: 'center', justifyContent: 'center' },
   loading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12 },
   notice: { marginHorizontal: 21, padding: 12, borderRadius: 12, backgroundColor: '#FFF5F6', gap: 8, marginTop: 12 },
-  movieCard: { width: 140, gap: 5, position: 'relative' },
+  movieCard: { width: 140, minHeight: 285, gap: 6, position: 'relative' },
   rank: { position: 'absolute', left: 12, top: 12, width: 23, height: 23, borderRadius: 12, backgroundColor: homeTheme.accent, alignItems: 'center', justifyContent: 'center' },
   rankText: { color: '#FFFFFF', fontFamily: homeFont, fontSize: 15, fontWeight: '700' },
   rating: { flexDirection: 'row', gap: 5, alignItems: 'center' },
@@ -192,10 +192,12 @@ const styles = StyleSheet.create({
   movieTagText: { color: '#6A7282', fontSize: 11, lineHeight: 17, fontFamily: homeFont },
   keywordRows: { gap: 8.5 },
   keywordRow: { flexDirection: 'row', gap: 8 },
-  keyword: { borderColor: '#D9D9D9', borderWidth: 1, borderRadius: 18, minHeight: 35, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 11 },
+  keyword: { borderColor: '#D9D9D9', borderWidth: 1, borderRadius: 18, minHeight: 34.12, flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 11 },
+  keywordOutline: { borderColor: homeTheme.accent },
+  keywordPink: { color: homeTheme.accent },
   keywordPrimary: { backgroundColor: homeTheme.accent, borderColor: homeTheme.accent },
-  keywordLabel: { fontSize: 15, color: homeTheme.ink, fontFamily: homeFont, fontWeight: '500' },
-  keywordCount: { fontSize: 13, color: '#888888', fontFamily: homeFont },
+  keywordLabel: { fontSize: 17.06, lineHeight: 20.47, color: homeTheme.ink, fontFamily: homeFont, fontWeight: '500' },
+  keywordCount: { fontSize: 17.06, lineHeight: 20.47, fontWeight: '300', opacity: 0.8, color: '#888888', fontFamily: homeFont },
   keywordLight: { color: '#FFFFFF' },
   gameWrap: { marginHorizontal: 21, gap: 10 },
   game: { height: 188, backgroundColor: homeTheme.accent, borderRadius: 20, justifyContent: 'flex-end', alignItems: 'center', paddingBottom: 35, gap: 14 },
