@@ -7,7 +7,7 @@
 - 대표 키워드/Light 태그는 15px·36px로 수정하고 영화별 리뷰 카드에는 기존 대표 키워드 저장/표시를 유지했다. 문구·버튼·접근 권한·AI 동의·개인정보 안내는 보존했다. 검색 대기 상태와 저장 중 상태를 분리해 복원 시 저장 버튼이 잠기는 경쟁 상태도 수정했다.
 - 22개 파일 84개 테스트, typecheck·lint를 통과했다. 402×904에서 별점 267×51 (x67.5,y386), 다음 360×53 (x21,y750)를 실측했다. 데모로 별점 드래그 5점·질문별 1회 변경 잠금·Q3/Q4 건너뛰기·Q5 후 키워드 종합을 검증했다. 320px 복원 화면에서 작성 완료가 활성화되고 가로 넘침은 0px였다. 430px 홈은 402px 중앙 캔버스·Light 카드 359×371·가로 넘침 0px·콘솔 오류 0건을 확인했다.
 - 실제 계정 로그인/AI 재호출/운영 DB 저장은 이번 UI QA에서 수행하지 않았다. DB·API·권한은 변경하지 않았다. 데모 QA 초안은 로컬 기기에만 남는다.
-- GitHub push 및 기존 EAS `beta` 최종 배포 검증 후 배포 식별자를 이 항목에 추가한다. 이전 소스는 태그 `rollback/ui-before-vector-fidelity-2026-10-23`에서 복구할 수 있다.
+- 코드 `8a15ad4`와 롤백 태그를 GitHub main에 push하고 기존 EAS beta에 배포했다. deployment `qlujbl3n9c`, 외부 고정 주소 `https://flick-film-journal--beta.expo.app`, 최종 번들 `entry-01c2b908b8cdab2acf4abb53ee6f7e7c.js`를 실제 외부 DOM에서 확인했다. 외부 402×779 기록 선택창의 Light/Core 버튼은 각각 x21,y635 / x21,y704, 360×56px였으며 가로 넘침 0px·콘솔 오류 0건이었다. 화면 증거는 ignored `tmp/ui-fidelity-proof.png`에만 보존한다. 이전 소스는 태그 `rollback/ui-before-vector-fidelity-2026-10-23`에서 복구할 수 있다.
 
 
 ## 2026-10-23 로고 회전·대표 키워드 표시 수정

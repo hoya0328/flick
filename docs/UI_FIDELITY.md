@@ -55,3 +55,12 @@ OS font rasterization, device scale and real content wrapping prevent a truthful
 - A discovered restoration race was fixed by separating search loading from form submission loading; an abandoned search can no longer leave Save permanently busy.
 - `tests/design-vectors.test.ts` verifies SVG/source parity, absence of embedded rasters/remote references, requested screen PNG removal, and canonical geometry; loading tests now verify SVG plus reduced motion.
 - Rollback source: Git tag `rollback/ui-before-vector-fidelity-2026-10-23` at `f88f15f`. Restore through a reviewed revert/branch; never hard-reset or delete user changes. Existing EAS project and `beta` alias are unchanged.
+
+## Final publication
+
+Code `8a15ad4` was pushed to GitHub main; rollback tag was pushed separately.
+EAS deployment `qlujbl3n9c` is assigned to the unchanged beta alias.
+The live DOM served `entry-01c2b908b8cdab2acf4abb53ee6f7e7c.js` and 36 inline SVG instances
+with the mode sheet open, 0px horizontal overflow and no console errors.
+The two live sheet buttons measured 360×56px at (21,635) and (21,704) in the 402×779 viewport.
+Final checks: 22 Vitest files / 84 tests, typecheck and lint pass; static export has 30 routes.
