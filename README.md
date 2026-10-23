@@ -15,6 +15,8 @@
 
 [웹 베타 사용해 보기](https://flick-film-journal--beta.expo.app) · [화면 구성](docs/SCREEN_STRUCTURE.md) · [아키텍처](docs/ARCHITECTURE.md) · [로드맵](docs/ROADMAP.md)
 
+홈 화면은 새 Figma 디자인에 맞춰 포스터 스와이프와 가로 스크롤 콘텐츠 중심으로 개편했습니다. [변경 사항과 이전 화면 롤백 안내](docs/HOME_REDESIGN.md)를 참고하세요. 실제 공개 콘텐츠가 없는 카드는 디자인 예시로 구분합니다.
+
 ## Project Snapshot
 
 | 항목 | 내용 |

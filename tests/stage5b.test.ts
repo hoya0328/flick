@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const migration = readFileSync('supabase/migrations/202608110002_stage5b_collections.sql', 'utf8');
 const home = readFileSync('src/app/(tabs)/index.tsx', 'utf8');
+const feed = readFileSync('src/app/(tabs)/feed.tsx', 'utf8');
 const collections = readFileSync('src/app/collections.tsx', 'utf8');
 const picker = readFileSync('src/app/collection-picker.tsx', 'utf8');
 const detail = readFileSync('src/app/collection/[id].tsx', 'utf8');
@@ -31,7 +32,7 @@ describe('Stage 5B responsive feed and collections contract', () => {
     expect(home).toContain('가볍게 기록한 리뷰');
     expect(home).toContain('집중 기록 매거진');
     expect(home).toContain('toggleReviewLike');
-    expect(home).toContain('toggleReviewSave');
+    expect(feed).toContain('toggleReviewSave');
   });
 
   it('connects collection create, edit, visibility, movie add, remove, and save UI', () => {

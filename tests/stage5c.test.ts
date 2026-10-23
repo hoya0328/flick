@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const migration = readFileSync('supabase/migrations/202608110003_stage5c_discovery_editorial.sql', 'utf8');
 const home = readFileSync('src/app/(tabs)/index.tsx', 'utf8');
+const feed = readFileSync('src/app/(tabs)/feed.tsx', 'utf8');
 const search = readFileSync('src/app/(tabs)/search.tsx', 'utf8');
 const admin = readFileSync('src/app/admin-curations.tsx', 'utf8');
 const publicDetail = readFileSync('src/app/curation/[id].tsx', 'utf8');
@@ -15,7 +16,8 @@ describe('Stage 5C discovery and editorial contract', () => {
     expect(migration).toContain("reviews.visibility = 'public' and reviews.status = 'completed'");
     expect(migration).toContain("coalesce(reviews.completed_at, reviews.updated_at) >= v_period_start");
     expect(migration).toContain('v_sample_size >= v_min_reviews');
-    expect(home).toContain('DiscoveryRankingsView');
+    expect(feed).toContain('DiscoveryRankingsView');
+    expect(home).toContain('hasCurrentRankings');
   });
 
   it('keeps ranking refresh and editorial mutations admin-only', () => {
@@ -38,6 +40,6 @@ describe('Stage 5C discovery and editorial contract', () => {
     expect(search).toContain('recommendationReason');
     expect(admin).toContain('니치 큐레이션');
     expect(admin).toContain('addAdminCurationMovie');
-    expect(home).toContain('상황별 편집 큐레이션');
+    expect(feed).toContain('상황별 편집 큐레이션');
   });
 });

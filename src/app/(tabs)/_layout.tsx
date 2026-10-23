@@ -1,13 +1,14 @@
 import { Redirect, Tabs, useLocalSearchParams, usePathname } from 'expo-router';
-import { StyleSheet, Text } from 'react-native';
+import { Image, ImageBackground, StyleSheet, View } from 'react-native';
 
-import { colors } from '@/theme/tokens';
 import { LoadingScreen } from '@/components/loading-screen';
 import { useSession } from '@/features/session/session-provider';
 import { safeSharedReviewPath } from '@/features/reviews/review-logic';
+import { homeAssets } from '@/features/home/design-assets';
+import { homeTheme } from '@/components/home-ui';
 
-function TabGlyph({ label, focused }: { label: string; focused: boolean }) {
-  return <Text style={[styles.glyph, focused && styles.glyphFocused]}>{label}</Text>;
+function TabGlyph({ name, focused }: { name: 'home' | 'search' | 'feed' | 'profile'; focused: boolean }) {
+  return <Image source={homeAssets[name]} resizeMode="contain" tintColor={focused ? homeTheme.accent : '#99A1AF'} style={styles.glyph} />;
 }
 
 export default function TabLayout() {
@@ -26,31 +27,38 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textMuted,
+        tabBarActiveTintColor: homeTheme.accent,
+        tabBarInactiveTintColor: '#99A1AF',
         tabBarLabelStyle: styles.label,
+        tabBarLabelPosition: 'below-icon',
         tabBarStyle: styles.bar,
       }}>
-      <Tabs.Screen name="index" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} label="⌂" />, title: '홈' }} />
-      <Tabs.Screen name="search" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} label="⌕" />, title: '탐색' }} />
+      <Tabs.Screen name="index" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="home" />, title: '홈' }} />
+      <Tabs.Screen name="search" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="search" />, title: '탐색' }} />
       <Tabs.Screen
         name="record"
         options={{
-          tabBarIcon: ({ focused }) => <TabGlyph focused={focused} label="✦" />,
+          tabBarIcon: () => <View style={styles.recordCircle}><ImageBackground source={homeAssets.recordCircle} style={styles.recordBackground}><Image resizeMode="contain" source={homeAssets.recordSymbol} style={styles.recordSymbol} /></ImageBackground></View>,
           tabBarItemStyle: styles.recordItem,
+          tabBarShowLabel: false,
+          tabBarLabel: () => null,
+          tabBarAccessibilityLabel: '새 감상 기록 작성',
           title: '기록',
         }}
       />
-      <Tabs.Screen name="archive" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} label="▦" />, title: '보관함' }} />
-      <Tabs.Screen name="profile" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} label="●" />, title: '마이' }} />
+      <Tabs.Screen name="feed" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="feed" />, title: '피드' }} />
+      <Tabs.Screen name="profile" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="profile" />, title: '마이' }} />
+      <Tabs.Screen name="archive" options={{ href: null, title: '보관함' }} />
     </Tabs>
   );
 }
 
 const styles = StyleSheet.create({
-  bar: { backgroundColor: colors.surface, borderTopColor: colors.border, height: 70, paddingBottom: 8, paddingTop: 7 },
-  label: { fontSize: 11, fontWeight: '700' },
-  glyph: { color: colors.textMuted, fontSize: 22, lineHeight: 24 },
-  glyphFocused: { color: colors.primary },
-  recordItem: { backgroundColor: colors.primarySoft, borderRadius: 18, marginHorizontal: 6 },
+  bar: { backgroundColor: '#F9FAFB', borderTopWidth: 0, borderRadius: 10, height: 89, paddingBottom: 24, paddingTop: 14, maxWidth: 560, width: '100%', alignSelf: 'center' },
+  label: { fontSize: 9.5, fontWeight: '500', marginTop: 1 },
+  glyph: { width: 21, height: 21 },
+  recordItem: { overflow: 'visible' },
+  recordCircle: { position: 'absolute', top: -33, alignItems: 'center', justifyContent: 'center', height: 76.8, width: 76.8 },
+  recordBackground: { alignItems: 'center', justifyContent: 'center', height: 76.8, width: 76.8 },
+  recordSymbol: { width: 40, height: 40 },
 });

@@ -1,3 +1,4 @@
+import { useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -10,6 +11,8 @@ import { tasteKeywords } from '@/features/onboarding/keywords';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 export default function SearchScreen() {
+  const { query: linkedQuery } = useLocalSearchParams<{ query?: string }>();
+  const initialQuery = typeof linkedQuery === 'string' ? linkedQuery.slice(0, 120) : '';
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<DiscoveryResult | null>(null);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -27,9 +30,11 @@ export default function SearchScreen() {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
+      setQuery(initialQuery);
+      setEmotionKeyword(null);
       setStatus('loading');
       try {
-        setResult(await discoverMovies(''));
+        setResult(await discoverMovies(initialQuery));
         setStatus('ready');
       } catch {
         setStatus('error');
@@ -37,7 +42,7 @@ export default function SearchScreen() {
     }, 0);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [initialQuery]);
 
   return (
     <Screen eyebrow="영화 발견" title="어떤 영화를 찾고 있나요?">

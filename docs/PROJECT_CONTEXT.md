@@ -1,5 +1,12 @@
 # PROJECT CONTEXT
 
+## 현재 작업 환경 · 2026-10-23
+
+- 현 작업 폴더: `C:\Users\letsh\Documents\ChatGPT\Flick` (과거 `Click` 폴더와 구분).
+- GitHub: `https://github.com/hoya0328/flick.git`; 기존 EAS 프로젝트 ID 및 `https://flick-film-journal--beta.expo.app` 주소를 유지한다.
+- 홈 화면은 Figma `7o0aA5nN2muGSgSEdtsYw7`, 프레임 `1:27`에 맞춰 변경한다. [홈 리디자인과 롤백](HOME_REDESIGN.md)을 참고한다.
+
+
 ## 한 문장 정의
 
 FLICK는 사용자가 감정 키워드로 다음 영화를 발견하고, 감상 직후의 느낌을 가벼운 기록 또는 AI 비평 가이드로 남겨 자신의 영화 취향과 기억을 축적하는 모바일 서비스다.
