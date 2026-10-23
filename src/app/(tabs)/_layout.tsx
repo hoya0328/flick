@@ -33,21 +33,20 @@ export default function TabLayout() {
         tabBarLabelPosition: 'below-icon',
         tabBarStyle: styles.bar,
       }}>
-      <Tabs.Screen name="index" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="home" />, title: '홈' }} />
-      <Tabs.Screen name="search" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="search" />, title: '탐색' }} />
+      <Tabs.Screen name="index" options={{ tabBarAccessibilityLabel: '홈', tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="home" />, title: '홈' }} />
+      <Tabs.Screen name="search" options={{ tabBarAccessibilityLabel: '탐색', tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="search" />, title: '탐색' }} />
       <Tabs.Screen
         name="record"
         options={{
           tabBarIcon: () => <View style={styles.recordCircle}><ImageBackground source={homeAssets.recordCircle} style={styles.recordBackground}><Image resizeMode="contain" source={homeAssets.recordSymbol} style={styles.recordSymbol} /></ImageBackground></View>,
           tabBarItemStyle: styles.recordItem,
-          tabBarShowLabel: false,
           tabBarLabel: () => null,
           tabBarAccessibilityLabel: '새 감상 기록 작성',
           title: '기록',
         }}
       />
-      <Tabs.Screen name="feed" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="feed" />, title: '피드' }} />
-      <Tabs.Screen name="profile" options={{ tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="profile" />, title: '마이' }} />
+      <Tabs.Screen name="feed" options={{ tabBarAccessibilityLabel: '피드', tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="feed" />, title: '피드' }} />
+      <Tabs.Screen name="profile" options={{ tabBarAccessibilityLabel: '마이', tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="profile" />, title: '마이' }} />
       <Tabs.Screen name="archive" options={{ href: null, title: '보관함' }} />
     </Tabs>
   );
