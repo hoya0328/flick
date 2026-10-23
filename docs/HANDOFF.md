@@ -9,7 +9,9 @@
 - 변경 전 `f5d5309`를 GitHub의 `rollback/home-before-figma-2026-10-23` 태그에 push했다. 이전 EAS 배포 `bch4ll8imz`도 보존한다.
 - 최종 `npm.cmd run check`: TypeScript·lint·17개 파일 61개 테스트 통과. `npm.cmd run build:web`: 새 피드를 포함한 정적 29개 경로 통과.
 - 데모에서 320/402/1280px 문서 가로 넘침 0px, 이미지 로드, Figma 슬롯 크기, 홈→제목 검색, Light 더보기→피드, 미니게임, 알림 안내·닫기를 확인했다. 실제 사용자 기록 작성·변경은 수행하지 않았다.
-- 외부 배포 완료 뒤 이 절에 새 deployment identifier와 외부 QA 결과를 덧붙인다. 새 과금·AI 호출·DB migration은 없다.
+- 구현 커밋 `670d8a2`와 하단 메뉴 표시 보완 `bf0a40b`를 GitHub `main`에 push했다. 최종 EAS deployment identifier는 `vtqvwsek5r`, 고유 URL은 `https://flick-film-journal--vtqvwsek5r.expo.app`, 고정 주소는 `https://flick-film-journal--beta.expo.app`이다. 첫 후보 배포 `4ndu3ixwcc`는 최종 수정본이 아니다.
+- 최종 외부 번들 `entry-978555684aab193eea70998d135af2cf.js`와 로컬 빌드가 일치한다. 402px 외부 데모에서 이미지 전체 로드·가로 넘침 0px, 기록 탭의 다섯 메뉴 접근성 이름 유지→홈 복귀→이모지 게임, Light 더보기→피드 로그인 경계를 확인했다. 브라우저 콘솔 오류 0건, `/`, `/feed`, 글꼴 URL의 HTTP 200을 확인했다.
+- 외부 검증 이미지는 `docs/assets/home-figma-2026-10-23.png`다. 로컬 `http://localhost:8081` 개발 서버는 계속 실행 중이며 실제 사용자 기록 작성/변경은 수행하지 않았다. 새 과금·AI 호출·DB migration은 없다.
 
 
 ## 2026-08-12 이모지 Windows 호환성 보완

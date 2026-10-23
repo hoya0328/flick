@@ -38,7 +38,7 @@
 - 변경 전 커밋: `f5d5309`.
 - GitHub 보존 태그: [`rollback/home-before-figma-2026-10-23`](https://github.com/hoya0328/flick/tree/rollback/home-before-figma-2026-10-23).
 - 변경 전 EAS 고유 배포: `bch4ll8imz`; 변경 전 화면은 [고유 배포 주소](https://flick-film-journal--bch4ll8imz.expo.app)에서도 비교할 수 있다.
-- 이전 화면 복구 요청 시 리디자인 구현 커밋을 `git revert`로 되돌리고 `npm run check`, `npm run build:web` 후 같은 EAS `beta` 별칭에 재배포한다. 태그/기존 배포는 삭제하지 않는다.
+- 이전 화면 복구 요청 시 `git revert bf0a40b 670d8a2`로 메뉴 보완과 리디자인을 함께 되돌리고 `npm run check`, `npm run build:web` 후 같은 EAS `beta` 별칭에 재배포한다. 이후 추가 기능이 생긴 경우 먼저 의존성과 충돌을 확인한다. 태그/기존 배포는 삭제하지 않는다.
 - 이번 변경은 DB/사용자 기록을 바꾸지 않으므로 UI 롤백으로 감상 기록이나 계정을 복구·삭제하지 않는다.
 
 ## 검증 및 배포
@@ -46,4 +46,5 @@
 - 타입·린트·17개 테스트 파일 61개 테스트 통과. 주간 스냅샷 신선도, 키워드 순서 보존, 평점 단위 변환을 회귀 검증한다.
 - 모바일 320px/402px, 데스크톱 1280px에서 문서 가로 넘침 0px를 확인한다. 원본 투명 아이콘과 표지 이미지 로드를 확인한다.
 - 데모로 홈→영화 검색, Light 더보기→피드, 미니게임 진입, 알림 안내를 검증한다. 실제 계정의 저장·기록 확정은 사용자 데이터 변경을 피하기 위해 이 작업에서 실행하지 않는다. 기존 RPC/권한 계약은 변경하지 않는다.
-- 최종 배포 ID와 외부 검증 결과는 `docs/HANDOFF.md`에 기록한다.
+- 최종 배포 ID `vtqvwsek5r`, 번들 `entry-978555684aab193eea70998d135af2cf.js`. 외부 402px에서 모든 이미지 로드·가로 넘침 0px, 기록→홈→퀴즈, 홈→피드, 콘솔 오류 0건 및 홈/피드/글꼴 HTTP 200을 확인했다.
+- 최종 배포에서 촬영한 [모바일 홈 검증 이미지](assets/home-figma-2026-10-23.png). 세부 인수인계는 `docs/HANDOFF.md`에 기록한다.
