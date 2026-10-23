@@ -9,9 +9,11 @@ import { StateNotice } from '@/components/state-notice';
 import { trackProductEvent } from '@/features/community/community-service';
 import { getMovie, getWatchlistMovieIds, type Movie, setWantToWatch, yearOf } from '@/features/discovery/movies';
 import { useSession } from '@/features/session/session-provider';
+import { useRecordingLauncher } from '@/features/reviews/recording-launcher';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 export default function MovieDetailScreen() {
+  const launchRecording = useRecordingLauncher();
   const params = useLocalSearchParams<{ id: string }>();
   const movieId = Array.isArray(params.id) ? params.id[0] : params.id;
   const { mode } = useSession();
@@ -80,7 +82,7 @@ export default function MovieDetailScreen() {
 
   const startRecord = () => {
     void trackProductEvent('record_start', 'movie', movie?.id ?? null, { surface: 'movie_detail', source: 'movie' });
-    if (movie) router.push({ pathname: '/(tabs)/record', params: { movieId: movie.id, title: movie.title } });
+    if (movie) launchRecording({ movieId: movie.id, title: movie.title });
   };
 
   if (status === 'loading') return <Screen><ActivityIndicator color={colors.primary} size="large" /></Screen>;

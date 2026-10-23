@@ -11,6 +11,12 @@ function record(update: Partial<ReportReview> = {}): ReportReview {
 }
 
 describe('stage 4 archive report', () => {
+  it('includes half-star reviews in the distribution without rounding away votes', () => {
+    const report = buildTasteReport([record({ rating: 4.5 }), record({ id: 'half', rating: 0.5 })]);
+    expect(report.ratingCounts[4.5]).toBe(1);
+    expect(report.ratingCounts[0.5]).toBe(1);
+    expect(Object.values(report.ratingCounts).reduce((sum, count) => sum + count, 0)).toBe(2);
+  });
   it('summarizes completed records without counting drafts', () => {
     const report = buildTasteReport([
       record(),

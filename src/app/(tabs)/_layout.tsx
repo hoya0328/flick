@@ -6,12 +6,14 @@ import { useSession } from '@/features/session/session-provider';
 import { safeSharedReviewPath } from '@/features/reviews/review-logic';
 import { homeAssets } from '@/features/home/design-assets';
 import { homeTheme } from '@/components/home-ui';
+import { useRecordingLauncher } from '@/features/reviews/recording-launcher';
 
 function TabGlyph({ name, focused }: { name: 'home' | 'search' | 'feed' | 'profile'; focused: boolean }) {
   return <Image source={homeAssets[name]} resizeMode="contain" tintColor={focused ? homeTheme.accent : '#99A1AF'} style={styles.glyph} />;
 }
 
 export default function TabLayout() {
+  const launchRecording = useRecordingLauncher();
   const pathname = usePathname();
   const params = useLocalSearchParams<{ reviewId?: string }>();
   const reviewIdParam = Array.isArray(params.reviewId) ? params.reviewId[0] : params.reviewId;
@@ -37,6 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen name="search" options={{ tabBarAccessibilityLabel: '탐색', tabBarIcon: ({ focused }) => <TabGlyph focused={focused} name="search" />, title: '탐색' }} />
       <Tabs.Screen
         name="record"
+        listeners={{ tabPress: (event) => { event.preventDefault(); launchRecording(); } }}
         options={{
           tabBarIcon: () => <View style={styles.recordCircle}><ImageBackground source={homeAssets.recordCircle} style={styles.recordBackground}><Image resizeMode="contain" source={homeAssets.recordSymbol} style={styles.recordSymbol} /></ImageBackground></View>,
           tabBarItemStyle: styles.recordItem,

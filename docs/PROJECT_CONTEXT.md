@@ -2,6 +2,8 @@
 
 ## 현재 작업 환경 · 2026-10-23
 
+- Light 리뷰는 Figma `2:453` 기반 단계형 `/light-record`로 변경한다. [리뷰 리디자인 계약](LIGHT_REVIEW_REDESIGN.md)에 저장·건너뛰기·AI·롤백 기준을 기록했다. Core는 기존 편집기를 유지한다.
+
 - 현 작업 폴더: `C:\Users\letsh\Documents\ChatGPT\Flick` (과거 `Click` 폴더와 구분).
 - GitHub: `https://github.com/hoya0328/flick.git`; 기존 EAS 프로젝트 ID 및 `https://flick-film-journal--beta.expo.app` 주소를 유지한다.
 - 홈 화면은 Figma `7o0aA5nN2muGSgSEdtsYw7`, 프레임 `1:27`에 맞춰 변경한다. [홈 리디자인과 롤백](HOME_REDESIGN.md)을 참고한다.

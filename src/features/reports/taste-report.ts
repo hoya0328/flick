@@ -8,7 +8,7 @@ export type TasteReport = {
   thisMonth: number;
   averageRating: number | null;
   modeCounts: { light: number; core: number };
-  ratingCounts: Record<1 | 2 | 3 | 4 | 5, number>;
+  ratingCounts: Record<number, number>;
   topEmotions: { label: string; count: number }[];
   secondRecordReached: boolean;
 };
@@ -26,8 +26,8 @@ export function buildTasteReport(records: ReportReview[], today = new Date().toI
   const ratings = completed.flatMap((record) => record.rating === null ? [] : [record.rating]);
   const emotionCounts = new Map<string, number>();
   completed.flatMap(selectedTagLabels).forEach((label) => emotionCounts.set(label, (emotionCounts.get(label) ?? 0) + 1));
-  const ratingCounts: TasteReport['ratingCounts'] = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  ratings.forEach((rating) => { if (Number.isInteger(rating) && rating >= 1 && rating <= 5) ratingCounts[rating as 1 | 2 | 3 | 4 | 5] += 1; });
+  const ratingCounts: TasteReport['ratingCounts'] = Object.fromEntries(Array.from({ length: 10 }, (_, index) => [(index + 1) / 2, 0]));
+  ratings.forEach((rating) => { if (Number.isInteger(rating * 2) && rating >= 0.5 && rating <= 5) ratingCounts[rating] = (ratingCounts[rating] ?? 0) + 1; });
 
   return {
     total: completed.length,

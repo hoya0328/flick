@@ -39,6 +39,9 @@ Thumbs.db
 *.swo
 
 # Archives
+# Local QA captures are not published to the public repository.
+docs/assets/light-review-question-2026-10-23.png
+docs/assets/light-review-summary-2026-10-23.png
 *.zip
 *.tar
 *.tar.gz

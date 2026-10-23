@@ -26,7 +26,7 @@ function ensureModeQuestions(form: ReviewForm, movie: Movie | null, title: strin
 }
 
 export default function RecordScreen() {
-  const params = useLocalSearchParams<{ movieId?: string; reviewId?: string; title?: string }>();
+  const params = useLocalSearchParams<{ movieId?: string; reviewId?: string; title?: string; mode?: string }>();
   const movieIdParam = one(params.movieId);
   const reviewIdParam = one(params.reviewId);
   const titleParam = one(params.title);
@@ -83,6 +83,10 @@ export default function RecordScreen() {
       try {
         if (reviewIdParam) {
           const record = await getReview(reviewIdParam, storageMode);
+          if (record?.lightFlow?.version === 1) {
+            router.replace({ pathname: '/light-record', params: { reviewId: record.id } });
+            return;
+          }
           if (!record) {
             const sharedPath = safeSharedReviewPath(`/review/${reviewIdParam}`);
             if (sharedPath) {
@@ -108,7 +112,9 @@ export default function RecordScreen() {
           ]);
           if (!active) return;
           setMovie(movie);
-          setForm(ensureModeQuestions(backup?.form ?? draft ?? emptyReviewForm(movieIdParam), movie, backup?.movieTitle || draft?.movie.title || titleParam || '선택한 영화'));
+          const initial = backup?.form ?? draft ?? { ...emptyReviewForm(movieIdParam), mode: params.mode === 'core' ? 'core' as const : 'light' as const };
+          if (initial.lightFlow?.version === 1) { router.replace({ pathname: '/light-record', params: { movieId: movieIdParam } }); return; }
+          setForm(ensureModeQuestions(initial, movie, backup?.movieTitle || draft?.movie.title || titleParam || '선택한 영화'));
           setReviewId(backup?.reviewId ?? draft?.id ?? null);
           setRecordStatus(draft?.status ?? 'draft');
           setMovieTitle(backup?.movieTitle || draft?.movie.title || titleParam || movie?.title || '선택한 영화');
@@ -129,7 +135,7 @@ export default function RecordScreen() {
     }
     void initialize();
     return () => { active = false; };
-  }, [loadList, movieIdParam, reviewIdParam, storageMode, titleParam]);
+  }, [loadList, movieIdParam, reviewIdParam, storageMode, titleParam, params.mode]);
 
   const change = useCallback((update: (current: ReviewForm) => ReviewForm) => {
     revision.current += 1;

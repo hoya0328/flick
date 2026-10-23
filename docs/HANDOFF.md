@@ -1,5 +1,15 @@
 # HANDOFF
 
+## 2026-10-23 Figma Light 리뷰
+
+- `/light-record`에 모드 선택→영화 확인→0.5점 드래그 별점→5개 질문→로딩→키워드·본문 종합→저장을 구현했다. Core 리디자인·음성·티켓 OCR은 제외한다. 상세 계약은 [LIGHT_REVIEW_REDESIGN.md](LIGHT_REVIEW_REDESIGN.md).
+- `202610230001_figma_light_review.sql`을 기존 무료 Supabase 프로젝트에 트랜잭션으로 적용했다. 소유자 전용 새 저장 RPC와 `light_flow`는 구형 기록/API를 보존한다. 공유 AI 초안 Edge Function도 갱신했고 편집기 전체 코드가 로컬 소스와 일치함을 확인했다.
+- 운영 DB 롤백 QA는 0.5점·5개 skipped·빈 감상/비정상 별점 거부·타 계정 private 조회/수정 차단을 통과했다. 실제 계정의 Gemini 생성 성공 응답은 아직 확인하지 않았다. 현재 브라우저 앱 세션은 데모이므로 계정 로그인 후 동의→생성으로 최종 확인한다.
+- AI Studio의 Klick 프로젝트가 무료 등급임을 확인했으며 결제 연결이나 요금제 변경은 하지 않았다. 무료 초안은 Core와 일 5회·분 2회 한도를 공유한다.
+- 변경 전 GitHub 태그: `rollback/review-before-figma-2026-10-23` (`ea014b4`). 이전 EAS deployment `vtqvwsek5r`는 유지한다. DB를 삭제하는 롤백은 금지한다.
+- 검증: typecheck·lint·18개 파일 71개 테스트·30개 웹 경로 빌드 통과. 402px에서 대표 키워드 추가/제거·3개/5개 제한·직접 입력·본문 편집·완료→보관함→재열기·새로고침 복원을 확인했다. 반점 별점도 취향 리포트 분포에 포함한다. 증거 PNG 2개는 공개 GitHub에 올리지 않고 로컬 `docs/assets/light-review-*-2026-10-23.png`에만 보관한다.
+
+
 ## 2026-10-23 Figma 홈 리디자인
 
 - Figma 파일 `7o0aA5nN2muGSgSEdtsYw7`, 프레임 `1:27`을 기준으로 홈을 구현했다. 비교표·자산 출처·데이터 원칙과 롤백은 `docs/HOME_REDESIGN.md`를 참고한다.

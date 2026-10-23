@@ -3,6 +3,14 @@ export type ReviewStatus = 'draft' | 'completed';
 export type ReviewVisibility = 'private' | 'public';
 export type LightTagOption = { id: string; label: string };
 export type LightQuestion = { key: string; text: string; sourceRule: string; options: LightTagOption[] };
+export type LightFlowState = {
+  version: 1;
+  responses: Record<string, 'answered' | 'skipped'>;
+  changed: string[];
+  aspects: string[];
+  representativeKeywords: string[];
+  draftSource: 'gemini' | 'manual' | 'demo';
+};
 
 export type ReviewForm = {
   movieId: string;
@@ -17,6 +25,7 @@ export type ReviewForm = {
   keywordIds: string[];
   questions: LightQuestion[];
   questionTags: Record<string, string[]>;
+  lightFlow?: LightFlowState;
 };
 
 export type ReviewPrompt = { key: string; label: string; placeholder: string };
@@ -60,10 +69,20 @@ export function isValidWatchedAt(value: string, today = todayDate()): boolean {
 
 export function reviewCompletionIssue(form: ReviewForm): ReviewCompletionIssue | null {
   if (!isValidWatchedAt(form.watchedAt)) return { field: 'watchedAt', message: '감상일은 오늘 또는 이전 날짜를 YYYY-MM-DD 형식으로 입력해야 합니다.' };
-  if (form.rating === null || !Number.isInteger(form.rating) || form.rating < 1 || form.rating > 5) return { field: 'rating', message: '별점은 1~5점 중 하나를 선택해야 합니다.' };
+  if (form.rating === null || !Number.isInteger(form.rating * 2) || form.rating < 0.5 || form.rating > 5) return { field: 'rating', message: '별점은 0.5~5점 사이에서 선택해야 합니다.' };
 
   if (form.mode === 'light') {
     if (form.questions.length !== 5) return { field: 'questions', message: 'Light 영화별 질문 5개를 모두 불러와야 합니다.' };
+    if (form.lightFlow?.version === 1) {
+      const complete = form.questions.every((question) => {
+        const response = form.lightFlow?.responses[question.key];
+        const tags = form.questionTags[question.key] ?? [];
+        return response === 'skipped' ? tags.length === 0 : response === 'answered' && tags.length >= 1 && tags.length <= 3 && tags.every((id) => question.options.some((option) => option.id === id));
+      });
+      if (!complete) return { field: 'questions', message: '질문 5개에 답변하거나 건너뛰기를 선택해 주세요.' };
+      if (!Object.values(form.questionTags).some((tags) => tags.length) && !form.body.trim()) return { field: 'questions', message: '모든 질문을 건너뛰었다면 감상을 직접 작성해 주세요.' };
+      return null;
+    }
     const answeredQuestions = form.questions.filter((question) => (form.questionTags[question.key]?.length ?? 0) > 0).length;
     if (answeredQuestions < 3) return { field: 'questions', message: 'Light 질문 5개 중 최소 3개에 느낌 태그를 선택해야 합니다.' };
   } else {
