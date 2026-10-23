@@ -5,6 +5,7 @@ import { HomeIcon, HomePicture, homeFont, homeText, homeTheme } from '@/componen
 import type { PublicReviewCard } from '@/features/community/community-service';
 import type { EditorialCuration } from '@/features/discovery/discovery-insights';
 import { homeAssets } from '@/features/home/design-assets';
+import { ReviewKeywords } from '@/components/review-keywords';
 
 export const previewMovies = [
   { title: '악마는 프라다를 입는다 2', image: homeAssets.devil, rating: '3.3', tags: ['우아', '완벽'] },
@@ -41,7 +42,7 @@ export function HomeReviewCard({ review, width, onPreview, onLike, busy }: Revie
         <View style={styles.divider} />
         <View style={styles.rating}><HomeIcon name="star" width={16} /><Text style={styles.small}>{review?.rating?.toFixed(1) ?? (sample ? '4.5' : '평점 없음')}</Text></View>
         <Text numberOfLines={2} style={[homeText.body, styles.reviewBody]}>{review?.spoiler ? '스포일러가 포함된 기록입니다. 상세에서 확인해 주세요.' : review?.bodyExcerpt || review?.oneLine || (sample ? 'B급 쌈마이 코미디의 껍데기를 뒤집어쓴 채 철학적 허무주의를 패버리는 미친 영화. 내 영화 관람 인생에서 가장 위대한 돌멩이를 만났다.' : '질문과 감정 태그로 남긴 감상이에요.')}</Text>
-        <View style={styles.tags}>{sample ? tags.map((tag, index) => <View key={tag} style={[styles.tag, { backgroundColor: ['#C02AEE', '#008CFF', '#1E222A', '#F8233C', '#FFAA00'][index] }]}><Text style={styles.tagText}>{tag}</Text></View>) : <View style={[styles.tag, { backgroundColor: homeTheme.accent }]}><Text style={styles.tagText}>Light</Text></View>}</View>
+        <ReviewKeywords keywords={sample ? tags : review?.representativeKeywords} concealed={review?.spoiler} />
       </View>
     </Pressable>
     <View style={styles.reactions}>
@@ -102,9 +103,6 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#EEEEEE', marginTop: 9, marginBottom: 10 },
   rating: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   reviewBody: { height: 40, marginTop: 8 },
-  tags: { flexDirection: 'row', gap: 7, marginTop: 16, minHeight: 24, flexWrap: 'wrap' },
-  tag: { borderRadius: 18, paddingHorizontal: 9, minHeight: 24, justifyContent: 'center' },
-  tagText: { color: '#FFFFFF', fontSize: 11, lineHeight: 16, fontFamily: homeFont },
   reactions: { marginHorizontal: 18, borderTopColor: '#E5E5E5', borderTopWidth: 1, marginTop: 12, flexDirection: 'row', alignItems: 'center' },
   reaction: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 36, minWidth: 44 },
   reactionEnd: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 5 },

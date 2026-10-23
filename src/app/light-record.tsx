@@ -1,12 +1,13 @@
 import { Redirect, router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, ActivityIndicator, Animated, Easing, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { homeFont } from '@/components/home-ui';
 import { PosterArt } from '@/components/poster-art';
 import { discoverMovies, getMovie, type Movie } from '@/features/discovery/movies';
 import { aiOperationMessage } from '@/features/reviews/ai-operations';
 import { generateLightDraft } from '@/features/reviews/light-draft-service';
+import { LoadingMark } from '@/features/reviews/loading-mark';
 import { changeLightQuestion, filmAspects, lightLabels, newLightForm, ratingMessage, respondToLight } from '@/features/reviews/light-flow';
 import { RatingControl } from '@/features/reviews/rating-control';
 import { isValidWatchedAt, reviewCompletionIssue, todayDate, type ReviewForm } from '@/features/reviews/review-logic';
@@ -22,19 +23,6 @@ function Action({ label, onPress, secondary = false, disabled = false }: { label
 }
 function Tag({ label, index = 0, onRemove }: { label: string; index?: number; onRemove?: () => void }) {
   return <View style={[s.tag, { backgroundColor: chipColors[index % chipColors.length] }]}><Text style={s.tagText}>{label}</Text>{onRemove ? <Pressable accessibilityRole="button" accessibilityLabel={`${label} 삭제`} hitSlop={8} onPress={onRemove} style={s.tagRemove}><Text style={s.tagX}>×</Text></Pressable> : null}</View>;
-}
-function LoadingMark() {
-  const [turn] = useState(() => new Animated.Value(0));
-  useEffect(() => {
-    let animation: Animated.CompositeAnimation | undefined;
-    let active = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((reduced) => { if (!active || reduced) return; animation = Animated.loop(Animated.timing(turn, { toValue: 1, duration: 1600, easing: Easing.linear, useNativeDriver: Platform.OS !== 'web' })); animation.start(); });
-    return () => { active = false; animation?.stop(); };
-  }, [turn]);
-  // Original Figma 2:1081 geometry, rendered natively without a screenshot.
-  return <Animated.View accessibilityLabel="키워드 정리 중" style={{ width: 94, height: 94, transform: [{ rotate: turn.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] }) }] }}>
-    {[[0, 40.7, 27.134, 12.598, '0deg'], [40.7, 40.7, 53.299, 12.598, '0deg'], [56.65, 9.01, 13.419, 26.837, '45deg'], [9.21, 56.45, 13.419, 26.837, '45deg'], [9.21, 9.01, 13.419, 26.837, '-45deg'], [47.16, 46.97, 13.419, 40.256, '-45deg'], [40.7, 0, 13.567, 27.134, '0deg'], [40.7, 40.7, 13.567, 53.299, '0deg']].map(([left, top, width, height, rotate], index) => <View key={index} style={{ position: 'absolute', left: Number(left), top: Number(top), width: Number(width), height: Number(height), borderRadius: 2, backgroundColor: '#F8233C', transform: [{ rotate: String(rotate) as `${number}deg` }] }} />)}
-  </Animated.View>;
 }
 
 export default function LightRecordScreen() {

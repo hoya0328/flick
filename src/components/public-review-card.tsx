@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ReviewKeywords } from '@/components/review-keywords';
 import { type PublicReviewCard as ReviewCard } from '@/features/community/community-service';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
@@ -29,6 +30,7 @@ export function PublicReviewCard({ review, busy = false, onLike, onSave }: Publi
         <Text style={styles.meta}>{review.watchedAt}{review.rating ? ` · ★ ${review.rating}` : ''}</Text>
         {review.oneLine ? <Text numberOfLines={core ? 3 : 2} style={core ? styles.coreQuote : styles.quote}>“{review.oneLine}”</Text> : null}
         <Text numberOfLines={core ? 5 : 3} style={styles.excerpt}>{review.spoiler ? '스포일러가 포함된 기록입니다. 상세 화면에서 확인해 주세요.' : review.bodyExcerpt || '질문과 감정 태그로 남긴 감상 기록이에요.'}</Text>
+        <ReviewKeywords keywords={review.representativeKeywords} concealed={review.spoiler} />
       </Pressable>
       <View style={styles.actions}>
         <Button disabled={busy} label={`공감 ${review.likeCount}`} onPress={() => onLike(review)} style={styles.action} variant={review.viewerLiked ? 'primary' : 'secondary'} />

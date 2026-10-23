@@ -1,5 +1,13 @@
 # HANDOFF
 
+## 2026-10-23 로고 회전·대표 키워드 표시 수정
+
+- 로딩 마크를 `loading-mark.tsx`로 분리하고 원본 Figma 노드의 `assets/figma-review/loading-logo.png` 한 개로 교체했다. 94px 정사각형 중심에서 등속 회전하며 동작 줄이기 설정 변경을 반영한다.
+- 홈 리뷰 카드의 고정 `Light` 태그 대신 사용자가 저장한 대표 키워드를 표시한다. `listPublicReviewFeed`는 기존 RPC 뒤에 ID 제한·public/completed 필터가 있는 메타데이터 단일 배치 조회를 수행한다. 피드·공개 상세에도 공통 `ReviewKeywords`를 적용했다. 빈 선택은 유지하며 스포일러 카드의 태그는 상세 안내로 감춘다.
+- 화면 QA는 실제 컴포넌트와 가상 데이터만 사용하는 로컬 `tmp/review-display-qa/`에서 진행했다. 다른 회전 각도에서도 중심이 (201,160)에 고정되고 transform origin은 (47,47), 자연 이미지 크기는 94×94였다. 카드 하단이 `색채·잔상·몽환적인` 선택 순서로 표시되고 콘솔 오류는 없었다. QA 파일·화면 증거는 공개 저장소나 배포에 포함하지 않는다.
+- Vitest에 기존 TypeScript의 `@` 별칭을 연결해 공개 피드 서비스의 실제 배치 결합도 테스트한다. DB·권한·AI 함수는 변경하지 않았다.
+
+
 ## 2026-10-23 Figma Light 리뷰
 
 - `/light-record`에 모드 선택→영화 확인→0.5점 드래그 별점→5개 질문→로딩→키워드·본문 종합→저장을 구현했다. Core 리디자인·음성·티켓 OCR은 제외한다. 상세 계약은 [LIGHT_REVIEW_REDESIGN.md](LIGHT_REVIEW_REDESIGN.md).

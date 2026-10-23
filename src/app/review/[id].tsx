@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/button';
+import { ReviewKeywords } from '@/components/review-keywords';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import {
@@ -201,6 +202,7 @@ export default function PublicReviewScreen() {
         </View>
       ))}
       {record.body ? <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><Text style={styles.response}>{record.body}</Text></View> : null}
+      <ReviewKeywords keywords={record.lightFlow?.representativeKeywords} />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>댓글 {community.commentCount}개</Text>

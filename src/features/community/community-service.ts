@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
+import { mergeRepresentativeKeywords } from '@/features/reviews/representative-keywords';
 
 const EVENT_SESSION_KEY = 'flick.stage5a.event-session';
 
@@ -22,6 +23,7 @@ export type PublicReviewCard = {
   saveCount: number;
   viewerLiked: boolean;
   viewerSaved: boolean;
+  representativeKeywords?: string[];
 };
 
 export type ReviewCommunity = {
@@ -72,7 +74,7 @@ function numberValue(value: unknown) {
 export async function listPublicReviewFeed(mode: 'light' | 'core' | null = null, cursor: string | null = null, limit = 20): Promise<PublicReviewCard[]> {
   const { data, error } = await client().rpc('list_public_reviews', { p_mode: mode, p_cursor: cursor, p_limit: limit });
   if (error) throw communityError(error);
-  return ((data ?? []) as Record<string, unknown>[]).map((row) => ({
+  const reviews: PublicReviewCard[] = ((data ?? []) as Record<string, unknown>[]).map((row) => ({
     reviewId: String(row.review_id),
     authorDisplayName: String(row.author_display_name ?? 'FLICK 사용자'),
     movieId: String(row.movie_id),
@@ -91,6 +93,15 @@ export async function listPublicReviewFeed(mode: 'light' | 'core' | null = null,
     viewerLiked: Boolean(row.viewer_liked),
     viewerSaved: Boolean(row.viewer_saved),
   }));
+  if (!reviews.length) return [];
+  // One owner/RLS-protected batch, limited to the already visible feed IDs.
+  // Keep the existing public feed RPC contract and database permissions intact.
+  const { data: keywords, error: keywordError } = await client().from('reviews')
+    .select('id,representative_keywords:light_flow->representativeKeywords')
+    .in('id', reviews.map((review) => review.reviewId))
+    .eq('visibility', 'public').eq('status', 'completed');
+  if (keywordError) throw communityError(keywordError);
+  return mergeRepresentativeKeywords(reviews, keywords ?? []);
 }
 
 export async function getReviewCommunity(reviewId: string): Promise<ReviewCommunity> {
