@@ -5,6 +5,7 @@ import { blockFromText, coreFlowIssue, coreTurns, magazineText, manualMagazine, 
 import { fallbackCoreQuestion } from '../src/features/reviews/core-questions';
 import { reviewCompletionIssue, type ReviewForm } from '../src/features/reviews/review-logic';
 import type { Movie } from '../src/features/discovery/movies';
+import { normalizeCoreFlow } from '../src/features/reviews/core-magazine-logic';
 
 const movie={id:'m1',title:'테스트 영화',genres:['드라마'],details:null} as Movie;
 const answered=():ReviewForm=>{const form=newCoreForm(movie);return {...form,rating:0.5,answers:{core_q1:'도시 속 고립된 인물의 선택이 오래 기억에 남았어요.'}};};
@@ -44,6 +45,15 @@ describe('Figma Core early finish and safe magazine',()=>{
   it('keeps legacy Core completion contract intact',()=>{
     const form=answered();delete form.coreFlow;
     expect(reviewCompletionIssue(form)?.message).toContain('Q5');
+  });
+  it('normalizes stored Core snapshots and rejects malformed public JSON safely',()=>{
+    const flow=manualMagazine(answered(),movie.title).coreFlow!;
+    expect(normalizeCoreFlow(flow)).toEqual(flow);
+    expect(normalizeCoreFlow({...flow,blocks:'not an array'})).toBeUndefined();
+    expect(normalizeCoreFlow({...flow,blocks:[{...flow.blocks[0],text:{html:'bad'}}]})).toBeUndefined();
+    expect(normalizeCoreFlow({...flow,cover:'javascript:alert(1)'})).toBeUndefined();
+    expect(normalizeCoreFlow({...flow,title:42})).toBeUndefined();
+    expect(normalizeCoreFlow({...flow,source:{toString:'not a function',valueOf:null}})).toBeUndefined();
   });
   it('renders safe structured blocks rather than HTML and constrains speech to local-only support',()=>{
     expect(readFileSync('src/features/reviews/core-magazine.tsx','utf8')).not.toContain('dangerouslySetInnerHTML');

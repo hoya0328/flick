@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
+import { normalizeCoreFlow } from '@/features/reviews/core-magazine-logic';
 import { emptyReviewForm, type LightQuestion, type LightTagOption, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
 
 export type ReviewRecord = ReviewForm & {
@@ -56,7 +57,7 @@ function fromRow(row: ReviewRow): ReviewRecord {
     rating: row.rating === null ? null : Number(row.rating), body: row.body, oneLine: row.one_line,
     spoiler: row.spoiler, visibility: row.visibility ?? 'private', status: row.status, createdAt: row.created_at, updatedAt: row.updated_at,
     answers: Object.fromEntries((row.review_answers ?? []).map((item) => [item.question_key, item.answer])),
-    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, lightFlow: row.light_flow ?? undefined, coreFlow: row.core_flow ?? undefined, movie: normalizedMovie(row.movies, row.movie_id),
+    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, lightFlow: row.light_flow ?? undefined, coreFlow: normalizeCoreFlow(row.core_flow), movie: normalizedMovie(row.movies, row.movie_id),
   };
 }
 

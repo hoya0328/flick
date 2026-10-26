@@ -1,7 +1,7 @@
 -- All writes below are rolled back. Run as postgres after additive migration.
 begin;
 do $$
-declare owner_id uuid; movie_id uuid; form jsonb; record_id uuid; other_id uuid; photo_path text;
+declare owner_id uuid; movie_id uuid; form jsonb; record_id uuid; other_id uuid; photo_path text; forged_record_id uuid;
 begin
   select id into owner_id from auth.users order by created_at limit 1;
   select id into other_id from auth.users where id<>owner_id order by created_at limit 1;
@@ -51,6 +51,10 @@ begin
     perform public.save_core_review(form,record_id,true);
     raise exception 'QA_foreign_edit_accepted';
   exception when others then if sqlerrm not in ('review_not_found','invalid_owned_photo') then raise; end if; end;
+  -- Bypass the RPC using an owner's direct UPDATE, as a malicious client could.
+  forged_record_id=public.save_core_review(jsonb_set(jsonb_set(form,'{coreFlow,cover}','null'),'{visibility}','"public"'),null,true);
+  update public.reviews set core_flow=jsonb_set(core_flow,'{cover}',to_jsonb(photo_path)) where id=forged_record_id;
+  if exists(select 1 from storage.objects where bucket_id='core-photos' and name=photo_path) then raise exception 'QA_forged_reference_photo_leak'; end if;
   perform set_config('request.jwt.claim.sub',owner_id::text,true);
   perform public.save_core_review(jsonb_set(form,'{visibility}','"public"'),record_id,true);
   perform set_config('request.jwt.claim.sub',other_id::text,true);
