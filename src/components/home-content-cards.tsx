@@ -18,7 +18,7 @@ export const previewMovies = [
 export const previewKeywords = ['몽환적인', '우주', '경이', '사랑', '미장센', 'OST', '위로', '빛바랜', '판타지', 'SF'];
 
 type PreviewHandler = (title: string) => void;
-type ReviewProps = { review?: PublicReviewCard; width: number; onPreview: PreviewHandler; busy?: boolean; onLike: (review: PublicReviewCard) => void };
+type ReviewProps = { review?: PublicReviewCard; width: number; onPreview: PreviewHandler; busy?: boolean; onLike: (review: PublicReviewCard) => void; readOnlyReactions?: boolean };
 
 function Author({ name, image, light = false, preview = false }: { name: string; image?: ImageSourcePropType; light?: boolean; preview?: boolean }) {
   return <View style={styles.author}>
@@ -27,7 +27,7 @@ function Author({ name, image, light = false, preview = false }: { name: string;
   </View>;
 }
 
-export function HomeReviewCard({ review, width, onPreview, onLike, busy }: ReviewProps) {
+export function HomeReviewCard({ review, width, onPreview, onLike, busy, readOnlyReactions = false }: ReviewProps) {
   const sample = !review;
   const title = review?.movieTitle ?? '에브리씽 에브리웨어 올앳원스';
   const open = () => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title);
@@ -48,7 +48,7 @@ export function HomeReviewCard({ review, width, onPreview, onLike, busy }: Revie
       </View>
     </Pressable>
     <View style={styles.reactions}>
-      <Pressable accessibilityLabel={`공감 ${review?.likeCount ?? 0}`} accessibilityRole="button" accessibilityState={{ selected: review?.viewerLiked ?? false }} disabled={busy} onPress={() => review ? onLike(review) : onPreview(title)} style={styles.reaction}><HomeIcon name="heart" width={13} height={12} tint={review?.viewerLiked ? homeTheme.accent : undefined} /><Text style={styles.small}>{review ? review.likeCount : '—'}</Text></Pressable>
+      {readOnlyReactions ? <View accessibilityLabel={`공감 ${review?.likeCount ?? 0}`} style={styles.reaction}><HomeIcon name="heart" width={13} height={12}/><Text style={styles.small}>{review?.likeCount ?? 0}</Text></View> : <Pressable accessibilityLabel={`공감 ${review?.likeCount ?? 0}`} accessibilityRole="button" accessibilityState={{ selected: review?.viewerLiked ?? false }} disabled={busy} onPress={() => review ? onLike(review) : onPreview(title)} style={styles.reaction}><HomeIcon name="heart" width={13} height={12} tint={review?.viewerLiked ? homeTheme.accent : undefined} /><Text style={styles.small}>{review ? review.likeCount : '—'}</Text></Pressable>}
       <Pressable accessibilityLabel="리뷰 댓글 보기" accessibilityRole="button" onPress={open} style={styles.reaction}><HomeIcon name="comment" width={12} height={12} /><Text style={styles.small}>{review ? review.commentCount : '—'}</Text></Pressable>
       <View accessibilityLabel="조회수는 집계 준비 중입니다" style={styles.reactionEnd}><HomeIcon name="eye" width={13.4} height={9} /><Text style={styles.small}>—</Text></View>
     </View>

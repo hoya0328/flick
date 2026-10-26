@@ -1,5 +1,9 @@
 # PROJECT CONTEXT
 
+## 2026-10-27 마이페이지
+
+마이페이지는 이제 Figma 프로필·캘린더·보관함 구성으로 구현한다. 범위와 준비 중 기능은 [PROFILE_REDESIGN.md](PROFILE_REDESIGN.md). `profile-edit`에서 닉네임·소개·사진을 편집하고 기존 계정 관리는 `account-settings`에 보존한다. `202610270001_profile_and_saved_content.sql`은 본인 프로필 저장과 본인 저장 콘텐츠 조회를 추가하며 공개/비공개 권한을 확장하지 않는다. 12유형·팔로우·일상 피드·프로필 컬렉션 확장은 계속 보류한다. 새 유료/AI 연동은 없다.
+
 ## 2026-10-26 Core 확정 범위
 
 집중 기록 Figma 재설계 기준은 `docs/CORE_REDESIGN.md`. 그만하기는 현재 답변으로 매거진 생성, 최대 다섯 답변, 제목/본문 총 1,000자, 취향 12유형·프로필 개편은 보류한다. 무료 외 유료 연동 금지. 새 경로 `/core-record`, 데이터는 기존 기록과 공존하는 `core_flow`를 사용한다.

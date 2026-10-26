@@ -1,207 +1,103 @@
-import { type Href, router } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Share, StyleSheet, Text, TextInput, View } from 'react-native';
-
-import { Button } from '@/components/button';
-import { Screen } from '@/components/screen';
-import { StateNotice } from '@/components/state-notice';
-import { getMyAdminAccess } from '@/features/admin/admin-service';
-import { validateNickname, validatePassword, validatePasswordConfirmation } from '@/features/session/account-logic';
-import { getKeywordLabels } from '@/features/onboarding/keywords';
-import { listReviews, type ReviewRecord } from '@/features/reviews/reviews';
+import { router,useFocusEffect } from 'expo-router';
+import { useCallback,useRef,useState } from 'react';
+import { ActivityIndicator,Modal,Pressable,ScrollView,Share,StyleSheet,Text,View,useWindowDimensions } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { DesignVector } from '@/components/design-vector';
+import { HomeInfoDialog,homeFont } from '@/components/home-ui';
+import { listMyCollections } from '@/features/community/collections-service';
+import { shiftMonth } from '@/features/reports/taste-report';
+import { listReviews,type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
-import { readClientIssues, recordClientIssue } from '@/lib/observability';
-import { colors, radii, spacing, typography } from '@/theme/tokens';
+import { profileCalendar,profileSummary } from '@/features/profile/profile-model';
+import { getMyProfileDetails,type ProfileDetails } from '@/features/profile/profile-service';
+import { ProfileAvatar,ProfileHeader,ProfileEditIcon,ProfileShareIcon,ProfilePoster,TasteRing,p } from '@/features/profile/profile-ui';
+import { SavedContent } from '@/features/profile/saved-content';
+import { useCurrentDate } from '@/features/profile/use-current-date';
 
-export default function ProfileScreen() {
-  const {
-    backendConfigured,
-    clearSession,
-    deleteAccount,
-    email,
-    mode,
-    nickname,
-    resetOnboarding,
-    selectedKeywords,
-    updateNickname,
-    updatePassword,
-  } = useSession();
-  const [records, setRecords] = useState<ReviewRecord[]>([]);
-  const [nicknameInput, setNicknameInput] = useState(nickname ?? '');
-  const [newPassword, setNewPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [editingPassword, setEditingPassword] = useState(false);
-  const [adminAvailable, setAdminAvailable] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState(false);
-  const [working, setWorking] = useState(false);
-  const [notice, setNotice] = useState<{ title: string; message: string; tone: 'success' | 'danger' | 'warning' } | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    void listReviews(mode === 'supabase' ? 'supabase' : 'demo')
-      .then((result) => { if (active) setRecords(result); })
-      .catch((caught) => {
-        void recordClientIssue('profile.export-load', caught);
-        if (active) setNotice({ title: '데이터 확인이 필요해요', message: '내보낼 기록을 불러오지 못했습니다.', tone: 'warning' });
-      });
-    return () => { active = false; };
-  }, [mode]);
-
-  useEffect(() => {
-    let active = true;
-    if (mode === 'supabase') {
-      void getMyAdminAccess().then((access) => { if (active) setAdminAvailable(Boolean(access)); }).catch(() => { if (active) setAdminAvailable(false); });
-    }
-    return () => { active = false; };
-  }, [mode]);
-
-  const handleNicknameUpdate = async () => {
-    const validation = validateNickname(nicknameInput);
-    if (validation) {
-      setNotice({ title: '닉네임을 저장할 수 없어요', message: validation.message, tone: 'danger' });
-      return;
-    }
-    setWorking(true);
-    setNotice(null);
-    try {
-      await updateNickname(nicknameInput);
-      setNotice({ title: '닉네임 변경 완료', message: '새 닉네임을 내 계정에 저장했습니다.', tone: 'success' });
-    } catch (caught) {
-      setNotice({ title: '닉네임을 저장할 수 없어요', message: caught instanceof Error ? caught.message : '잠시 후 다시 시도해 주세요.', tone: 'danger' });
-    } finally {
-      setWorking(false);
-    }
-  };
-
-  const handlePasswordUpdate = async () => {
-    const validation = validatePassword(newPassword) ?? validatePasswordConfirmation(newPassword, passwordConfirm);
-    if (validation) {
-      setNotice({ title: '비밀번호를 변경할 수 없어요', message: validation.message, tone: 'danger' });
-      return;
-    }
-    setWorking(true);
-    setNotice(null);
-    try {
-      await updatePassword(newPassword);
-      setNewPassword('');
-      setPasswordConfirm('');
-      setEditingPassword(false);
-      setNotice({ title: '비밀번호 변경 완료', message: '다음 로그인부터 새 비밀번호를 사용해 주세요.', tone: 'success' });
-    } catch (caught) {
-      setNotice({ title: '비밀번호를 변경할 수 없어요', message: caught instanceof Error ? caught.message : '잠시 후 다시 시도해 주세요.', tone: 'danger' });
-    } finally {
-      setWorking(false);
-    }
-  };
-
-  const handleReset = async () => {
-    await resetOnboarding();
-    router.replace('/onboarding');
-  };
-
-  const handleClearSession = async () => {
-    await clearSession();
-    router.replace('/welcome');
-  };
-
-  const handleExport = async () => {
-    setNotice(null);
-    const payload = {
-      exportedAt: new Date().toISOString(),
-      account: { email, nickname },
-      keywords: getKeywordLabels(selectedKeywords),
-      reviews: records,
-      recentDiagnostics: await readClientIssues(),
-    };
-    try {
-      await Share.share({ message: JSON.stringify(payload, null, 2), title: 'FLICK 내 데이터' });
-      setNotice({ title: '내보내기 화면을 열었어요', message: '저장하거나 전송할 위치는 사용자가 직접 결정합니다.', tone: 'success' });
-    } catch {
-      setNotice({ title: '내보내지 못했어요', message: '이 기기의 공유 기능을 사용할 수 없습니다.', tone: 'danger' });
-    }
-  };
-
-  const handleDelete = async () => {
-    setWorking(true);
-    setNotice(null);
-    try {
-      await deleteAccount();
-      router.replace('/welcome');
-    } catch (caught) {
-      void recordClientIssue('profile.account-delete', caught);
-      setNotice({ title: '계정을 삭제하지 못했어요', message: caught instanceof Error ? caught.message : '잠시 후 다시 시도해 주세요.', tone: 'danger' });
-    } finally {
-      setWorking(false);
-    }
-  };
-
-  return (
-    <Screen eyebrow="나의 FLICK" title="계정과 취향 설정">
-      {notice ? <StateNotice {...notice} /> : null}
-
-      {mode === 'supabase' ? (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>내 계정</Text>
-          <Text style={styles.label}>이메일</Text>
-          <Text style={styles.valueSmall}>{email ?? '확인할 수 없음'}</Text>
-          <View style={styles.field}>
-            <Text style={styles.label}>닉네임</Text>
-            <TextInput accessibilityLabel="닉네임" autoCapitalize="none" autoComplete="nickname" editable={!working} maxLength={20} onChangeText={setNicknameInput} placeholder="2~20자" placeholderTextColor={colors.textMuted} style={styles.input} value={nicknameInput} />
-            <Text style={styles.help}>글자, 숫자, 공백, ., _, -를 사용할 수 있어요.</Text>
-          </View>
-          <Button label="닉네임 저장" loading={working} onPress={() => void handleNicknameUpdate()} variant="secondary" />
-          {editingPassword ? (
-            <View style={styles.passwordBox}>
-              <Text style={styles.label}>새 비밀번호</Text>
-              <TextInput accessibilityLabel="새 비밀번호" autoCapitalize="none" autoComplete="new-password" editable={!working} onChangeText={setNewPassword} placeholder="영문·숫자를 포함한 8자 이상" placeholderTextColor={colors.textMuted} secureTextEntry style={styles.input} value={newPassword} />
-              <Text style={styles.label}>새 비밀번호 확인</Text>
-              <TextInput accessibilityLabel="새 비밀번호 확인" autoCapitalize="none" autoComplete="new-password" editable={!working} onChangeText={setPasswordConfirm} onSubmitEditing={() => void handlePasswordUpdate()} placeholder="비밀번호 다시 입력" placeholderTextColor={colors.textMuted} returnKeyType="done" secureTextEntry style={styles.input} value={passwordConfirm} />
-              <Button label="취소" onPress={() => setEditingPassword(false)} variant="ghost" />
-              <Button label="새 비밀번호 저장" loading={working} onPress={() => void handlePasswordUpdate()} variant="secondary" />
-            </View>
-          ) : <Button label="비밀번호 변경" onPress={() => setEditingPassword(true)} variant="ghost" />}
-        </View>
-      ) : (
-        <StateNotice message="데모 기록은 이 기기에만 저장됩니다. 계정으로 보관하려면 로그인해 주세요." title="데모 모드" tone="warning" />
-      )}
-
-      <Text style={styles.label}>선택한 키워드</Text>
-      <Text style={styles.value}>{getKeywordLabels(selectedKeywords).join(' · ')}</Text>
-      <StateNotice message={backendConfigured ? 'Supabase 계정·기록 서버가 연결되어 있습니다.' : '환경 변수 연결 전까지 기기 안의 데모 데이터만 사용합니다.'} title={mode === 'demo' ? '데모 모드' : '계정 모드'} tone={backendConfigured ? 'success' : 'warning'} />
-      {adminAvailable ? <Button label="Super Admin 콘솔" onPress={() => router.push('/admin' as Href)} /> : null}
-      <Button label="취향 키워드 다시 고르기" onPress={() => void handleReset()} variant="secondary" />
-      <Button label="나의 아카이브와 리포트" onPress={() => router.push('/archive' as Href)} variant="secondary" />
-      <Button label="취향 인사이트와 다시보기" onPress={() => router.push('/taste-insights' as Href)} variant="secondary" />
-      <Button label="FLICK 영화 취향 실험실" onPress={() => router.push('/experiments' as Href)} variant="secondary" />
-
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>내 데이터 관리</Text>
-        <Text style={styles.help}>삭제 전에 현재 계정 정보, 취향과 기록을 JSON 텍스트로 내보낼 수 있어요.</Text>
-        <Button label="내 데이터 내보내기" onPress={() => void handleExport()} variant="secondary" />
-        {pendingDelete ? (
-          <View style={styles.dangerBox}>
-            <Text style={styles.dangerTitle}>계정과 모든 데이터를 영구 삭제할까요?</Text>
-            <Text style={styles.help}>기록, 질문, 태그, 보고서와 취향 설정을 삭제하면 복구할 수 없습니다.</Text>
-            <Button label="취소" onPress={() => setPendingDelete(false)} variant="ghost" />
-            <Button label="계정과 데이터 영구 삭제" loading={working} onPress={() => void handleDelete()} variant="secondary" />
-          </View>
-        ) : <Button label={mode === 'demo' ? '데모 데이터 전체 삭제' : '계정과 데이터 삭제'} onPress={() => setPendingDelete(true)} variant="ghost" />}
-      </View>
-      <Button label={mode === 'demo' ? '로그인 화면으로 돌아가기' : '로그아웃'} onPress={() => void handleClearSession()} variant="ghost" />
-    </Screen>
-  );
+type ProfileTab='calendar'|'feed'|'saved';
+const weekdays=['일','월','화','수','목','금','토'];
+export default function ProfileScreen(){
+  const identity=useSession();
+  return <MyProfile key={`${identity.mode}:${identity.email??''}`}/>;
 }
-
-const styles = StyleSheet.create({
-  label: { ...typography.label, color: colors.textMuted },
-  value: { ...typography.heading, color: colors.text },
-  valueSmall: { ...typography.body, color: colors.text },
-  section: { backgroundColor: colors.surface, borderRadius: radii.lg, gap: spacing.md, padding: spacing.lg },
-  sectionTitle: { ...typography.heading, color: colors.text },
-  field: { gap: spacing.xs },
-  input: { ...typography.body, backgroundColor: colors.background, borderColor: colors.border, borderRadius: radii.md, borderWidth: 1, color: colors.text, minHeight: 52, paddingHorizontal: spacing.lg },
-  help: { ...typography.caption, color: colors.textMuted },
-  passwordBox: { backgroundColor: colors.background, borderRadius: radii.md, gap: spacing.md, padding: spacing.md },
-  dangerBox: { backgroundColor: colors.dangerSoft, borderRadius: radii.md, gap: spacing.md, padding: spacing.md },
-  dangerTitle: { ...typography.label, color: colors.danger },
+function MyProfile(){
+  const session=useSession(),mode=session.mode==='supabase'?'supabase':'demo';
+  const width=Math.min(useWindowDimensions().width,402);
+  const today=useCurrentDate();
+  const [tab,setTab]=useState<ProfileTab>('calendar');
+  const [chosenMonth,setMonth]=useState<string|null>(null),[selectedDate,setSelectedDate]=useState<string|null>(null);
+  const month=chosenMonth??today.slice(0,7);
+  const [details,setDetails]=useState<ProfileDetails|null>(null),[records,setRecords]=useState<ReviewRecord[]|null>(null),[collectionCount,setCollectionCount]=useState<number|null>(null);
+  const [busy,setBusy]=useState(false),[errors,setErrors]=useState<string[]>([]);
+  const [info,setInfo]=useState<{title:string;body:string}|null>(null),[shareOpen,setShareOpen]=useState(false);
+  const scroll=useRef<ScrollView>(null);
+  const request=useRef(0);
+  const load=useCallback(()=>{
+    const token=++request.current;setBusy(true);setErrors([]);
+    void Promise.allSettled([getMyProfileDetails(mode),listReviews(mode),mode==='supabase'?listMyCollections():Promise.resolve([])]).then(([meta,reviews,collections])=>{
+      if(token!==request.current)return;
+      const failed:string[]=[];
+      if(meta.status==='fulfilled')setDetails(meta.value);else failed.push('프로필');
+      if(reviews.status==='fulfilled')setRecords(reviews.value);else failed.push('기록');
+      if(collections.status==='fulfilled')setCollectionCount(collections.value.length);else failed.push('컬렉션');
+      setErrors(failed);setBusy(false);
+    });
+  },[mode]);
+  useFocusEffect(useCallback(()=>{load();return()=>{request.current++;};},[load]));
+  const summary=profileSummary(records??[],today),calendar=profileCalendar(month,records??[]);
+  const selected=(records??[]).filter(record=>record.status==='completed'&&record.watchedAt===selectedDate);
+  const name=details?.displayName??session.nickname??(mode==='demo'?'FLICK 사용자':'프로필 불러오는 중');
+  const show=(title:string,body:string)=>setInfo({title,body});
+  const shareText=`${name}님의 FLICK\n영화의 여운을 나만의 기록으로 남기고 있어요.\nhttps://flick-film-journal--beta.expo.app/welcome`;
+  async function share(){
+    try{await Share.share({message:shareText,title:'FLICK 프로필 소개'});setShareOpen(false);}
+    catch{show('공유 안내','이 브라우저에서는 공유 창을 지원하지 않아요. 아래 소개 글을 선택해 복사할 수 있어요.');}
+  }
+  function selectTab(next:ProfileTab){setTab(next);setSelectedDate(null);}
+  return <SafeAreaView style={s.safe} edges={['top']}><ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
+    <ProfileHeader onHome={()=>router.push('/')} onSettings={()=>router.push('/account-settings')} onInfo={()=>show('알림은 준비 중이에요','새 알림 기능은 아직 제공하지 않아요. 현재 계정과 기존 기록은 그대로 사용할 수 있어요.')}/>
+    <View style={s.identity}>
+      <ProfileAvatar path={details?.avatarPath??null} name={name}/>
+      <View style={s.identityText}><Text numberOfLines={1} style={p.title}>{name}</Text><Text numberOfLines={1} style={[p.body,{marginTop:6}]}>{details?.bio||(mode==='demo'?'나만의 영화 기록을 시작해 보세요':'소개를 입력해 나를 표현해 보세요')}</Text>
+      <Pressable accessibilityRole="button" accessibilityLabel="팔로우 기능 준비 안내" onPress={()=>show('팔로우는 준비 중이에요','팔로워·팔로잉은 아직 집계하지 않아요. 숫자와 관계를 임의로 만들지 않습니다.')} style={s.follow}><Text style={s.followText}>팔로워 <Text style={s.followValue}>—</Text></Text><Text style={s.followText}>팔로잉 <Text style={s.followValue}>—</Text></Text><Text style={s.preparing}>준비 중</Text></Pressable></View>
+    </View>
+    <View style={s.actions}><Pressable accessibilityRole="button" onPress={()=>router.push('/profile-edit')} style={[p.action,s.action]}><ProfileEditIcon/><Text style={p.actionText}>프로필 편집</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>setShareOpen(true)} style={[p.action,s.action]}><ProfileShareIcon/><Text style={p.actionText}>프로필 공유</Text></Pressable></View>
+    <View style={s.stats}>
+      {[{label:'본 영화',value:records===null||errors.includes('기록')?'—':summary.watchedMovies,action:()=>router.push('/archive')},{label:'리뷰',value:records===null||errors.includes('기록')?'—':summary.report.total,action:()=>router.push('/archive')},{label:'컬렉션',value:errors.includes('컬렉션')?'—':collectionCount??'—',action:()=>show('프로필 컬렉션은 준비 중이에요','마이페이지 컬렉션 모아보기는 보류 중이에요. 기존 컬렉션 관리 기능은 계정 설정에서 계속 사용할 수 있어요.')}].map((item,index)=><Pressable key={item.label} accessibilityRole="button" accessibilityLabel={`${item.label} ${item.value}`} onPress={item.action} style={s.stat}><Text style={s.statNumber}>{item.value}</Text><Text style={s.statLabel}>{item.label}</Text>{index<2?<View style={s.statDivider}/>:null}</Pressable>)}
+    </View>
+    <Pressable accessibilityRole="button" accessibilityLabel="기존 나의 취향 리포트 보기" onPress={()=>router.push('/taste-insights')} style={s.taste}>
+      <Text style={s.tasteHeader}>나의 취향 리포트</Text><DesignVector name="chevron" width={6} height={12} style={{position:'absolute',right:18,top:24}}/>
+      <Text numberOfLines={1} style={s.tasteTitle}>나의 기록에서 발견한 취향</Text><Text numberOfLines={1} style={s.tasteCaption}>취향 12유형은 준비 중이에요</Text>
+      <Text style={s.keywordLabel}>자주 남긴 키워드</Text><View style={s.keywords}>{summary.keywords.length?summary.keywords.map(word=><View style={s.chip} key={word.label}><Text numberOfLines={1} style={s.chipText}>{word.label}</Text></View>):<Text style={s.noKeywords}>기록이 쌓이면 키워드가 보여요</Text>}</View>
+      <Text style={s.pointLabel}>감상 포인트</Text><Text numberOfLines={1} style={[s.pointText,{maxWidth:Math.max(110,width-177)}]}>{summary.aspects.join(' > ')||'선택한 감상 요소가 아직 없어요'}</Text><Text numberOfLines={1} style={[s.foot,{maxWidth:Math.max(110,width-177)}]}>{errors.includes('기록')?'마지막 조회 기준 · 새로고침 필요':records===null?'기록 확인 중':`${summary.report.total}편 기록 · 평균 ★${summary.report.averageRating??'—'}`}</Text>
+      <View style={s.ring}><TasteRing point={summary.dominant}/></View>
+    </Pressable>
+    {busy?<ActivityIndicator accessibilityLabel="내 프로필 불러오는 중" color="#F8233C" style={{paddingTop:8}}/>:null}
+    {errors.length?<View style={[p.empty,{marginTop:12}]}><Text style={p.error}>{errors.join('·')} 정보를 불러오지 못했어요. 기존 기록은 변경되지 않았습니다.</Text><Pressable accessibilityRole="button" disabled={busy} onPress={load}><Text style={p.link}>다시 시도</Text></Pressable></View>:null}
+    <View accessibilityRole="tablist" style={s.tabs}>{([{key:'calendar',label:'캘린더'},{key:'feed',label:'내 피드'},{key:'saved',label:'보관함'}] as const).map(item=><Pressable key={item.key} accessibilityRole="tab" accessibilityState={{selected:tab===item.key}} onPress={()=>selectTab(item.key)} style={[s.tab,tab===item.key&&s.tabActive]}><Text style={[s.tabText,tab===item.key&&s.tabTextActive]}>{item.label}</Text></Pressable>)}</View>
+    {tab==='calendar'?<View style={s.calendar}>
+      <View style={s.monthRow}><View style={s.monthControls}><Pressable accessibilityRole="button" accessibilityLabel="캘린더 이전 달" onPress={()=>{setMonth(shiftMonth(month,-1));setSelectedDate(null);}} style={s.monthArrow}><DesignVector name="profileMonthLeft" style={{transform:[{rotate:'-90deg'}]}}/></Pressable><Pressable accessibilityRole="button" accessibilityLabel="캘린더 이번 달로 이동" onPress={()=>setMonth(null)} style={s.monthLabel}><Text style={s.monthText}>{Number(month.slice(5))}월</Text></Pressable><Pressable accessibilityRole="button" accessibilityLabel="캘린더 다음 달" hitSlop={8} onPress={()=>{setMonth(shiftMonth(month,1));setSelectedDate(null);}} style={[s.monthArrow,{width:28}]}><DesignVector name="profileMonthRight" style={{transform:[{rotate:'90deg'}]}}/></Pressable></View><Text style={s.year}>{month.slice(0,4)}년</Text><Pressable accessibilityRole="button" onPress={()=>{setMonth(null);setSelectedDate(today);}} style={s.todayButton}><Text style={p.link}>오늘</Text></Pressable></View>
+      <View style={s.weekdays}>{weekdays.map(day=><Text key={day} style={s.weekday}>{day}</Text>)}</View>
+      <View style={s.calendarGrid}>{calendar.map(day=><Pressable key={day.date} accessibilityRole="button" accessibilityLabel={`${day.date}, 완료 기록 ${day.completedCount}개${day.date===today?', 오늘':''}`} accessibilityState={{disabled:!day.inMonth,selected:selectedDate===day.date}} disabled={!day.inMonth} onPress={()=>setSelectedDate(day.date)} style={s.dayCell}>
+        {day.inMonth?<><Text style={[s.dayNumber,day.date===today&&{color:'#F8233C'}]}>{day.day}</Text>{day.reviews[0]?<View style={s.dayPoster}><ProfilePoster path={day.reviews[0].movie.posterPath} title={day.reviews[0].movie.title}/>{day.completedCount>1?<View accessibilityLabel={`${day.completedCount}개 기록`} style={s.posterBadge}><DesignVector name="profilePosterBadge" width={17.4} height={17.4} style={StyleSheet.absoluteFill}/><Text style={s.badgeText}>{day.completedCount>99?'99+':day.completedCount}</Text></View>:null}</View>:null}</>:null}
+      </Pressable>)}</View>
+      {records!==null&&!summary.report.total?<View style={[p.empty,{marginTop:12}]}><Text style={p.body}>완료한 기록이 아직 없어요. 첫 감상을 기록하면 감상일에 영화 포스터가 나타나요.</Text><Pressable accessibilityRole="button" onPress={()=>router.push('/archive')}><Text style={p.link}>작성 중인 기록 확인</Text></Pressable></View>:null}
+      <Pressable accessibilityRole="button" onPress={()=>router.push('/archive')} style={{alignSelf:'center',padding:16}}><Text style={p.link}>Light·Core·초안 전체 관리</Text></Pressable>
+    </View>:tab==='feed'?<View style={[p.empty,{marginTop:24,marginBottom:40}]}><Text style={p.title}>내 피드를 준비하고 있어요</Text><Text style={p.body}>영화 밖의 순간을 나누는 일상 피드는 추후 제공할 예정이에요. 작성한 영화 리뷰는 기존 기록 관리에서 확인할 수 있어요.</Text><Pressable accessibilityRole="button" onPress={()=>router.push('/archive')} style={p.action}><Text style={p.actionText}>내 리뷰 관리</Text></Pressable></View>:<SavedContent mode={mode} width={width} onInfo={show}/>}
+  </ScrollView>
+  <Modal visible={selectedDate!==null} transparent animationType="slide" onRequestClose={()=>setSelectedDate(null)}><View style={s.scrim}><Pressable accessibilityRole="button" accessibilityLabel="날짜별 기록 닫기" style={StyleSheet.absoluteFill} onPress={()=>setSelectedDate(null)}/><View accessibilityViewIsModal style={s.sheet}><View style={s.sheetHeading}><Text style={p.title}>{selectedDate} 기록</Text><Pressable accessibilityRole="button" accessibilityLabel="날짜별 기록 창 닫기" onPress={()=>setSelectedDate(null)} style={s.close}><DesignVector name="cancel"/></Pressable></View><ScrollView contentContainerStyle={{paddingBottom:24}}>{!selected.length?<Text style={p.body}>이 날짜에 완료한 기록이 없어요.</Text>:selected.map(record=><Pressable key={record.id} accessibilityRole="button" accessibilityLabel={`${record.movie.title} ${record.mode==='light'?'Light':'Core'} 기록 열기`} onPress={()=>{setSelectedDate(null);router.push({pathname:'/(tabs)/record',params:{reviewId:record.id}});}} style={s.recordRow}><ProfilePoster path={record.movie.posterPath} title={record.movie.title} width={44} height={63}/><View style={{flex:1}}><Text numberOfLines={1} style={s.recordTitle}>{record.movie.title}</Text><Text style={p.body}>{record.mode==='light'?'Light':'Core'} · ★{record.rating??'—'} · {record.visibility==='public'?'전체 공개':'나만 보기'}</Text></View><DesignVector name="chevron" width={6}/></Pressable>)}</ScrollView></View></View></Modal>
+  <Modal visible={shareOpen} transparent animationType="fade" onRequestClose={()=>setShareOpen(false)}><View style={s.shareScrim}><View accessibilityViewIsModal style={s.shareDialog}><Text style={p.title}>프로필 소개 공유</Text><Text style={p.body}>공개 프로필 페이지는 준비 중이에요. 닉네임과 서비스 소개만 공유하며 이메일·비공개 기록·취향 데이터는 포함하지 않아요.</Text><Text selectable style={s.shareText}>{shareText}</Text><Pressable accessibilityRole="button" onPress={()=>void share()} style={p.action}><ProfileShareIcon/><Text style={p.actionText}>공유 화면 열기</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>setShareOpen(false)} style={p.action}><Text style={p.actionText}>닫기</Text></Pressable></View></View></Modal>
+  <HomeInfoDialog info={info} onClose={()=>setInfo(null)}/>
+  </SafeAreaView>;
+}
+const s=StyleSheet.create({
+  safe:{flex:1,backgroundColor:'#FFF'},content:{width:'100%',maxWidth:402,alignSelf:'center',paddingBottom:24},
+  identity:{marginTop:22,marginHorizontal:21,height:84,flexDirection:'row',gap:17},identityText:{flex:1,minWidth:0},follow:{flexDirection:'row',gap:8,alignItems:'center',marginTop:4,minHeight:20},followText:{fontFamily:homeFont,fontSize:13,lineHeight:19.5,color:'#4A5565'},followValue:{fontWeight:'600',color:'#000'},preparing:{fontFamily:homeFont,fontSize:10,color:'#99A1AF'},
+  actions:{marginTop:30,marginHorizontal:21,flexDirection:'row',gap:19},action:{flex:1},
+  stats:{marginTop:23,height:79,borderTopWidth:1,borderBottomWidth:1,borderColor:'#F3F4F6',paddingHorizontal:21,flexDirection:'row'},stat:{flex:1,paddingTop:11,alignItems:'center'},statNumber:{fontFamily:homeFont,fontSize:20,lineHeight:30,fontWeight:'700',color:'#0A0A0A'},statLabel:{fontFamily:homeFont,fontSize:12,lineHeight:18,color:'#4A5565',marginTop:3.5},statDivider:{position:'absolute',right:0,top:26.25,height:20,width:1,backgroundColor:'#D1D5DC'},
+  taste:{marginTop:23,marginHorizontal:21,height:285,borderWidth:1,borderColor:'#D1D5DC',borderRadius:20,paddingHorizontal:16,paddingTop:15},tasteHeader:{fontFamily:homeFont,fontSize:16,lineHeight:24,fontWeight:'700',color:'#0A0A0A'},tasteTitle:{fontFamily:homeFont,fontSize:18,lineHeight:27,fontWeight:'700',color:'#0A0A0A',marginTop:12},tasteCaption:{fontFamily:homeFont,fontSize:13,lineHeight:19.5,color:'#4A5565',marginTop:4},keywordLabel:{fontFamily:homeFont,fontSize:12,lineHeight:18,color:'#6A7282',marginTop:19.5},keywords:{flexDirection:'row',gap:5,marginTop:12,minHeight:22},chip:{backgroundColor:'#F3F4F6',paddingHorizontal:12,borderRadius:20,height:22,justifyContent:'center',maxWidth:106,flexShrink:1,minWidth:0},chipText:{fontFamily:homeFont,fontSize:12,lineHeight:18,fontWeight:'500',color:'#364153'},noKeywords:{fontFamily:homeFont,fontSize:12,lineHeight:22,color:'#99A1AF'},pointLabel:{fontFamily:homeFont,fontSize:12,lineHeight:18,color:'#6A7282',marginTop:22},pointText:{fontFamily:homeFont,fontSize:13,lineHeight:19.5,fontWeight:'500',color:'#1E2939',marginTop:8,maxWidth:225},foot:{fontFamily:homeFont,fontSize:11,lineHeight:16.5,color:'#6A7282',marginTop:8.5,maxWidth:225},ring:{position:'absolute',right:21,top:193},
+  tabs:{marginTop:13,height:43,borderBottomWidth:2,borderBottomColor:'#F3F4F6',flexDirection:'row'},tab:{flex:1,alignItems:'center',justifyContent:'center',height:43},tabActive:{borderBottomWidth:2,borderBottomColor:'#F8233C'},tabText:{fontFamily:homeFont,fontSize:15,lineHeight:22.5,fontWeight:'500',color:'#99A1AF'},tabTextActive:{color:'#000'},
+  calendar:{paddingBottom:20},monthRow:{marginTop:12,height:56,flexDirection:'row',alignItems:'center'},monthControls:{marginLeft:16,flexDirection:'row',alignItems:'center'},monthArrow:{width:44,height:44,alignItems:'center',justifyContent:'center'},monthLabel:{width:40,height:44,alignItems:'center',justifyContent:'center'},monthText:{fontFamily:homeFont,fontSize:20,lineHeight:36,fontWeight:'700',textDecorationLine:'underline',color:'#000',letterSpacing:-.2},year:{marginLeft:'auto',fontFamily:homeFont,fontSize:13,color:'#6A7282'},todayButton:{paddingHorizontal:16,minHeight:44,justifyContent:'center'},weekdays:{marginTop:13,paddingHorizontal:6,flexDirection:'row'},weekday:{width:'14.285714%',textAlign:'center',fontFamily:homeFont,fontSize:15,lineHeight:23,fontWeight:'500',color:'#6A7282'},calendarGrid:{paddingHorizontal:6,marginTop:27,flexDirection:'row',flexWrap:'wrap'},dayCell:{width:'14.285714%',height:77,alignItems:'center',paddingTop:10},dayNumber:{fontFamily:homeFont,fontSize:20,lineHeight:22.5,fontWeight:'600',color:'#6A7282'},dayPoster:{position:'absolute',top:36},posterBadge:{position:'absolute',right:-9,top:-5,width:17.4,height:17.4,alignItems:'center',justifyContent:'center'},badgeText:{fontFamily:homeFont,fontSize:10,lineHeight:12,fontWeight:'700',color:'#FFF',paddingBottom:2},
+  scrim:{flex:1,backgroundColor:'#0005',justifyContent:'flex-end',alignItems:'center'},sheet:{width:'100%',maxWidth:402,maxHeight:'70%',minHeight:180,backgroundColor:'#FFF',borderTopLeftRadius:23,borderTopRightRadius:23,padding:21,paddingBottom:30},sheetHeading:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',paddingBottom:16},close:{width:44,height:44,alignItems:'center',justifyContent:'center'},recordRow:{flexDirection:'row',alignItems:'center',gap:12,paddingVertical:12},recordTitle:{fontFamily:homeFont,fontSize:15,lineHeight:23,fontWeight:'600',color:'#0A0A0A'},
+  shareScrim:{flex:1,backgroundColor:'#0005',alignItems:'center',justifyContent:'center',padding:21},shareDialog:{width:'100%',maxWidth:360,padding:22,borderRadius:18,backgroundColor:'#FFF',gap:16},shareText:{fontFamily:homeFont,fontSize:13,lineHeight:21,color:'#364153',backgroundColor:'#F9FAFB',padding:12,borderRadius:8}
 });
