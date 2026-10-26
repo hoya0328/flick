@@ -1,5 +1,9 @@
 # PROJECT CONTEXT
 
+## 2026-10-26 Core 확정 범위
+
+집중 기록 Figma 재설계 기준은 `docs/CORE_REDESIGN.md`. 그만하기는 현재 답변으로 매거진 생성, 최대 다섯 답변, 제목/본문 총 1,000자, 취향 12유형·프로필 개편은 보류한다. 무료 외 유료 연동 금지. 새 경로 `/core-record`, 데이터는 기존 기록과 공존하는 `core_flow`를 사용한다.
+
 ## 현재 작업 환경 · 2026-10-23
 
 - Figma 홈·Light 화면의 세부 치수와 벡터 UI 기준은 [UI_FIDELITY.md](UI_FIDELITY.md). 402px 캔버스, 원본 SVG, 로컬 Pretendard/Inter와 필수 개인정보/복구 안내를 보존한다.

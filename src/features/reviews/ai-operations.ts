@@ -38,6 +38,7 @@ export async function readAiOperationError(error: unknown, data?: unknown): Prom
 
 export function aiOperationMessage(error: unknown): string {
   const code = error instanceof AiOperationError ? error.code : 'ai_unavailable';
+  if (code === 'free_tier_not_verified') return '무료 등급 확인이 필요해 AI를 호출하지 않았어요. 직접 기록은 계속할 수 있어요.';
   if (code === 'daily_limit') return '오늘 사용할 수 있는 무료 AI 횟수를 모두 사용했어요. 내일 다시 시도해 주세요.';
   if (code === 'burst_limit') return '요청이 잠시 많아요. 1분 뒤 다시 시도해 주세요.';
   if (code === 'free_tier_limit') return 'Gemini 무료 제공량이 소진됐어요. 기존 기록을 유지하고 나중에 다시 시도해 주세요.';

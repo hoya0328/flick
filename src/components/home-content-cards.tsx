@@ -7,6 +7,7 @@ import type { PublicReviewCard } from '@/features/community/community-service';
 import type { EditorialCuration } from '@/features/discovery/discovery-insights';
 import { homeAssets } from '@/features/home/design-assets';
 import { ReviewKeywords } from '@/components/review-keywords';
+import { CorePhoto } from '@/features/reviews/core-photo';
 
 export const previewMovies = [
   { title: '악마는 프라다를 입는다 2', image: homeAssets.devil, rating: '3.3', tags: ['우아', '완벽'] },
@@ -58,7 +59,7 @@ export function HomeMagazineCard({ review, alternate = false, onPreview }: { rev
   const sample = !review;
   const title = review?.oneLine || review?.movieTitle || (alternate ? '헤일메리 프로젝트' : '이별과 만남이 스쳐지나가는 곳, 사랑을 가득 담아.');
   return <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '매거진'} 보기`} onPress={() => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title)} style={styles.magazine}>
-    <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? alternate ? homeAssets.hailMaryCover : homeAssets.magazineCover : null} label={title} width={311} height={160} />
+    {review?.coreCover ? <CorePhoto path={review.coreCover} style={{ width: 311, height: 160 }} label={title} /> : <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? alternate ? homeAssets.hailMaryCover : homeAssets.magazineCover : null} label={title} width={311} height={160} />}
     <View style={styles.magazineCopy}>
       <Author name={review?.authorDisplayName ?? (alternate ? 'MICHI' : '솜사탕덕후')} image={sample ? alternate ? homeAssets.hailMaryAvatar : homeAssets.magazineAvatar : undefined} preview={sample} />
       <Text numberOfLines={1} style={homeText.title}>{title}</Text>

@@ -24,6 +24,7 @@ export type PublicReviewCard = {
   viewerLiked: boolean;
   viewerSaved: boolean;
   representativeKeywords?: string[];
+  coreCover?: string | null;
 };
 
 export type ReviewCommunity = {
@@ -97,11 +98,14 @@ export async function listPublicReviewFeed(mode: 'light' | 'core' | null = null,
   // One owner/RLS-protected batch, limited to the already visible feed IDs.
   // Keep the existing public feed RPC contract and database permissions intact.
   const { data: keywords, error: keywordError } = await client().from('reviews')
-    .select('id,representative_keywords:light_flow->representativeKeywords')
+    .select('id,representative_keywords:light_flow->representativeKeywords,core_cover:core_flow->>cover')
     .in('id', reviews.map((review) => review.reviewId))
     .eq('visibility', 'public').eq('status', 'completed');
   if (keywordError) throw communityError(keywordError);
-  return mergeRepresentativeKeywords(reviews, keywords ?? []);
+  return mergeRepresentativeKeywords(reviews, keywords ?? []).map((review) => {
+    const cover = keywords?.find((row) => row.id === review.reviewId)?.core_cover;
+    return { ...review, coreCover: typeof cover === 'string' && /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(cover) ? cover : null };
+  });
 }
 
 export async function getReviewCommunity(reviewId: string): Promise<ReviewCommunity> {

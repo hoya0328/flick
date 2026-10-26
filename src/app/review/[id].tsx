@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 
 
 import { Button } from '@/components/button';
 import { ReviewKeywords } from '@/components/review-keywords';
+import { CoreMagazine } from '@/features/reviews/core-magazine';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import {
@@ -201,7 +202,7 @@ export default function PublicReviewScreen() {
           <Text style={styles.response}>{row.response}</Text>
         </View>
       ))}
-      {record.body ? <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><Text style={styles.response}>{record.body}</Text></View> : null}
+      {record.coreFlow?.version === 1 ? <CoreMagazine flow={record.coreFlow} cover /> : record.body ? <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><Text style={styles.response}>{record.body}</Text></View> : null}
       <ReviewKeywords keywords={record.lightFlow?.representativeKeywords} />
 
       <View style={styles.section}>

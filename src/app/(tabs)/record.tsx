@@ -83,6 +83,10 @@ export default function RecordScreen() {
       try {
         if (reviewIdParam) {
           const record = await getReview(reviewIdParam, storageMode);
+            if (record?.coreFlow?.version === 1) {
+              router.replace({ pathname: '/core-record', params: { reviewId: record.id } });
+              return;
+            }
           if (record?.lightFlow?.version === 1) {
             router.replace({ pathname: '/light-record', params: { reviewId: record.id } });
             return;
@@ -113,7 +117,8 @@ export default function RecordScreen() {
           if (!active) return;
           setMovie(movie);
           const initial = backup?.form ?? draft ?? { ...emptyReviewForm(movieIdParam), mode: params.mode === 'core' ? 'core' as const : 'light' as const };
-          if (initial.lightFlow?.version === 1) { router.replace({ pathname: '/light-record', params: { movieId: movieIdParam } }); return; }
+            if (initial.coreFlow?.version === 1) { router.replace({ pathname: '/core-record', params: { movieId: movieIdParam } }); return; }
+            if (initial.lightFlow?.version === 1) { router.replace({ pathname: '/light-record', params: { movieId: movieIdParam } }); return; }
           setForm(ensureModeQuestions(initial, movie, backup?.movieTitle || draft?.movie.title || titleParam || '선택한 영화'));
           setReviewId(backup?.reviewId ?? draft?.id ?? null);
           setRecordStatus(draft?.status ?? 'draft');

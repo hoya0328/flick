@@ -21,7 +21,7 @@
 
 ## Project Snapshot
 
-Light 리뷰도 새 Figma 흐름을 적용했습니다. 중앙 기록 버튼에서 시작해 별점 → 5개 질문 → 키워드 종합 → 수정·저장으로 이어집니다. [화면·AI·복구 안내](docs/LIGHT_REVIEW_REDESIGN.md)를 참고하세요. 집중 기록은 기존 방식을 유지합니다.
+Light와 집중 기록에 새 Figma 흐름을 적용했습니다. Light는 별점 → 5개 질문 → 키워드 종합 → 수정·저장, Core는 답변별 코멘트·연계 질문 → 최대 5개 답변 → 1,000자 이내 매거진 → 편집·저장으로 이어집니다. 중간에 그만하기를 선택하면 현재까지의 답변으로 매거진을 만듭니다. [Light 안내](docs/LIGHT_REVIEW_REDESIGN.md) · [Core 화면·무료 정책·복구 안내](docs/CORE_REDESIGN.md).
 
 | 항목 | 내용 |
 | :--- | :--- |

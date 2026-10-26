@@ -20,11 +20,12 @@ type ReviewRow = {
   review_questions: { question_key: string; question_text: string; source_rule: string; options: unknown; sort_order: number }[] | null;
   review_answer_tags: { question_key: string; tag_id: string; sort_order: number }[] | null;
   light_flow?: ReviewForm['lightFlow'];
+  core_flow?: ReviewForm['coreFlow'];
 };
 
 const DRAFT_PREFIX = 'flick.stage3.review-draft.';
 const DEMO_RECORDS_KEY = 'flick.stage3.demo-reviews';
-const reviewSelect = 'id,movie_id,mode,watched_at,rating,body,one_line,spoiler,visibility,status,created_at,updated_at,light_flow,movies(id,title,original_title,poster_path,release_date),review_answers(question_key,answer),review_keywords(keyword_id),review_questions!review_questions_review_id_fkey(question_key,question_text,source_rule,options,sort_order),review_answer_tags(question_key,tag_id,sort_order)';
+const reviewSelect = 'id,movie_id,mode,watched_at,rating,body,one_line,spoiler,visibility,status,created_at,updated_at,light_flow,core_flow,movies(id,title,original_title,poster_path,release_date),review_answers(question_key,answer),review_keywords(keyword_id),review_questions!review_questions_review_id_fkey(question_key,question_text,source_rule,options,sort_order),review_answer_tags(question_key,tag_id,sort_order)';
 
 async function currentUserId(): Promise<string> {
   if (!supabase) throw new Error('기록 서버가 연결되지 않았어요.');
@@ -55,7 +56,7 @@ function fromRow(row: ReviewRow): ReviewRecord {
     rating: row.rating === null ? null : Number(row.rating), body: row.body, oneLine: row.one_line,
     spoiler: row.spoiler, visibility: row.visibility ?? 'private', status: row.status, createdAt: row.created_at, updatedAt: row.updated_at,
     answers: Object.fromEntries((row.review_answers ?? []).map((item) => [item.question_key, item.answer])),
-    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, lightFlow: row.light_flow ?? undefined, movie: normalizedMovie(row.movies, row.movie_id),
+    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, lightFlow: row.light_flow ?? undefined, coreFlow: row.core_flow ?? undefined, movie: normalizedMovie(row.movies, row.movie_id),
   };
 }
 
@@ -121,6 +122,11 @@ export async function saveReview(form: ReviewForm, reviewId: string | null, comp
   if (!supabase) throw new Error('기록 서버가 연결되지 않았어요.');
   if (form.mode === 'light' && form.lightFlow?.version === 1) {
     const { data, error } = await supabase.rpc('save_light_review', { p_form: form, p_review_id: reviewId, p_complete: complete });
+    if (error) throw new Error(error.message);
+    return data as string;
+  }
+  if (form.mode === 'core' && form.coreFlow?.version === 1) {
+    const { data, error } = await supabase.rpc('save_core_review', { p_form: form, p_review_id: reviewId, p_complete: complete });
     if (error) throw new Error(error.message);
     return data as string;
   }

@@ -20,7 +20,7 @@ describe('public feed representative keyword integration', () => {
     expect(cards.map((card) => card.representativeKeywords)).toEqual([['아련한'], ['잔상', '색채']]);
     expect(mocks.from).toHaveBeenCalledExactlyOnceWith('reviews');
     expect(mocks.ids).toHaveBeenCalledWith('id', ['r1', 'r2']);
-    expect(mocks.select).toHaveBeenCalledWith('id,representative_keywords:light_flow->representativeKeywords');
+    expect(mocks.select).toHaveBeenCalledWith('id,representative_keywords:light_flow->representativeKeywords,core_cover:core_flow->>cover');
     expect(mocks.visibility).toHaveBeenCalledWith('visibility', 'public');
     expect(mocks.completed).toHaveBeenCalledWith('status', 'completed');
   });
@@ -36,5 +36,10 @@ describe('public feed representative keyword integration', () => {
   it('reports metadata read failures rather than presenting fake keywords', async () => {
     mocks.completed.mockResolvedValue({ data: null, error: new Error('network failed') });
     await expect(listPublicReviewFeed()).rejects.toThrow('network failed');
+  });
+  it('accepts only owned-storage-shaped cover paths from the already public review batch', async () => {
+    const path='00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000002.jpg';
+    mocks.completed.mockResolvedValue({data:[{id:'r1',representative_keywords:[],core_cover:path},{id:'r2',representative_keywords:[],core_cover:'https://untrusted.example/track.jpg'}],error:null});
+    expect((await listPublicReviewFeed('core')).map(r=>r.coreCover)).toEqual([path,null]);
   });
 });

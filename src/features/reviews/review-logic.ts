@@ -1,3 +1,5 @@
+import { coreFlowIssue, type CoreFlowState } from './core-magazine-logic';
+
 export type ReviewMode = 'light' | 'core';
 export type ReviewStatus = 'draft' | 'completed';
 export type ReviewVisibility = 'private' | 'public';
@@ -26,6 +28,7 @@ export type ReviewForm = {
   questions: LightQuestion[];
   questionTags: Record<string, string[]>;
   lightFlow?: LightFlowState;
+  coreFlow?: CoreFlowState;
 };
 
 export type ReviewPrompt = { key: string; label: string; placeholder: string };
@@ -86,6 +89,10 @@ export function reviewCompletionIssue(form: ReviewForm): ReviewCompletionIssue |
     const answeredQuestions = form.questions.filter((question) => (form.questionTags[question.key]?.length ?? 0) > 0).length;
     if (answeredQuestions < 3) return { field: 'questions', message: 'Light 질문 5개 중 최소 3개에 느낌 태그를 선택해야 합니다.' };
   } else {
+    if (form.coreFlow?.version === 1) {
+      const message = coreFlowIssue(form);
+      return message ? { field: 'questions', message } : null;
+    }
     if (form.questions.length !== 5) return { field: 'questions', message: 'Core 연계 질문을 Q5까지 생성하고 각 질문에 답해야 합니다.' };
     const substantialAnswers = form.questions.filter((question) => (form.answers[question.key]?.trim().length ?? 0) >= 20).length;
     if (substantialAnswers !== 5) return { field: 'questions', message: 'Core 질문 Q1~Q5에 각각 20자 이상 작성해야 합니다.' };

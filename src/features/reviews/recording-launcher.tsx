@@ -15,7 +15,7 @@ export function RecordingLauncherProvider({ children }: PropsWithChildren) {
   function choose(mode: 'light' | 'core') {
     const params = { ...selection, mode };
     setSelection(null);
-    router.push({ pathname: mode === 'light' ? '/light-record' : '/(tabs)/record', params });
+    router.push({ pathname: mode === 'light' ? '/light-record' : '/core-record', params });
   }
   return <RecordingContext.Provider value={(value = {}) => setSelection(value)}>
     {children}
