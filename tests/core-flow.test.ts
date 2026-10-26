@@ -51,6 +51,11 @@ describe('Figma Core early finish and safe magazine',()=>{
     expect(speech).toContain('recognition.processLocally=true');expect(speech).toContain("!=='available'");
     expect(speech).not.toContain('processLocally=false');
   });
+  it('does not downgrade a completed record when leaving or saving an editing draft',()=>{
+    const source=readFileSync('src/app/core-record.tsx','utf8');
+    expect(source).toContain('if(!complete&&wasCompleted)');
+    expect(source.indexOf('if(!complete&&wasCompleted)')).toBeLessThan(source.indexOf('const id=await saveReview('));
+  });
   it('requires verified free tier before new-mode AI calls and never adds paid fallbacks',()=>{
     for(const path of ['generate-core-question','generate-core-review-draft']){
       const source=readFileSync(`supabase/functions/${path}/index.ts`,'utf8');

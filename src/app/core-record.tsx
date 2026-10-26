@@ -42,6 +42,7 @@ function CoreRecordFlow(){
   const [form,setForm]=useState<ReviewForm|null>(null);
   const [movie,setMovie]=useState<Movie|null>(null);
   const [reviewId,setReviewId]=useState<string|null>(null);
+  const [wasCompleted,setWasCompleted]=useState(false);
   const [query,setQuery]=useState('');
   const [results,setResults]=useState<Movie[]>([]);
   const [busy,setBusy]=useState(false);
@@ -94,7 +95,7 @@ function CoreRecordFlow(){
       try{const local=saved?JSON.parse(saved):null;if(local?.form?.coreFlow?.version===1&&local.form.movieId===nextMovie.id&&local.reviewId===(record?.id??null))restored=local.form;}catch{/* Server record remains available. */}
       if(!valid)return;
       const next=restored??record??newCoreForm(nextMovie);
-      setMovie(nextMovie);setForm(next);setReviewId(record?.id??null);
+      setMovie(nextMovie);setForm(next);setReviewId(record?.id??null);setWasCompleted(record?.status==='completed');
       setStep(record?.status==='completed'?'summary':restored||record?(!next.rating?'rating':next.coreFlow?.stage??'question'):'confirm');
       if(restored)setNotice('이 계정에서 작성하던 임시 기록을 복원했어요.');
     }catch(caught){if(valid)setError(caught instanceof Error?caught.message:'기록을 불러오지 못했어요.');}finally{if(valid)setInitializing(false);}})();
@@ -110,7 +111,7 @@ function CoreRecordFlow(){
   function changeStep(next:Step){stopSpeech.current?.();setError('');setStep(next);}
   async function selectMovie(item:Movie){
     if(lock.current)return;lock.current=true;setBusy(true);
-    try{const draft=await getDraftForMovie(item.id,storageMode);if(draft){router.setParams({movieId:item.id,reviewId:draft.id});return;}setMovie(item);setForm(newCoreForm(item));setReviewId(null);setNotice('');setStep('confirm');initialized.current=`${storageMode}:${session.email}:${item.id}`;router.setParams({movieId:item.id});}
+    try{const draft=await getDraftForMovie(item.id,storageMode);if(draft){router.setParams({movieId:item.id,reviewId:draft.id});return;}setMovie(item);setForm(newCoreForm(item));setReviewId(null);setWasCompleted(false);setNotice('');setStep('confirm');initialized.current=`${storageMode}:${session.email}:${item.id}`;router.setParams({movieId:item.id});}
     catch{setError('작성 중인 기록을 확인하지 못했어요. 다시 시도해 주세요.');}finally{lock.current=false;setBusy(false);}
   }
   function move(stage:'question'|'feedback'|'summary',next:ReviewForm){setForm({...next,coreFlow:{...next.coreFlow!,stage}});setStep(stage);}
@@ -155,7 +156,7 @@ function CoreRecordFlow(){
     if(!form||!movie||lock.current)return;
     if(complete){const issue=reviewCompletionIssue(form);if(issue){setError(issue.message);if(issue.field==='rating')setStep('rating');else if(issue.field==='watchedAt')setStep('confirm');else{const missing=form.questions.findIndex(q=>(form.answers[q.key]?.trim().length??0)<10);if(missing>=0){setForm({...form,coreFlow:{...form.coreFlow!,index:missing,stage:'question'}});setStep('question');requestAnimationFrame(()=>answerInput.current?.focus());}else setStep('edit');}return;}}
     lock.current=true;setBusy(true);setError('');
-    try{await queue.current;const id=await saveReview(form,reviewId,complete,storageMode,movie.title);await AsyncStorage.removeItem(backupKey(form.movieId,reviewId));setReviewId(id);setDialog(null);setNotice('초안을 서버에 저장했어요.');if(complete||leave){await AsyncStorage.removeItem(backupKey(form.movieId,id));router.replace('/(tabs)/archive');}}
+    try{await queue.current;if(!complete&&wasCompleted){setDialog(null);setNotice('수정사항을 이 계정의 기기 임시 기록에 보관했어요. 기존 완료 기록은 기록 완료를 눌러야 변경됩니다.');if(leave)router.replace('/(tabs)/archive');return;}const id=await saveReview(form,reviewId,complete,storageMode,movie.title);await AsyncStorage.removeItem(backupKey(form.movieId,reviewId));setReviewId(id);setDialog(null);setNotice('초안을 서버에 저장했어요.');if(complete||leave){await AsyncStorage.removeItem(backupKey(form.movieId,id));router.replace('/(tabs)/archive');}}
     catch(caught){setError(`저장하지 못했어요. 기기 임시 기록은 유지돼요. ${caught instanceof Error?caught.message:''}`);}
     finally{lock.current=false;if(active.current)setBusy(false);}
   }
