@@ -2,6 +2,9 @@
 
 ## 2026-10-27 무료 커뮤니티·PWA v1
 
+- 최종 게시: 기능 `9238856`, 공유 링크 보완 `ad08d84`, UI/legacy 회귀 보완 `a5fe425`를 기존 GitHub main에 push했다. 최종 구현 CI [40525646538](https://github.com/hoya0328/flick/actions/runs/40525646538) 성공. 기존 EAS 프로젝트 `d701494e-4875-45b4-b9c4-feb15dac3e85`, `beta`를 유지하고 최종 deployment `98eadriv28`의 번들 `entry-40a59864f76914aaef30600dfbea5728.js`를 외부 DOM과 HTTP에서 확인했다. 신규 유료 연결/요금제 변경은 없다.
+- 외부 최종 QA: demo의 새 일상/팔로잉 탭·실계정 로그인 게이트, 공유200 진입→공개 프로필 로그인 안내→returnTo 유지, manifest/SW/offline/192·512아이콘200을 확인했다. 320/402px 가로 넘침0·중첩 button0, 최종 새 외부 탭 콘솔 오류0. 공개/글 작성·관리 권한을 실제 계정에 켜거나 테스트 글을 남기지 않았다. 증거는 ignored `tmp/free-community-feed-beta-20261027.png`. 임시 뷰포트는 복구하고 로컬 서버8081은 유지한다.
+
 - 구현: 공개 동의형 프로필/검색/링크·팔로우/본인 관계 목록·일상/팔로잉 피드 CRUD/사진/공감/댓글/저장/신고·7일 private 복원·인앱 알림/읽음·보관함 연결·PWA 설치 안내/오프라인 안내. 실제 읽기/쓰기 권한은 RPC에서 검증한다. 기존 Light/Core/12유형·AI 무료 조건은 유지했다. 사용자 계약/운영 한계는 `FREE_COMMUNITY.md`, `FREE_RELEASE_QA.md`.
 - 서버: 사용자가 SQL 운영 반영과 계정 삭제 함수 갱신을 각각 승인했다. 기존 `vthswebqroygpbmxpqaj`에 migration003 및 `delete-account`를 적용했다. 신규 공개/일상 신고 관리 권한은 OFF이며 관리자 기존 권한은 유지했다. 실제 사용자 기록/프로필 공개/권한은 QA로 바꾸지 않았다.
 - 검증: typecheck/lint·29개 파일155개 테스트, 웹43개 경로. 운영 적용 전 동일 DDL+합성 데이터 ROLLBACK 검증, 적용 후 `supabase/tests/free_community.sql` 전체 통과 및 모두 ROLLBACK. 본인CRUD/사진/비공개·중복관계·팔로잉·댓글·알림 격리·moderation·휴지통·anon·합성 cascade를 검증했다. 사진 포함 계정 탈퇴는 HTTP mock만 실행했다. 배포된 삭제 함수의 OPTIONS200/인증 없는 POST401도 확인했다. legacy null 프로필 표시와 홈 카드 버튼 중첩을 보완하고 회귀 테스트를 추가했다. 홈402/1280px 가로 넘침0·중첩 button0·새 검증 탭 콘솔 오류0.
