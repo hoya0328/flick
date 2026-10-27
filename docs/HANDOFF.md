@@ -2,6 +2,9 @@
 
 ## 2026-10-28 API 키 위치 점검·업로드 차단
 
+- 최종 게시: 구현 `8af4dc9` main push 및 [CI40542736766](https://github.com/hoya0328/flick/actions/runs/40542736766) 전체 성공(secret gate/설치/audit0/typecheck/lint/195테스트/웹 빌드). 이 PC의 `core.hooksPath=.githooks` 연결 후 실제 commit에서 staged16파일 검사, push에서 이력732blob 검사가 통과했다. 기존 hook 설정/활성 hook은 없었다. 새 clone은 별도 연결이 필요하다.
+- 기존 EAS 프로젝트의 `beta`에 deployment `ypn609gfct`를 게시했다. 별칭의 이전 응답이 남아 같은 deployment에 `--alias beta --id ypn609gfct`로 재연결했고 새 target/`--prod`는 사용하지 않았다. 최종 고유·beta 번들 HTTP200 및 로컬 SHA256 일치, 알려진 비밀 패턴0을 확인했다. beta 브라우저에서도 `entry-ab9617db3530a0e918dbeaf2dada004c.js`·콘솔 error0. 고유 배포의 `/.env`403, `/.env.local`404, `/.env.production`404로 env 내용 미제공을 확인했다. 공개용 키 사용은 정상이며 실제 데이터·동의·권한 변경은 없다.
+- UI QA는 로컬 로그인/기존 홈 복원·외부 로그인 화면만 읽기 전용 확인했다. 증거는 ignored `tmp/secret-guard-beta-20261028.png`. 로컬8081은 실행 상태로 유지하고 임시 viewport를 복구한다. 신규 유료 도구/요금제/키 회전은 없다.
 - 사용자 요청: `.env`/API 키 위치 설명, Git 업로드 및 유출 방어. 실제 로컬 `.env.local`은 공개 Supabase URL/publishable 두 값만 있고 기존에도 ignored였다. 추적 env는 빈 `.env.example`뿐이다. 운영 Supabase secret 이름 목록만 읽어 Gemini/TMDB/service-role 등록을 확인했다. 키 값·CLI 인증 저장소는 출력하지 않았다. 관련 계약은 `SECRETS_MANAGEMENT.md`.
 - 변경: `.gitignore`에 env 백업/변형·인증서·서비스 계정 파일을 추가했다. Node secret guard는 추적/미추적 소스·staged index·도달 가능한 Git 이력·웹 출력 및 공개 env allowlist를 검사한다. source/check/build 전후/CI 게이트, local start/web 게이트, 공개용 키 자리의 서버 키를 거부하는 런타임 검사를 추가했다. 서버 함수/키/DB/RLS·호스팅 식별자 변경은 없다.
 - 검증: typecheck/lint·31파일195테스트 및 웹43경로 성공. 이력716개 blob 및 웹86개 파일에서 알려진 비밀키 패턴 미검출. 새 합성 회귀는 키 종류·민감 경로·실제 gitignore·로컬 env·Git index와 워킹 파일 차이·빌드 결과 및 값 없는 오류를 검사한다. 확정 CI/배포·로컬 hook 연결 결과는 아래 추가한다. 최종 bundle `entry-ab9617db3530a0e918dbeaf2dada004c.js`, PWA cache `ed00fe8656106ce9`.
