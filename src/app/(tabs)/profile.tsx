@@ -13,6 +13,8 @@ import { getMyProfileDetails,type ProfileDetails } from '@/features/profile/prof
 import { ProfileAvatar,ProfileHeader,ProfileEditIcon,ProfileShareIcon,ProfilePoster,TasteRing,p } from '@/features/profile/profile-ui';
 import { SavedContent } from '@/features/profile/saved-content';
 import { useCurrentDate } from '@/features/profile/use-current-date';
+import { useTwelveTaste } from '@/features/reports/use-twelve-taste';
+import { tasteTypes } from '@/features/reports/taste-engine';
 
 type ProfileTab='calendar'|'feed'|'saved';
 const weekdays=['일','월','화','수','목','금','토'];
@@ -45,6 +47,7 @@ function MyProfile(){
   },[mode]);
   useFocusEffect(useCallback(()=>{load();return()=>{request.current++;};},[load]));
   const summary=profileSummary(records??[],today),calendar=profileCalendar(month,records??[]);
+  const taste=useTwelveTaste(records,mode).report;
   const selected=(records??[]).filter(record=>record.status==='completed'&&record.watchedAt===selectedDate);
   const name=details?.displayName??session.nickname??(mode==='demo'?'FLICK 사용자':'프로필 불러오는 중');
   const show=(title:string,body:string)=>setInfo({title,body});
@@ -65,12 +68,12 @@ function MyProfile(){
     <View style={s.stats}>
       {[{label:'본 영화',value:records===null||errors.includes('기록')?'—':summary.watchedMovies,action:()=>router.push('/archive')},{label:'리뷰',value:records===null||errors.includes('기록')?'—':summary.report.total,action:()=>router.push('/archive')},{label:'컬렉션',value:errors.includes('컬렉션')?'—':collectionCount??'—',action:()=>show('프로필 컬렉션은 준비 중이에요','마이페이지 컬렉션 모아보기는 보류 중이에요. 기존 컬렉션 관리 기능은 계정 설정에서 계속 사용할 수 있어요.')}].map((item,index)=><Pressable key={item.label} accessibilityRole="button" accessibilityLabel={`${item.label} ${item.value}`} onPress={item.action} style={s.stat}><Text style={s.statNumber}>{item.value}</Text><Text style={s.statLabel}>{item.label}</Text>{index<2?<View style={s.statDivider}/>:null}</Pressable>)}
     </View>
-    <Pressable accessibilityRole="button" accessibilityLabel="기존 나의 취향 리포트 보기" onPress={()=>router.push('/taste-insights')} style={s.taste}>
+    <Pressable accessibilityRole="button" accessibilityLabel="나의 12가지 취향 리포트 보기" onPress={()=>router.push('/taste-insights')} style={s.taste}>
       <Text style={s.tasteHeader}>나의 취향 리포트</Text><DesignVector name="chevron" width={6} height={12} style={{position:'absolute',right:18,top:24}}/>
-      <Text numberOfLines={1} style={s.tasteTitle}>나의 기록에서 발견한 취향</Text><Text numberOfLines={1} style={s.tasteCaption}>취향 12유형은 준비 중이에요</Text>
-      <Text style={s.keywordLabel}>자주 남긴 키워드</Text><View style={s.keywords}>{summary.keywords.length?summary.keywords.map(word=><View style={s.chip} key={word.label}><Text numberOfLines={1} style={s.chipText}>{word.label}</Text></View>):<Text style={s.noKeywords}>기록이 쌓이면 키워드가 보여요</Text>}</View>
-      <Text style={s.pointLabel}>감상 포인트</Text><Text numberOfLines={1} style={[s.pointText,{maxWidth:Math.max(110,width-177)}]}>{summary.aspects.join(' > ')||'선택한 감상 요소가 아직 없어요'}</Text><Text numberOfLines={1} style={[s.foot,{maxWidth:Math.max(110,width-177)}]}>{errors.includes('기록')?'마지막 조회 기준 · 새로고침 필요':records===null?'기록 확인 중':`${summary.report.total}편 기록 · 평균 ★${summary.report.averageRating??'—'}`}</Text>
-      <View style={s.ring}><TasteRing point={summary.dominant}/></View>
+      <Text numberOfLines={1} style={s.tasteTitle}>{taste.headline}</Text><Text numberOfLines={1} style={s.tasteCaption}>{taste.status==='insufficient'?'유효한 영화 3편부터 임시 유형을 제시해요':`유효한 근거 ${taste.validFilms}편 · ${taste.status==='representative'?'대표 유형':taste.status==='mixed'?(taste.reason==='close_scores'?'두 유형이 비슷해요':'긍정 근거 보강 중'):'임시 분석'}`}</Text>
+      <Text style={s.keywordLabel}>자주 남긴 키워드</Text><View style={s.keywords}>{taste.topKeywords.length?taste.topKeywords.slice(0,3).map(word=><View style={s.chip} key={word.label}><Text numberOfLines={1} style={s.chipText}>{word.label}</Text></View>):<Text style={s.noKeywords}>기록이 쌓이면 키워드가 보여요</Text>}</View>
+      <Text style={s.pointLabel}>감상 포인트</Text><Text numberOfLines={1} style={[s.pointText,{maxWidth:Math.max(110,width-177)}]}>{taste.topPoints.map(point=>point.label).join(' > ')||'선택한 감상 요소가 아직 없어요'}</Text><Text numberOfLines={1} style={[s.foot,{maxWidth:Math.max(110,width-177)}]}>{errors.includes('기록')?'마지막 조회 기준 · 새로고침 필요':records===null?'기록 확인 중':`${taste.totalMovies}편 영화 · 평균 ★${taste.meanRating??'—'}`}</Text>
+      <View style={s.ring}><TasteRing point={taste.primary?{label:tasteTypes[taste.primary].name,percent:Math.round(taste.share[taste.primary])}:null}/></View>
     </Pressable>
     {busy?<ActivityIndicator accessibilityLabel="내 프로필 불러오는 중" color="#F8233C" style={{paddingTop:8}}/>:null}
     {errors.length?<View style={[p.empty,{marginTop:12}]}><Text style={p.error}>{errors.join('·')} 정보를 불러오지 못했어요. 기존 기록은 변경되지 않았습니다.</Text><Pressable accessibilityRole="button" disabled={busy} onPress={load}><Text style={p.link}>다시 시도</Text></Pressable></View>:null}

@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '@/lib/supabase';
 import { normalizeCoreFlow } from '@/features/reviews/core-magazine-logic';
 import { emptyReviewForm, type LightQuestion, type LightTagOption, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
+import { analyzeSavedTaste } from '@/features/reports/taste-service';
 
 export type ReviewRecord = ReviewForm & {
   id: string;
@@ -129,6 +130,7 @@ export async function saveReview(form: ReviewForm, reviewId: string | null, comp
   if (form.mode === 'core' && form.coreFlow?.version === 1) {
     const { data, error } = await supabase.rpc('save_core_review', { p_form: form, p_review_id: reviewId, p_complete: complete });
     if (error) throw new Error(error.message);
+    if(complete)void analyzeSavedTaste(data as string);
     return data as string;
   }
   const { data, error } = await supabase.rpc('save_review_record', {
@@ -139,6 +141,7 @@ export async function saveReview(form: ReviewForm, reviewId: string | null, comp
     p_question_tags: form.questions.flatMap((question) => (form.questionTags[question.key] ?? []).map((tagId, sortOrder) => ({ questionKey: question.key, tagId, sortOrder }))),
   });
   if (error) throw new Error(error.message);
+  if(complete&&form.mode==='core')void analyzeSavedTaste(data as string);
   return data as string;
 }
 

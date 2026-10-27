@@ -26,7 +26,7 @@ export function ProfileShareIcon(){return <View pointerEvents="none" style={{wid
   </View>;}
 export function TasteRing({point}:{point:{label:string;percent:number}|null}){
   const radius=32,c=2*Math.PI*radius;
-  return <View accessibilityLabel={point?`${point.label}, 감상 요소 선택 중 ${point.percent}%`:'감상 요소가 아직 없어요'} style={{width:71,height:71,alignItems:'center',justifyContent:'center'}}>
+  return <View accessibilityLabel={point?`${point.label}, 기록 근거 상대 비중 ${point.percent}%`:'감상 요소가 아직 없어요'} style={{width:71,height:71,alignItems:'center',justifyContent:'center'}}>
     <Svg width={71} height={71} style={StyleSheet.absoluteFill}><Circle cx={35.5} cy={35.5} r={radius} stroke="#E5E7EB" strokeWidth={6} fill="none"/><Circle cx={35.5} cy={35.5} r={radius} stroke="#FF7D92" strokeWidth={6} fill="none" strokeDasharray={`${c*(point?.percent??0)/100} ${c}`} transform="rotate(-90 35.5 35.5)"/></Svg>
     <Text style={{fontFamily:homeFont,fontSize:14,lineHeight:21,color:'#F8233C',fontWeight:'700'}}>{point?`${point.percent}%`:'—'}</Text>
     <Text numberOfLines={1} style={{fontFamily:homeFont,fontSize:9,lineHeight:13.5,color:'#6A7282',maxWidth:58}}>{point?.label??'기록 대기'}</Text>

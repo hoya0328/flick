@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { type Href, router, useFocusEffect } from 'expo-router';
+import { type Href, Redirect,router, useFocusEffect } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
@@ -9,6 +9,7 @@ import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { discoverMovies, type Movie } from '@/features/discovery/movies';
 import { buildTastePersonalization } from '@/features/reports/taste-personalization';
+import { TwelveTastePanel } from '@/features/reports/twelve-taste-panel';
 import { listReviews, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -16,6 +17,12 @@ import { colors, radii, spacing, typography } from '@/theme/tokens';
 const preferenceKey = 'flick.stage5.personalization-enabled';
 
 export default function TasteInsightsScreen() {
+  const identity=useSession();
+  if(identity.status==='loading')return <Screen title="취향 리포트"><ActivityIndicator/></Screen>;
+  if(identity.mode==='none')return <Redirect href="/welcome"/>;
+  return <TasteInsights key={`${identity.mode}:${identity.email??''}`}/>;
+}
+function TasteInsights(){
   const { mode, selectedKeywords } = useSession();
   const [records, setRecords] = useState<ReviewRecord[]>([]);
   const [contrastMovies, setContrastMovies] = useState<Movie[]>([]);
@@ -31,7 +38,7 @@ export default function TasteInsightsScreen() {
         listReviews(mode === 'supabase' ? 'supabase' : 'demo'),
       ]);
       const nextInsights = buildTastePersonalization(reviews, selectedKeywords);
-      const result = nextInsights.contrastKeyword ? await discoverMovies('', [nextInsights.contrastKeyword.id]) : null;
+      const result = nextInsights.contrastKeyword ? await discoverMovies('', [nextInsights.contrastKeyword.id]).catch(()=>null) : null;
       const watched = new Set(reviews.map((review) => review.movieId));
       setEnabled(stored !== 'false');
       setRecords(reviews);
@@ -53,31 +60,14 @@ export default function TasteInsightsScreen() {
   return (
     <Screen eyebrow="5D · 설명 가능한 개인화" title="나의 영화 취향 인사이트">
       <View style={styles.controlCard}>
-        <Text style={styles.body}>리뷰 본문을 AI에 보내지 않고, 완료 기록의 키워드·선택 태그·별점·Light/Core 사용량만 계산합니다.</Text>
+        <Text style={styles.body}>완료 기록의 키워드·질문 맥락·별점으로 12가지 취향을 계산합니다. 별도로 동의한 경우에만 Core 질문과 사용자 원문을 무료 AI로 분석합니다.</Text>
         <Button label={enabled ? '개인화 결과 숨기기' : '개인화 결과 다시 보기'} onPress={() => void setPersonalization(!enabled)} variant="secondary" />
       </View>
 
       {!enabled ? <StateNotice message="취향 유형과 추천을 숨겼어요. 기록과 선택값은 삭제되지 않으며 언제든 다시 볼 수 있어요." title="개인화를 사용하지 않고 있어요" tone="warning" /> : null}
 
       {enabled ? <>
-        <View style={styles.darkCard}>
-          <Text style={styles.kicker}>TASTE TYPE</Text>
-          {insights.tasteType ? <><Text style={styles.darkTitle}>{insights.tasteType.name}</Text><Text style={styles.darkBody}>{insights.tasteType.summary}</Text><Text style={styles.darkEvidence}>근거 · {insights.tasteType.evidence.join(' · ')}</Text></> : <><Text style={styles.darkTitle}>아직 발견 중</Text><Text style={styles.darkBody}>완료 기록 {insights.minimumRequired}편부터 유형을 제시해요. 지금 {insights.completedCount}편이어서 {insights.minimumRequired - insights.completedCount}편이 더 필요합니다.</Text></>}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>리뷰 방식별 감상 초점</Text>
-          <Text style={styles.muted}>각 막대는 기록에서 직접 선택한 태그의 횟수입니다.</Text>
-          {insights.signalInsights.map((item) => {
-            const maximum = Math.max(1, ...insights.signalInsights.map((signal) => signal.value));
-            return <View key={item.label} style={styles.signal}><View style={styles.signalHeader}><Text style={styles.label}>{item.label}</Text><Text style={styles.muted}>{item.value}회</Text></View><View style={styles.track}><View style={[styles.fill, { width: `${(item.value / maximum) * 100}%` }]} /></View><Text style={styles.muted}>{item.description}</Text></View>;
-          })}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>반복해서 선택한 감상 패턴</Text>
-          {insights.topPatterns.length ? <View style={styles.chips}>{insights.topPatterns.map((item) => <View key={item.label} style={styles.chip}><Text style={styles.chipText}>{item.label} · {item.count}</Text></View>)}</View> : <Text style={styles.muted}>질문 태그와 감정 키워드를 선택하면 패턴이 표시됩니다.</Text>}
-        </View>
+        <TwelveTastePanel records={records} mode={mode==='supabase'?'supabase':'demo'}/>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>다시보기 추천</Text>
