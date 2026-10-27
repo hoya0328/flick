@@ -9,6 +9,7 @@
 - PWA는 원본 Figma SVG에서 앱 아이콘을 출력하고 공개 정적 번들/폰트만 캐시한다. 개인 HTML·Supabase/API·서명 사진·POST는 캐시하지 않는다. 작성 중 강제 업데이트·오프라인 저장 성공 표시를 하지 않는다.
 - 사용자가 운영 SQL 적용 및 계정 삭제 함수 업데이트를 각각 승인했다. 합성 계정 SQL QA는 전체 ROLLBACK, 계정 삭제 HTTP는 mock 검증만 수행했다. 운영 사용자 탈퇴/운영 DB 복원은 실행하지 않는다. 관리자/감사/편집 콘텐츠 소유 계정은 사진 정리 전 보호한다. 일반 탈퇴의 Storage→Auth는 원자적이지 않으므로 부분 실패 안내/재시도를 제공한다.
 - 전체 DB/Auth/Storage 복구 리허설과 실제 휴대폰 PWA 설치는 미실행이며 유료 전환 요건과 혼동하지 않는다. 사용자 JSON 내보내기는 전체 운영 백업이 아니다. 소스 롤백 태그는 `rollback/free-community-before-2026-10-27`.
+- 생성 프로필 공유 URL은 `/?returnTo=` 정적200 진입점을 사용한다. static export의 동적 직접 경로 HTTP404 fallback/JS hydration에 대한 크롤러 의존을 줄이고, 새 SSR/호스팅 비용 없이 UUID allowlist로 복귀한다. 원래 직접 경로의 클라이언트 탐색은 유지한다.
 
 ## 2026-10-27 12유형 취향 리포트
 

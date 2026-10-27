@@ -15,7 +15,7 @@ import { SavedContent } from '@/features/profile/saved-content';
 import { useCurrentDate } from '@/features/profile/use-current-date';
 import { useTwelveTaste } from '@/features/reports/use-twelve-taste';
 import { tasteTypes } from '@/features/reports/taste-engine';
-import { getCommunityState,type CommunityState } from '@/features/community/social-service';
+import { getCommunityState,publicCommunityUrl,type CommunityState } from '@/features/community/social-service';
 import { SocialPosts } from '@/features/community/social-ui';
 
 type ProfileTab='calendar'|'feed'|'saved';
@@ -55,7 +55,7 @@ function MyProfile(){
   const selected=(records??[]).filter(record=>record.status==='completed'&&record.watchedAt===selectedDate);
   const name=details?.displayName??session.nickname??(mode==='demo'?'FLICK 사용자':'프로필 불러오는 중');
   const show=(title:string,body:string)=>setInfo({title,body});
-  const shareText=`${name}님의 FLICK\n영화의 여운을 나만의 기록으로 남기고 있어요.\nhttps://flick-film-journal--beta.expo.app/${community?.publicProfile?`people/${community.userId}`:'welcome'}`;
+  const shareText=`${name}님의 FLICK\n영화의 여운을 나만의 기록으로 남기고 있어요.\n${community?.publicProfile?publicCommunityUrl(`/people/${community.userId}`):'https://flick-film-journal--beta.expo.app/welcome'}`;
   async function share(){
     try{await Share.share({message:shareText,title:'FLICK 프로필 소개'});setShareOpen(false);}
     catch{show('공유 안내','이 브라우저에서는 공유 창을 지원하지 않아요. 아래 소개 글을 선택해 복사할 수 있어요.');}

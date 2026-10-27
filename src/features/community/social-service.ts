@@ -213,6 +213,11 @@ export function safeCommunityPath(value: unknown): string | undefined {
     ? value
     : undefined;
 }
+// A static 200 entry keeps shared links independent of build-time dynamic IDs.
+export function publicCommunityUrl(path:string):string{
+  const safe=safeCommunityPath(path);
+  return safe?`https://flick-film-journal--beta.expo.app/?returnTo=${encodeURIComponent(safe)}`:'https://flick-film-journal--beta.expo.app/welcome';
+}
 export function notificationPath(n: CommunityNotification): string | undefined {
   return safeCommunityPath(
     n.postId

@@ -25,7 +25,7 @@ export default function IndexScreen() {
   }
 
   if (mode === 'none') return <Redirect href={returnTo ? { pathname: '/welcome', params: { returnTo } } : '/welcome'} />;
-  if (mode === 'supabase' && returnTo && onboardingComplete) return <Redirect href={returnTo as Href} />;
+  if (returnTo && onboardingComplete) return <Redirect href={returnTo as Href} />;
   if (!onboardingComplete && returnTo) return <Redirect href={{pathname:'/onboarding',params:{returnTo}}}/>;
   if (!onboardingComplete) return <Redirect href="/onboarding" />;
   return <Redirect href="/(tabs)" />;

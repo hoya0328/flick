@@ -4,7 +4,8 @@
 
 - 구현: 공개 동의형 프로필/검색/링크·팔로우/본인 관계 목록·일상/팔로잉 피드 CRUD/사진/공감/댓글/저장/신고·7일 private 복원·인앱 알림/읽음·보관함 연결·PWA 설치 안내/오프라인 안내. 실제 읽기/쓰기 권한은 RPC에서 검증한다. 기존 Light/Core/12유형·AI 무료 조건은 유지했다. 사용자 계약/운영 한계는 `FREE_COMMUNITY.md`, `FREE_RELEASE_QA.md`.
 - 서버: 사용자가 SQL 운영 반영과 계정 삭제 함수 갱신을 각각 승인했다. 기존 `vthswebqroygpbmxpqaj`에 migration003 및 `delete-account`를 적용했다. 신규 공개/일상 신고 관리 권한은 OFF이며 관리자 기존 권한은 유지했다. 실제 사용자 기록/프로필 공개/권한은 QA로 바꾸지 않았다.
-- 검증: typecheck/lint·29개 파일152개 테스트, 웹43개 경로. 운영 적용 전 동일 DDL+합성 데이터 ROLLBACK 검증, 적용 후 `supabase/tests/free_community.sql` 전체 통과 및 모두 ROLLBACK. 본인CRUD/사진/비공개·중복관계·팔로잉·댓글·알림 격리·moderation·휴지통·anon·합성 cascade를 검증했다. 사진 포함 계정 탈퇴는 HTTP mock만 실행했다.
+- 검증: typecheck/lint·29개 파일153개 테스트, 웹43개 경로. 운영 적용 전 동일 DDL+합성 데이터 ROLLBACK 검증, 적용 후 `supabase/tests/free_community.sql` 전체 통과 및 모두 ROLLBACK. 본인CRUD/사진/비공개·중복관계·팔로잉·댓글·알림 격리·moderation·휴지통·anon·합성 cascade를 검증했다. 사진 포함 계정 탈퇴는 HTTP mock만 실행했다. 배포된 삭제 함수의 OPTIONS200/인증 없는 POST401도 확인했다.
+- 공유: 외부 static dynamic 경로는 HTTP404 fallback이어도 클라이언트 화면/로그인 안내가 정상 로드됨을 확인했다. 생성 프로필 링크는 이를 피하도록 정적200 루트+엄격한 `returnTo`로 보완했다. 로그인/온보딩 후 공개 프로필로 복귀하며 demo는 실제 커뮤니티 인증 게이트를 우회하지 않는다. 새 호스팅/SSR 전환은 하지 않았다.
 - UI: 로컬 실제 계정의 기존8개 완료 기록과12유형 결과 유지, 팔로워/팔로잉0, 공개 OFF/운영 권한 OFF를 확인했다. 320px 글 작성의 빈 본문 안내·스크롤/포커스, 공개 동의 안내, 알림/검색/일상 피드 빈 상태에서 가로 넘침0px. 실제 공개 프로필이나 시험 게시물을 사용자 계정에 만들지 않았다. 최종 외부 증거/배포 식별자는 아래에 추가한다.
 - 보안: 기존 전이 패키지9개 호환 갱신으로 critical을 제거했다. Expo57/Router57/RN0.86 보존. 남은 npm 운영 감사 경고10개(high4/moderate6)는 `FREE_RELEASE_QA.md`에 경로와 한계를 기록했으며 강제 SDK 변경은 하지 않았다. 로컬 서버는 `--localhost --port8081`로 재시작했다.
 - 운영 위험: 운영 전체 DB/Auth/Storage 백업·격리 restore, 실기기 PWA 설치, 일회용 실제 Auth/Storage 탈퇴 E2E는 미실행이다. Git 소스와 사용자 JSON 내보내기를 전체 데이터 백업으로 안내하지 않는다. Storage→Auth 삭제는 원자적이지 않아 부분 실패를 명시한다. 관리자·감사·편집 콘텐츠 소유 계정은 사진 정리 전에 보호한다.

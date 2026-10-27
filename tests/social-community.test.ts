@@ -4,6 +4,7 @@ const mock = vi.hoisted(() => ({ rpc: vi.fn() }));
 vi.mock("../src/lib/supabase", () => ({ supabase: { rpc: mock.rpc } }));
 import {
   safeCommunityPath,
+  publicCommunityUrl,
   notificationPath,
   postIssue,
   mergeById,
@@ -19,6 +20,11 @@ beforeEach(() => {
   mock.rpc.mockResolvedValue({ data: [], error: null });
 });
 describe("free social boundaries", () => {
+  it('shares through a static 200 entry with a strict return path',()=>{
+    const link=new URL(publicCommunityUrl(`/people/${id}`));
+    expect(link.pathname).toBe('/');expect(link.searchParams.get('returnTo')).toBe(`/people/${id}`);
+    expect(publicCommunityUrl('https://evil.example')).toBe('https://flick-film-journal--beta.expo.app/welcome');
+  });
   it("allowlists only exact UUID content routes after login", () => {
     for (const kind of ["review", "post", "people"])
       expect(safeCommunityPath(`/${kind}/${id}`)).toBe(`/${kind}/${id}`);

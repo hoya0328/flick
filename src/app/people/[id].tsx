@@ -18,6 +18,7 @@ import {
   followMember,
   getMemberContent,
   getPublicMember,
+  publicCommunityUrl,
   type Member,
   type MemberContent,
 } from "@/features/community/social-service";
@@ -91,7 +92,7 @@ function Profile({ id }: { id: string }) {
       if (token === gen.current) setBusy(false);
     }
   }
-  const url = `https://flick-film-journal--beta.expo.app/people/${id}`;
+  const url = publicCommunityUrl(`/people/${id}`);
   return (
     <Screen title="공개 프로필">
       <Message message={message} />
