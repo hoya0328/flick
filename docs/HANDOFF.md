@@ -2,7 +2,9 @@
 
 ## 2026-10-28 남은 의존성 보안 경고 수정
 
-- 추가 QA 보완: 외부 `/welcome?returnTo=...` 직접 진입의 SSR/클라이언트 문구 차이(#418)를 `useSyncExternalStore` hydration snapshot으로 보완했다. 인증·returnTo 검증은 그대로다. 회귀2개 추가 후 typecheck/lint·30파일173테스트 및 웹43경로 성공. 최종 번들 `entry-c64d8773e71fe6a61b624981d29aa306.js`, PWA cache `20607dae1860e106`. 최종 CI/배포 확인은 이어서 기록한다.
+- 최종 게시 완료: 보안 수정 `eca5c4d`, 공유 로그인 hydration 보완 `3619771`을 main에 push했다. 최종 구현 CI [40535913021](https://github.com/hoya0328/flick/actions/runs/40535913021) 전체 성공(설치·전체 audit·typecheck/lint·173테스트·웹 빌드). 기존 프로젝트/`beta`에 최종 deployment `44gom371yg`를 게시했고 외부 DOM 번들 `entry-c64d8773e71fe6a61b624981d29aa306.js` 일치를 확인했다. 직전 보안-only deployment는 `hqvmxxkgrr`다. 유료 연결·요금제 변경은 없다.
+- 최종 외부 QA: 새 탭에서 공유 `/welcome?returnTo=...` 직접 진입과 일반 `/welcome`의 안내·데모 표시 분기 정상, 콘솔 error0으로 #418 해소를 확인했다. URL 인코딩 한글 검색 입력 복원 정상(외부 demo이므로 실제 인증 검색 결과를 검증한 것은 아님). 320/402px 가로 넘침0. 증거는 ignored `tmp/security-beta-20261028.png`. 로컬8081 재가동 및 기존 홈 복원을 확인했다. 임시 viewport는 복구한다. 실제 계정 데이터·동의·프로필 공개·권한은 변경하지 않았다.
+- 추가 QA 보완: 외부 `/welcome?returnTo=...` 직접 진입의 SSR/클라이언트 문구 차이(#418)를 `useSyncExternalStore` hydration snapshot으로 보완했다. 인증·returnTo 검증은 그대로다. 회귀2개 추가 후 typecheck/lint·30파일173테스트 및 웹43경로 성공. 최종 번들 `entry-c64d8773e71fe6a61b624981d29aa306.js`, PWA cache `20607dae1860e106`. 루트·manifest·SW·offline·192/512아이콘 HTTP200도 확인했다.
 - 사용자가 남은 경고 설명·무료 수정·외부 배포를 요청했다. 현재 계약/근거는 `SECURITY_REMEDIATION.md`. 이전 전체 audit13개(high5/moderate8), 운영-only10개를 실제 patched decoder/image-size/Zod/UUID/Vitest/Vite로 수정했다. audit 제외/무시 또는 SDK 강제 변경은 없다. Expo57.0.20/Router57.0.19/RN0.86.2와 운영 데이터·권한·AI 조건·호스팅 프로젝트는 유지했다.
 - 설치 재현: `npm ci` 완전 재설치 성공(887개). postinstall에서 query-string7.1.3 원본 SHA·실제경로·decoder0.5 버전을 검증하고 CJS→ESM 한 줄 연결을 재적용한다. Node22.12+/24+ 필요, `--ignore-scripts` 금지. `check`/`build:web` 전 무수정 check가 있으며, CI의 전체 audit는 moderate 이상이면 실패한다.
 - 로컬 검증: typecheck/lint·30개 파일171개 테스트 통과. 보안 회귀16개는 한글/이모지/복귀 URL, malformed UTF-8, 손상 ICNS/HEIF, 실제 CLI Zod4/plugin/output/MCP schema, 실제 Metro PNG/SVG, Xcode UUID, SHA 변조/패치 누락 fail-closed를 포함한다. 공격성 입력은 timeout/heap 제한 child 또는 합성 fixture에만 사용했다.
