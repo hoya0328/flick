@@ -1,5 +1,12 @@
 # HANDOFF
 
+## 2026-10-28 공개키·계정 격리 확인 및 공통 검사 등록
+
+- 사용자가 공개 Supabase 키로 타인 기록 조회/수정이 가능한지 확인하고 모든 프로젝트의 보안 검사에 같은 항목을 넣도록 요청했다. `ACCOUNT_ISOLATION_QA.md`가 최신 결과와 한계다. 운영 프로젝트의 공개키만 사용한 실제 HTTP12개 모두 거절/빈 결과. 관리자 조회 RPC의400은 명시적 `admin_view_reviews_required`이며401만 기대하는 잘못된 판정을 보완했다.
+- `supabase/tests/record_isolation.sql`은 랜덤 합성 A/B·Light/Core/private/public/draft 및 사진 메타데이터를 한 ROLLBACK 트랜잭션에서 검증했다. 실제 authenticated/anon 역할·auth.uid를 assert하고 소유자 생성/수정/삭제 양성 대조, 타인의 조회/수정/삭제·owner 위조·답변/태그·저장 RPC·관리자 승격·사진 폴더 위조 차단과 의도된 공개 읽기를 모두 통과했다. 최종 합성 계정/영화 잔여0. 실제 사용자 데이터·서버 정책·키는 바꾸지 않았다.
+- `scripts/check-anonymous-access.mjs` 문법·secret guard와 보안 계약/키 보호 회귀25개 통과. 앱 코드 변경이 없어 기존 외부 `beta` deployment `ypn609gfct`를 유지하며 새 배포는 하지 않는다. 두 실제 회원 JWT 브라우저 로그인·실파일 signed URL 만료는 미실행이며 DB 역할 검사와 구분한다.
+- 개인 공통 AGENTS에 `보안 검사 / 보안 점검` → `$check-security`, 새 개인 skill 및 기존 check-release의 보안 기준을 추가했다. 두 skill 공식 validator 통과. 사용자 기본 Python에 YAML이 없어 무료 PyYAML6.0.3을 ignored `tmp/skill-validator-deps`에만 격리해 검증했고 프로젝트/시스템 의존성은 바꾸지 않았다. 새 기기에는 개인 지침/skill 이관이 필요하다.
+
 ## 2026-10-28 API 키 위치 점검·업로드 차단
 
 - 최종 게시: 구현 `8af4dc9` main push 및 [CI40542736766](https://github.com/hoya0328/flick/actions/runs/40542736766) 전체 성공(secret gate/설치/audit0/typecheck/lint/195테스트/웹 빌드). 이 PC의 `core.hooksPath=.githooks` 연결 후 실제 commit에서 staged16파일 검사, push에서 이력732blob 검사가 통과했다. 기존 hook 설정/활성 hook은 없었다. 새 clone은 별도 연결이 필요하다.
