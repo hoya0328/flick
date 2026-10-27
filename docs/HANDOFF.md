@@ -1,5 +1,15 @@
 # HANDOFF
 
+## 2026-10-28 남은 의존성 보안 경고 수정
+
+- 사용자가 남은 경고 설명·무료 수정·외부 배포를 요청했다. 현재 계약/근거는 `SECURITY_REMEDIATION.md`. 이전 전체 audit13개(high5/moderate8), 운영-only10개를 실제 patched decoder/image-size/Zod/UUID/Vitest/Vite로 수정했다. audit 제외/무시 또는 SDK 강제 변경은 없다. Expo57.0.20/Router57.0.19/RN0.86.2와 운영 데이터·권한·AI 조건·호스팅 프로젝트는 유지했다.
+- 설치 재현: `npm ci` 완전 재설치 성공(887개). postinstall에서 query-string7.1.3 원본 SHA·실제경로·decoder0.5 버전을 검증하고 CJS→ESM 한 줄 연결을 재적용한다. Node22.12+/24+ 필요, `--ignore-scripts` 금지. `check`/`build:web` 전 무수정 check가 있으며, CI의 전체 audit는 moderate 이상이면 실패한다.
+- 로컬 검증: typecheck/lint·30개 파일171개 테스트 통과. 보안 회귀16개는 한글/이모지/복귀 URL, malformed UTF-8, 손상 ICNS/HEIF, 실제 CLI Zod4/plugin/output/MCP schema, 실제 Metro PNG/SVG, Xcode UUID, SHA 변조/패치 누락 fail-closed를 포함한다. 공격성 입력은 timeout/heap 제한 child 또는 합성 fixture에만 사용했다.
+- 전체 `npm run security:audit` 및 완전 재설치 결과 알려진 취약점0건. 웹43개 경로를 빌드했다. 병렬 Metro 캐시 읽기 경고는 full-crawl fallback으로 회복됐고 서버를 멈춘 `--clear` 최종 빌드에서도 같은 `entry-193d5e61f79866bdb92250631d6df956.js`가 생성됐다. 캐시 역직렬화 경고는 재발하지 않았다. 최종 외부 검증/배포 식별자는 아래에 추가한다.
+- 무료 native JS 검증: `expo export --platform ios --platform android --no-bytecode` 성공, iOS1415/Android1551모듈·47자산. 결과는 ignored `tmp/security-native-20261028`. 실제 native 바이너리 빌드·기기 실행·스토어 배포는 아니며 유료 EAS Build를 호출하지 않았다.
+- 브라우저: 로컬 실계정 기존8개 완료 기록·취향 카드 유지, 엄격한 returnTo→비공개/없는 공개 프로필 안내, URL에 인코딩한 ‘센과 치히로의 행방불명’ 검색 입력 복원, 320px 넘침0·콘솔 error0을 확인했다. 실제 기록/프로필 공개/계정 권한/AI 동의를 테스트로 변경하지 않았다.
+- 롤백: `rollback/security-before-2026-10-28` (`9231b64`), 직전 웹 `98eadriv28`. 롤백하면 의존성 경고도 돌아올 수 있다. 새 무료 보안 도구/기존 CI만 사용하며 유료 서비스나 요금제는 추가하지 않는다. 알려진 npm 경고0은 전체 침투/백업·복원/실기기 검증 완료라는 뜻이 아니다.
+
 ## 2026-10-27 무료 커뮤니티·PWA v1
 
 - 최종 게시: 기능 `9238856`, 공유 링크 보완 `ad08d84`, UI/legacy 회귀 보완 `a5fe425`를 기존 GitHub main에 push했다. 최종 구현 CI [40525646538](https://github.com/hoya0328/flick/actions/runs/40525646538) 성공. 기존 EAS 프로젝트 `d701494e-4875-45b4-b9c4-feb15dac3e85`, `beta`를 유지하고 최종 deployment `98eadriv28`의 번들 `entry-40a59864f76914aaef30600dfbea5728.js`를 외부 DOM과 HTTP에서 확인했다. 신규 유료 연결/요금제 변경은 없다.

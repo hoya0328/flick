@@ -1,5 +1,12 @@
 # DECISIONS
 
+## 2026-10-28 의존성 보안 경고 후속 수정
+
+- 사용자가 남은 경고의 무료 수정·외부 beta 배포를 요청했다. 기존 스택/프로젝트/DB/AI 무료 정책을 보존하며 `SECURITY_REMEDIATION.md`의 고정 overrides와 실행 회귀를 적용한다. SDK 강제 업/다운그레이드와 유료 보안 서비스는 추가하지 않는다.
+- CommonJS query-string7은 유지하고 ESM decoder0.5 수정판에만 `.default` 연결을 적용한다. 원본 SHA/버전/실제 node_modules 경로를 검사하는 postinstall과 빌드 전 check를 둔다. 불명확한 의존성 소스를 조용히 다시 쓰거나 audit 경고를 제외하지 않는다.
+- Expo CLI에 Zod4.6.6 실제 export, Metro에 image-size2.0.3 default 함수, Xcode3.0.1에 UUID11.1.1을 사용한다. CLI plugin/output/MCP schema·Metro PNG/SVG·Xcode v4 ID 동작을 실행 테스트한다. native 바이너리/스토어/DB 권한은 바꾸지 않는다.
+- Vitest4 범위 보안 패치를 적용하고 기존 CI에 전체 npm audit(moderate 이상 실패)을 추가한다. 알려진 의존성 경고0과 전체 서비스 보안/재해 복구 검증은 별개로 표시한다.
+
 ## 2026-10-27 무료 커뮤니티·PWA
 
 - 사용자의 무료 잔여 개발 요청으로 팔로우·일상 피드·공개 프로필·인앱 알림 보류를 해제했다. DM·OS 푸시·유료 SMTP·외부 음성·새 호스팅·AI 유료 대체는 제외한다. 계약은 `FREE_COMMUNITY.md`.

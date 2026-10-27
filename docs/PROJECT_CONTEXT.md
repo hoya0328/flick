@@ -1,5 +1,9 @@
 # PROJECT CONTEXT
 
+## 최신 운영 보완: 2026-10-28 의존성 보안
+
+- 이전 무료 기능 배포에서 남긴 npm 의존성 경고를 실제 수정판으로 보완했다. Expo57/Router57/RN0.86, 운영 DB·AI 조건·배포 대상은 그대로다. 설치/빌드 시 `security-compat.mjs`, CI의 `security:audit`가 재현과 신규 경고를 검사한다. `npm ci`를 사용하고 install scripts를 끄지 않는다. 상세 버전·호환 계약은 `SECURITY_REMEDIATION.md`.
+
 ## 최신 추가: 2026-10-27 무료 커뮤니티·PWA
 
 - 팔로우·공개 동의형 프로필·일상 피드 CRUD/사진/댓글/공감/저장/신고·앱 내 알림·PWA 설치 안내를 구현했다. 기존 Light/Core/12유형·무료 AI 정책과 독립적이며 유료 연결은 없다. `FREE_COMMUNITY.md`, `FREE_RELEASE_QA.md`를 현재 계약으로 참고한다.

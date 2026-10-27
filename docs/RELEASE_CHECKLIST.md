@@ -4,6 +4,7 @@
 
 - `git status --short`가 비어 있고 배포 커밋이 GitHub `main`에 push됐는지 확인한다.
 - `npm.cmd run check`와 `npm.cmd run build:web`을 같은 커밋에서 실행한다.
+- `npm.cmd ci`의 postinstall 호환 검사가 재현되고 `npm.cmd run security:audit`에 알려진 moderate 이상 경고가 없는지 확인한다. 감사 제외/강제 SDK 변경으로 숫자만 줄이지 않는다. 상세 계약은 `SECURITY_REMEDIATION.md`.
 - migration 적용 전 운영 DB 논리 백업을 만들고 복구 가능한 위치와 생성 시각을 기록한다.
 - migration은 순방향 적용 후 핵심 RLS 조회를 확인한다. 실패하면 데이터 삭제 없이 호환 가능한 후속 migration으로 복구한다.
 - EAS 웹 롤백은 직전 정상 deployment identifier를 `beta` 또는 운영 alias에 다시 연결한다.

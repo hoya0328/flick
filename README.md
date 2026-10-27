@@ -125,17 +125,17 @@ flowchart TD
 | **최종 통합 검증 예정** | 서로 다른 계정의 접근 경계, 계정 삭제 시 연관 데이터 정리, 보안 점검 후속 항목 |
 | **후속 배포** | iOS TestFlight와 Android 빌드, 스토어 자산과 정식 출시 안내 정비 |
 
-웹 베타 공개와 정식 출시 준비 완료는 구분합니다. 의존성 보안 점검의 잔여 항목과 네이티브 출시 조건은 [릴리스 체크리스트](docs/RELEASE_CHECKLIST.md)와 [인수인계](docs/HANDOFF.md)에 기록했습니다.
+웹 베타 공개와 정식 출시 준비 완료는 구분합니다. 2026-10-28 의존성 보안 경고를 무료 수정판과 호환 검증으로 보완하고 CI 보안 검사를 추가했습니다. [보안 수정·검증 범위](docs/SECURITY_REMEDIATION.md) · [릴리스 체크리스트](docs/RELEASE_CHECKLIST.md) · [인수인계](docs/HANDOFF.md).
 
 <details>
 <summary><strong>로컬 실행과 검증</strong></summary>
 
-CI와 같은 Node.js 22 환경을 권장합니다.
+CI와 같은 Node.js 22.12 이상 또는 Node.js 24 이상 환경을 사용합니다. 보안 수정 decoder의 ESM 연결을 자동 적용하므로 install scripts를 끄지 않습니다.
 
 ```bash
 git clone https://github.com/hoya0328/flick.git
 cd flick
-npm install
+npm ci
 cp .env.example .env.local
 npm run web
 ```
@@ -144,6 +144,7 @@ Windows PowerShell에서는 환경 파일 복사에 `Copy-Item .env.example .env
 
 ```bash
 npm run check
+npm run security:audit
 npm run build:web
 ```
 
