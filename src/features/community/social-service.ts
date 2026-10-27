@@ -125,20 +125,25 @@ export const getCommunityState = () =>
   socialRpc<CommunityState>("get_my_community_state");
 export const setPublicProfile = (enabled: boolean) =>
   socialRpc<void>("set_my_public_profile", { p_public: enabled });
-export const getPublicMember = (id: string) =>
-  socialRpc<Member | null>("get_public_member", { p_user: id });
+export function readableMember(member:Member):Member{
+  return {...member,name:typeof member.name==='string'&&member.name.trim()?member.name:'FLICK 사용자',bio:typeof member.bio==='string'?member.bio:'',avatar:typeof member.avatar==='string'?member.avatar:null};
+}
+export const getPublicMember = async(id: string) =>{
+  const member=await socialRpc<Member | null>("get_public_member", { p_user: id });
+  return member?readableMember(member):null;
+};
 export const listPublicMembers = (query = "", offset = 0) =>
   socialRpc<Member[]>("list_public_members", {
     p_query: query,
     p_offset: offset,
-  });
+  }).then(rows=>rows.map(readableMember));
 export const followMember = (id: string, follow: boolean) =>
   socialRpc<void>("set_member_follow", { p_target: id, p_follow: follow });
 export const listConnections = (kind: "followers" | "following", offset = 0) =>
   socialRpc<Member[]>("list_my_connections", {
     p_kind: kind,
     p_offset: offset,
-  });
+  }).then(rows=>rows.map(readableMember));
 export const listPosts = (
   scope: PostScope,
   offset = 0,

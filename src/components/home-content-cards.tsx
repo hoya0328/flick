@@ -1,4 +1,4 @@
-import { type Href,router } from 'expo-router';
+import { router } from 'expo-router';
 import { Image, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from 'react-native';
 
 import { DesignVector } from '@/components/design-vector';
@@ -20,11 +20,11 @@ export const previewKeywords = ['몽환적인', '우주', '경이', '사랑', '�
 type PreviewHandler = (title: string) => void;
 type ReviewProps = { review?: PublicReviewCard; width: number; onPreview: PreviewHandler; busy?: boolean; onLike: (review: PublicReviewCard) => void; readOnlyReactions?: boolean };
 
-function Author({ name, image, light = false, preview = false,profileId }: { name: string; image?: ImageSourcePropType; light?: boolean; preview?: boolean;profileId?:string }) {
-  return <Pressable accessibilityRole="button" accessibilityLabel={`${name} 공개 프로필`} disabled={!profileId} onPress={()=>router.push(`/people/${profileId}` as Href)} style={styles.author}>
+function Author({ name, image, light = false, preview = false }: { name: string; image?: ImageSourcePropType; light?: boolean; preview?: boolean }) {
+  return <View style={styles.author}>
     {image ? <Image accessible={false} source={image} style={light ? styles.lightAvatar : styles.avatar} /> : <View style={[styles.avatar, styles.avatarFallback]}><Text style={styles.initial}>{name.slice(0, 1)}</Text></View>}
     <Text numberOfLines={1} style={[styles.authorText, light && styles.authorLight]}>{name}{preview ? ' · 디자인 예시' : ''}</Text>
-  </Pressable>;
+  </View>;
 }
 
 export function HomeReviewCard({ review, width, onPreview, onLike, busy, readOnlyReactions = false }: ReviewProps) {
@@ -36,7 +36,7 @@ export function HomeReviewCard({ review, width, onPreview, onLike, busy, readOnl
     <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '공개 리뷰'} 보기`} onPress={open}>
       <View pointerEvents="none" style={styles.reviewOutline} /><View style={styles.cover}>
         <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? homeAssets.lightCover : null} label={title} width={width} height={143} radius={0} />
-        <View style={styles.authorOverlay}><Author name={review?.authorDisplayName ?? '솜사탕덕후'} image={sample ? homeAssets.lightAvatar : undefined} light preview={sample} profileId={review?.authorProfileId}/></View>
+        <View style={styles.authorOverlay}><Author name={review?.authorDisplayName ?? '솜사탕덕후'} image={sample ? homeAssets.lightAvatar : undefined} light preview={sample} /></View>
       </View>
       <View style={styles.reviewCopy}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><Text numberOfLines={1} style={[styles.reviewTitle, { flexShrink: 1 }]}>{title}</Text><HomeIcon name="chevron" width={5} height={10} /></View>
@@ -61,7 +61,7 @@ export function HomeMagazineCard({ review, alternate = false, onPreview }: { rev
   return <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '매거진'} 보기`} onPress={() => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title)} style={styles.magazine}>
     {review?.coreCover ? <CorePhoto path={review.coreCover} style={{ width: 311, height: 160 }} label={title} /> : <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? alternate ? homeAssets.hailMaryCover : homeAssets.magazineCover : null} label={title} width={311} height={160} />}
     <View style={styles.magazineCopy}>
-      <Author name={review?.authorDisplayName ?? (alternate ? 'MICHI' : '솜사탕덕후')} image={sample ? alternate ? homeAssets.hailMaryAvatar : homeAssets.magazineAvatar : undefined} preview={sample} profileId={review?.authorProfileId}/>
+      <Author name={review?.authorDisplayName ?? (alternate ? 'MICHI' : '솜사탕덕후')} image={sample ? alternate ? homeAssets.hailMaryAvatar : homeAssets.magazineAvatar : undefined} preview={sample} />
       <Text numberOfLines={1} style={homeText.title}>{title}</Text>
       <Text numberOfLines={1} style={[homeText.muted, styles.subtitle]}>{review?.spoiler ? '스포일러 포함 · 상세에서 확인' : review?.bodyExcerpt || (alternate ? '홀로 살아갈 수 있는 생명은 없다' : '끊임없는 만남과 이별에 대하여')}</Text>
     </View>

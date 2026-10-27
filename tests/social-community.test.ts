@@ -5,6 +5,7 @@ vi.mock("../src/lib/supabase", () => ({ supabase: { rpc: mock.rpc } }));
 import {
   safeCommunityPath,
   publicCommunityUrl,
+  readableMember,
   notificationPath,
   postIssue,
   mergeById,
@@ -20,6 +21,9 @@ beforeEach(() => {
   mock.rpc.mockResolvedValue({ data: [], error: null });
 });
 describe("free social boundaries", () => {
+  it('handles legacy nullable profile fields without a broken avatar',()=>{
+    expect(readableMember({userId:id,name:null,bio:null,avatar:null,viewerFollows:false} as unknown as Parameters<typeof readableMember>[0])).toMatchObject({name:'FLICK 사용자',bio:'',avatar:null});
+  });
   it('shares through a static 200 entry with a strict return path',()=>{
     const link=new URL(publicCommunityUrl(`/people/${id}`));
     expect(link.pathname).toBe('/');expect(link.searchParams.get('returnTo')).toBe(`/people/${id}`);
@@ -131,6 +135,11 @@ describe("free social boundaries", () => {
   });
 });
 describe("PWA safety contract", () => {
+  it('keeps home author presentation non-interactive inside article buttons',()=>{
+    const home=readFileSync('src/components/home-content-cards.tsx','utf8');
+    const author=home.slice(home.indexOf('function Author('),home.indexOf('export function HomeReviewCard'));
+    expect(author).toContain('return <View');expect(author).not.toContain('<Pressable');
+  });
   it("caches only same-origin public static assets, never API or account HTML", () => {
     const sw = readFileSync("public/sw.js", "utf8");
     expect(sw).toContain(

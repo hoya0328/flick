@@ -7,7 +7,7 @@ import { NotificationBell } from '@/features/community/notification-bell';
 
 export const profileColor={accent:'#F8233C',ink:'#0A0A0A',muted:'#6A7282',border:'#D1D5DC'};
 export function ProfileAvatar({path,name,size=84}:{path:string|null;name:string;size?:number}){
-  return path?<CorePhoto path={path} label="내 프로필 사진" style={{width:size,height:size,borderRadius:size/2}}/>:<View accessibilityLabel="기본 프로필" style={{width:size,height:size,borderRadius:size/2,backgroundColor:'#FFF0F3',alignItems:'center',justifyContent:'center'}}><Text style={{fontFamily:homeFont,color:'#F8233C',fontSize:size*.35,fontWeight:'700'}}>{Array.from(name.trim())[0]??'F'}</Text></View>;
+  return path?<CorePhoto path={path} label={`${name} 프로필 사진`} style={{width:size,height:size,borderRadius:size/2}}/>:<View accessibilityLabel="기본 프로필" style={{width:size,height:size,borderRadius:size/2,backgroundColor:'#FFF0F3',alignItems:'center',justifyContent:'center'}}><Text style={{fontFamily:homeFont,color:'#F8233C',fontSize:size*.35,fontWeight:'700'}}>{Array.from(name.trim())[0]??'F'}</Text></View>;
 }
 export function ProfileHeader({onSettings,onInfo,onHome}:{onSettings:()=>void;onInfo:()=>void;onHome:()=>void}){
   return <View style={p.header}>
