@@ -2,6 +2,7 @@
 
 ## 2026-10-28 남은 의존성 보안 경고 수정
 
+- 추가 QA 보완: 외부 `/welcome?returnTo=...` 직접 진입의 SSR/클라이언트 문구 차이(#418)를 `useSyncExternalStore` hydration snapshot으로 보완했다. 인증·returnTo 검증은 그대로다. 회귀2개 추가 후 typecheck/lint·30파일173테스트 및 웹43경로 성공. 최종 번들 `entry-c64d8773e71fe6a61b624981d29aa306.js`, PWA cache `20607dae1860e106`. 최종 CI/배포 확인은 이어서 기록한다.
 - 사용자가 남은 경고 설명·무료 수정·외부 배포를 요청했다. 현재 계약/근거는 `SECURITY_REMEDIATION.md`. 이전 전체 audit13개(high5/moderate8), 운영-only10개를 실제 patched decoder/image-size/Zod/UUID/Vitest/Vite로 수정했다. audit 제외/무시 또는 SDK 강제 변경은 없다. Expo57.0.20/Router57.0.19/RN0.86.2와 운영 데이터·권한·AI 조건·호스팅 프로젝트는 유지했다.
 - 설치 재현: `npm ci` 완전 재설치 성공(887개). postinstall에서 query-string7.1.3 원본 SHA·실제경로·decoder0.5 버전을 검증하고 CJS→ESM 한 줄 연결을 재적용한다. Node22.12+/24+ 필요, `--ignore-scripts` 금지. `check`/`build:web` 전 무수정 check가 있으며, CI의 전체 audit는 moderate 이상이면 실패한다.
 - 로컬 검증: typecheck/lint·30개 파일171개 테스트 통과. 보안 회귀16개는 한글/이모지/복귀 URL, malformed UTF-8, 손상 ICNS/HEIF, 실제 CLI Zod4/plugin/output/MCP schema, 실제 Metro PNG/SVG, Xcode UUID, SHA 변조/패치 누락 fail-closed를 포함한다. 공격성 입력은 timeout/heap 제한 child 또는 합성 fixture에만 사용했다.

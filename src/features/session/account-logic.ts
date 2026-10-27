@@ -66,3 +66,13 @@ export function accountErrorMessage(error: unknown) {
   }
   return raw || '계정 요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
 }
+// Static HTML cannot know per-request query params. Match the first client render
+// to the server, then reveal shared-link copy and demo controls after hydration.
+export function welcomePresentation(hydrated: boolean, hasSharedLink: boolean) {
+  return {
+    description: hydrated && hasSharedLink
+      ? '공유받은 기록은 로그인한 뒤 읽을 수 있어요.'
+      : '내 계정에 취향과 감상을 안전하게 쌓아 보세요.',
+    showDemo: hydrated && !hasSharedLink,
+  };
+}

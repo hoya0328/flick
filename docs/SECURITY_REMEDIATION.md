@@ -27,7 +27,8 @@
 
 ## 검증과 한계
 
-- 완전 `npm ci` 재설치 및 전체 npm audit에 알려진 경고0건을 확인했다. typecheck/lint·30개 파일171개 테스트를 통과했다. 추가 보안 회귀16개 중 변조/패치 누락 검사도 실제 설치 파일을 건드리지 않는 합성 fixture에서 수행했다.
+- 완전 `npm ci` 재설치 및 전체 npm audit에 알려진 경고0건을 확인했다. 최종 typecheck/lint·30개 파일173개 테스트를 통과했다. 추가 보안 회귀16개 중 변조/패치 누락 검사도 실제 설치 파일을 건드리지 않는 합성 fixture에서 수행했다.
+- 외부 공유 로그인 직접 진입에서 별도로 발견된 React hydration 문구 차이를 보완했다. 서버/첫 클라이언트 화면을 동일하게 유지한 뒤 공유 안내와 데모 버튼을 표시한다. 로그인 복귀 경로 검증·인증·권한은 변경하지 않았다. 이 두 회귀 테스트는 의존성 보안 경고와 별개다.
 - iOS/Android JS export도 로컬에서 성공했다. 1415/1551모듈과47자산을 검사했으며 `--no-bytecode` 결과다. 네이티브 앱의 기기 실행 또는 스토어 배포 성공으로 안내하지 않는다.
 
 - `tests/security-dependencies.test.ts`: 한글/이모지/공백·URL 왕복·한 번만 decoding·합성 로그인 복귀, 실제 query-string ESM 연결 검사, 손상 ICNS/HEIF 거부, 실제 Metro PNG/SVG 크기, 실제 Expo CLI plugin/output/MCP schema, Zod4 export, Xcode24자리 ID·UUID v5 경계 검사를 실행한다.

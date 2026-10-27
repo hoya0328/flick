@@ -8,9 +8,18 @@ import {
   validateNickname,
   validatePassword,
   validatePasswordConfirmation,
+  welcomePresentation,
 } from '../src/features/session/account-logic';
 
 describe('account validation', () => {
+  it('keeps static welcome and the first client render identical for shared links',()=>{
+    expect(welcomePresentation(false,false)).toEqual(welcomePresentation(false,true));
+    expect(welcomePresentation(false,true).showDemo).toBe(false);
+  });
+  it('reveals the correct copy and demo option only after hydration',()=>{
+    expect(welcomePresentation(true,true)).toEqual({description:'공유받은 기록은 로그인한 뒤 읽을 수 있어요.',showDemo:false});
+    expect(welcomePresentation(true,false)).toEqual({description:'내 계정에 취향과 감상을 안전하게 쌓아 보세요.',showDemo:true});
+  });
   it('normalizes email and nickname input', () => {
     expect(normalizeEmail('  User@Example.COM ')).toBe('user@example.com');
     expect(normalizeNickname('  영화   친구  ')).toBe('영화 친구');

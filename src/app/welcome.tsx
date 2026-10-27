@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { BrandMark } from '@/components/brand-mark';
@@ -11,17 +11,23 @@ import {
   validateNickname,
   validatePassword,
   validatePasswordConfirmation,
+  welcomePresentation,
 } from '@/features/session/account-logic';
 import { useSession } from '@/features/session/session-provider';
 import { safeCommunityPath } from '@/features/community/social-service';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 type AuthMode = 'signIn' | 'signUp';
+const subscribeHydration = () => () => {};
+const clientHydrationSnapshot = () => true;
+const serverHydrationSnapshot = () => false;
 
 export default function WelcomeScreen() {
   const params = useLocalSearchParams<{ returnTo?: string }>();
   const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
   const returnTo = safeCommunityPath(returnToParam);
+  const hydrated = useSyncExternalStore(subscribeHydration, clientHydrationSnapshot, serverHydrationSnapshot);
+  const presentation = welcomePresentation(hydrated, Boolean(returnTo));
   const { backendConfigured, sendPasswordReset, signIn, signUp, startDemo } = useSession();
   const [authMode, setAuthMode] = useState<AuthMode>('signIn');
   const [nickname, setNickname] = useState('');
@@ -110,7 +116,7 @@ export default function WelcomeScreen() {
           <BrandMark />
           <View style={styles.copy}>
             <Text style={styles.title}>영화 감상,{`\n`}어떻게 남겨야 할지{`\n`}막막했다면?</Text>
-            <Text style={styles.body}>{returnTo ? '공유받은 기록은 로그인한 뒤 읽을 수 있어요.' : '내 계정에 취향과 감상을 안전하게 쌓아 보세요.'}</Text>
+            <Text style={styles.body}>{presentation.description}</Text>
           </View>
         </View>
 
@@ -152,7 +158,7 @@ export default function WelcomeScreen() {
         </View>
 
         {!backendConfigured ? <Text style={styles.backendWarning}>계정 서버 설정이 없어 현재 회원가입과 로그인을 사용할 수 없습니다.</Text> : null}
-        {!returnTo ? (
+        {presentation.showDemo ? (
           <View style={styles.demoArea}>
             <View style={styles.dividerRow}><View style={styles.divider} /><Text style={styles.dividerText}>또는</Text><View style={styles.divider} /></View>
             <Button label="가입 없이 데모로 둘러보기" loading={busy} onPress={() => void handleDemo()} variant="secondary" />
