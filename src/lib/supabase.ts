@@ -4,11 +4,14 @@ import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 
 import { authStorage } from '@/lib/auth-storage';
+import { assertPublicSupabaseKey } from '@/lib/public-config';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim();
 const supabasePublishableKey =
   process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() ||
   process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim();
+
+assertPublicSupabaseKey(supabasePublishableKey);
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabasePublishableKey);
 

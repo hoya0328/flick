@@ -1,5 +1,12 @@
 # HANDOFF
 
+## 2026-10-28 API 키 위치 점검·업로드 차단
+
+- 사용자 요청: `.env`/API 키 위치 설명, Git 업로드 및 유출 방어. 실제 로컬 `.env.local`은 공개 Supabase URL/publishable 두 값만 있고 기존에도 ignored였다. 추적 env는 빈 `.env.example`뿐이다. 운영 Supabase secret 이름 목록만 읽어 Gemini/TMDB/service-role 등록을 확인했다. 키 값·CLI 인증 저장소는 출력하지 않았다. 관련 계약은 `SECRETS_MANAGEMENT.md`.
+- 변경: `.gitignore`에 env 백업/변형·인증서·서비스 계정 파일을 추가했다. Node secret guard는 추적/미추적 소스·staged index·도달 가능한 Git 이력·웹 출력 및 공개 env allowlist를 검사한다. source/check/build 전후/CI 게이트, local start/web 게이트, 공개용 키 자리의 서버 키를 거부하는 런타임 검사를 추가했다. 서버 함수/키/DB/RLS·호스팅 식별자 변경은 없다.
+- 검증: typecheck/lint·31파일195테스트 및 웹43경로 성공. 이력716개 blob 및 웹86개 파일에서 알려진 비밀키 패턴 미검출. 새 합성 회귀는 키 종류·민감 경로·실제 gitignore·로컬 env·Git index와 워킹 파일 차이·빌드 결과 및 값 없는 오류를 검사한다. 확정 CI/배포·로컬 hook 연결 결과는 아래 추가한다. 최종 bundle `entry-ab9617db3530a0e918dbeaf2dada004c.js`, PWA cache `ed00fe8656106ce9`.
+- 한계: 형식 기반 검사는 완전한 유출 부재를 보장하지 않는다. 이미 노출된 실제 비밀키는 ignore/파일 삭제로 회수되지 않으며 먼저 폐기/재발급해야 한다. 이번 검사에서 실제 노출은 발견하지 않아 키 회전·Git 이력 재작성은 하지 않는다. 새 clone의 hook 연결 방법을 문서에 남겼다.
+
 ## 2026-10-28 남은 의존성 보안 경고 수정
 
 - 최종 게시 완료: 보안 수정 `eca5c4d`, 공유 로그인 hydration 보완 `3619771`을 main에 push했다. 최종 구현 CI [40535913021](https://github.com/hoya0328/flick/actions/runs/40535913021) 전체 성공(설치·전체 audit·typecheck/lint·173테스트·웹 빌드). 기존 프로젝트/`beta`에 최종 deployment `44gom371yg`를 게시했고 외부 DOM 번들 `entry-c64d8773e71fe6a61b624981d29aa306.js` 일치를 확인했다. 직전 보안-only deployment는 `hqvmxxkgrr`다. 유료 연결·요금제 변경은 없다.

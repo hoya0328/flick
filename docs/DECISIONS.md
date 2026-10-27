@@ -1,5 +1,11 @@
 # DECISIONS
 
+## 2026-10-28 API 키 저장·업로드 방어
+
+- 사용자 요청에 따라 기존 env ignore를 확인하고 백업/인증서/서버 credential 파일 제외를 확장한다. 빈 공개 `.env.example`만 추적하며 로컬 실제 값이나 CLI 인증 정보를 복사하지 않는다.
+- Expo 클라이언트는 공개 Supabase URL/publishable/legacy anon만 허용한다. Gemini/TMDB/service-role은 Edge Function 환경에 유지하고 프록시·RLS·계정 권한을 넓히지 않는다. 서버 키를 공개 변수에 넣으면 빌드 및 클라이언트 생성이 실패하도록 한다.
+- 외부 유료 스캐너 없이 Node 기반 검사를 소스·Git index·도달 가능한 이력·웹 출력에 적용한다. 로컬 기존 hook이 없으면 repo hooksPath를 연결하고 새 clone 설치 절차를 문서화한다. hook/CI만으로 과거 유출을 회수할 수 없으므로 실제 노출 시 공급자 폐기/재발급을 우선한다. 이번에 회전·이력 재작성은 하지 않는다.
+
 ## 2026-10-28 의존성 보안 경고 후속 수정
 
 - 사용자가 남은 경고의 무료 수정·외부 beta 배포를 요청했다. 기존 스택/프로젝트/DB/AI 무료 정책을 보존하며 `SECURITY_REMEDIATION.md`의 고정 overrides와 실행 회귀를 적용한다. SDK 강제 업/다운그레이드와 유료 보안 서비스는 추가하지 않는다.

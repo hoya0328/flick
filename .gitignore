@@ -1,9 +1,20 @@
 # Secrets and local environment
 .env
 .env.*
+.env-*
+.env_*
+*.env
+*.env.*
 !.env.example
+.envrc
+secrets/
+service-account*.json
+*-service-account.json
 *.pem
 *.key
+*.p12
+*.pfx
+*.keystore
 
 # Dependencies and virtual environments
 node_modules/
@@ -28,6 +39,7 @@ __pycache__/
 .wrangler/
 supabase/.temp/
 .dev.vars
+.dev.vars.*
 tmp/
 temp/
 *.log

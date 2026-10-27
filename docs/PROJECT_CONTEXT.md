@@ -1,5 +1,10 @@
 # PROJECT CONTEXT
 
+## 2026-10-28 API 키 업로드 방어
+
+- `.env.local`은 공개 Supabase URL/publishable 두 값만 가진 Git 제외 파일이다. Gemini/TMDB/service-role은 서버 함수 환경에서만 읽는다. `SECRETS_MANAGEMENT.md`가 저장 경계·유출 대응 계약이다. 공개 키를 숨기는 대신 Auth/RLS를 유지한다.
+- Git 민감 파일 제외·secret guard(소스/index/이력/웹 산출물)·CI/빌드 게이트·공개 키 런타임 검사를 추가한다. 기존 스택/서버 권한/키/호스팅 대상은 변경하지 않는다. 알려진 패턴 검사이며 유출 부재의 절대 보장은 아니다.
+
 ## 최신 운영 보완: 2026-10-28 의존성 보안
 
 - 이전 무료 기능 배포에서 남긴 npm 의존성 경고를 실제 수정판으로 보완했다. Expo57/Router57/RN0.86, 운영 DB·AI 조건·배포 대상은 그대로다. 설치/빌드 시 `security-compat.mjs`, CI의 `security:audit`가 재현과 신규 경고를 검사한다. `npm ci`를 사용하고 install scripts를 끄지 않는다. 상세 버전·호환 계약은 `SECURITY_REMEDIATION.md`.

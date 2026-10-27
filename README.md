@@ -145,10 +145,13 @@ Windows PowerShell에서는 환경 파일 복사에 `Copy-Item .env.example .env
 ```bash
 npm run check
 npm run security:audit
+npm run security:secrets -- --history
 npm run build:web
 ```
 
 </details>
+
+API 키 위치와 업로드 방어는 [키 관리 안내](docs/SECRETS_MANAGEMENT.md)를 참고하세요. 새 clone에서는 기존 hook 설정을 확인한 뒤 `git config --local core.hooksPath .githooks`로 커밋·push 전 검사를 연결합니다. `.env.local`은 업로드하지 않으며 AI·TMDB·관리자 비밀키는 서버에만 둡니다.
 
 ## 더 자세한 문서
 

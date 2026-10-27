@@ -5,17 +5,20 @@
   "main": "expo-router/entry",
   "scripts": {
     "postinstall": "node scripts/security-compat.mjs",
+    "prestart": "npm run security:secrets",
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
+    "preweb": "npm run security:secrets",
     "web": "expo start --web",
-    "build:web": "node scripts/security-compat.mjs --check && expo export --platform web && node scripts/build-pwa.mjs",
+    "build:web": "node scripts/security-compat.mjs --check && npm run security:secrets && expo export --platform web && node scripts/build-pwa.mjs && npm run security:secrets -- --build",
     "security:audit": "npm audit --audit-level=moderate",
+    "security:secrets": "node scripts/secrets-guard.mjs",
     "catalog:audit": "node scripts/audit-tmdb-catalog.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint",
     "test": "vitest run",
-    "check": "node scripts/security-compat.mjs --check && npm run typecheck && npm run lint && npm test"
+    "check": "node scripts/security-compat.mjs --check && npm run security:secrets && npm run typecheck && npm run lint && npm test"
   },
   "engines": {
     "node": "^22.12.0 || >=24.0.0"
