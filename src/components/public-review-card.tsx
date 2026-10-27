@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { type Href,router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { Button } from '@/components/button';
@@ -19,7 +19,7 @@ export function PublicReviewCard({ review, busy = false, onLike, onSave }: Publi
     <View style={[styles.card, core && styles.coreCard]}>
       <View style={styles.badgeRow}>
         <Text style={[styles.badge, core && styles.coreBadge]}>{core ? 'CORE MAGAZINE' : 'LIGHT REVIEW'}</Text>
-        <Text style={styles.author}>{review.authorDisplayName}</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={`${review.authorDisplayName} 공개 프로필`} disabled={!review.authorProfileId} onPress={()=>router.push(`/people/${review.authorProfileId}` as Href)} style={{minHeight:44,justifyContent:'center'}}><Text style={styles.author}>{review.authorDisplayName}</Text></Pressable>
       </View>
       <Pressable
         accessibilityHint="공개 감상 기록을 엽니다"

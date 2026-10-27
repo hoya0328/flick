@@ -15,6 +15,8 @@ import { SavedContent } from '@/features/profile/saved-content';
 import { useCurrentDate } from '@/features/profile/use-current-date';
 import { useTwelveTaste } from '@/features/reports/use-twelve-taste';
 import { tasteTypes } from '@/features/reports/taste-engine';
+import { getCommunityState,type CommunityState } from '@/features/community/social-service';
+import { SocialPosts } from '@/features/community/social-ui';
 
 type ProfileTab='calendar'|'feed'|'saved';
 const weekdays=['일','월','화','수','목','금','토'];
@@ -31,17 +33,19 @@ function MyProfile(){
   const month=chosenMonth??today.slice(0,7);
   const [details,setDetails]=useState<ProfileDetails|null>(null),[records,setRecords]=useState<ReviewRecord[]|null>(null),[collectionCount,setCollectionCount]=useState<number|null>(null);
   const [busy,setBusy]=useState(false),[errors,setErrors]=useState<string[]>([]);
+  const [community,setCommunity]=useState<CommunityState|null>(null);
   const [info,setInfo]=useState<{title:string;body:string}|null>(null),[shareOpen,setShareOpen]=useState(false);
   const scroll=useRef<ScrollView>(null);
   const request=useRef(0);
   const load=useCallback(()=>{
     const token=++request.current;setBusy(true);setErrors([]);
-    void Promise.allSettled([getMyProfileDetails(mode),listReviews(mode),mode==='supabase'?listMyCollections():Promise.resolve([])]).then(([meta,reviews,collections])=>{
+    void Promise.allSettled([getMyProfileDetails(mode),listReviews(mode),mode==='supabase'?listMyCollections():Promise.resolve([]),mode==='supabase'?getCommunityState():Promise.resolve(null)]).then(([meta,reviews,collections,social])=>{
       if(token!==request.current)return;
       const failed:string[]=[];
       if(meta.status==='fulfilled')setDetails(meta.value);else failed.push('프로필');
       if(reviews.status==='fulfilled')setRecords(reviews.value);else failed.push('기록');
       if(collections.status==='fulfilled')setCollectionCount(collections.value.length);else failed.push('컬렉션');
+      if(social.status==='fulfilled')setCommunity(social.value);else failed.push('팔로우·알림');
       setErrors(failed);setBusy(false);
     });
   },[mode]);
@@ -51,22 +55,22 @@ function MyProfile(){
   const selected=(records??[]).filter(record=>record.status==='completed'&&record.watchedAt===selectedDate);
   const name=details?.displayName??session.nickname??(mode==='demo'?'FLICK 사용자':'프로필 불러오는 중');
   const show=(title:string,body:string)=>setInfo({title,body});
-  const shareText=`${name}님의 FLICK\n영화의 여운을 나만의 기록으로 남기고 있어요.\nhttps://flick-film-journal--beta.expo.app/welcome`;
+  const shareText=`${name}님의 FLICK\n영화의 여운을 나만의 기록으로 남기고 있어요.\nhttps://flick-film-journal--beta.expo.app/${community?.publicProfile?`people/${community.userId}`:'welcome'}`;
   async function share(){
     try{await Share.share({message:shareText,title:'FLICK 프로필 소개'});setShareOpen(false);}
     catch{show('공유 안내','이 브라우저에서는 공유 창을 지원하지 않아요. 아래 소개 글을 선택해 복사할 수 있어요.');}
   }
   function selectTab(next:ProfileTab){setTab(next);setSelectedDate(null);}
   return <SafeAreaView style={s.safe} edges={['top']}><ScrollView ref={scroll} showsVerticalScrollIndicator={false} contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-    <ProfileHeader onHome={()=>router.push('/')} onSettings={()=>router.push('/account-settings')} onInfo={()=>show('알림은 준비 중이에요','새 알림 기능은 아직 제공하지 않아요. 현재 계정과 기존 기록은 그대로 사용할 수 있어요.')}/>
+    <ProfileHeader onHome={()=>router.push('/')} onSettings={()=>router.push('/account-settings')} onInfo={()=>router.push('/notifications')}/>
     <View style={s.identity}>
       <ProfileAvatar path={details?.avatarPath??null} name={name}/>
       <View style={s.identityText}><Text numberOfLines={1} style={p.title}>{name}</Text><Text numberOfLines={1} style={[p.body,{marginTop:6}]}>{details?.bio||(mode==='demo'?'나만의 영화 기록을 시작해 보세요':'소개를 입력해 나를 표현해 보세요')}</Text>
-      <Pressable accessibilityRole="button" accessibilityLabel="팔로우 기능 준비 안내" onPress={()=>show('팔로우는 준비 중이에요','팔로워·팔로잉은 아직 집계하지 않아요. 숫자와 관계를 임의로 만들지 않습니다.')} style={s.follow}><Text style={s.followText}>팔로워 <Text style={s.followValue}>—</Text></Text><Text style={s.followText}>팔로잉 <Text style={s.followValue}>—</Text></Text><Text style={s.preparing}>준비 중</Text></Pressable></View>
+      <Pressable accessibilityRole="button" accessibilityLabel="내 팔로워와 팔로잉 보기" onPress={()=>router.push('/connections')} style={s.follow}><Text style={s.followText}>팔로워 <Text style={s.followValue}>{community?.followers??'—'}</Text></Text><Text style={s.followText}>팔로잉 <Text style={s.followValue}>{community?.following??'—'}</Text></Text></Pressable></View>
     </View>
     <View style={s.actions}><Pressable accessibilityRole="button" onPress={()=>router.push('/profile-edit')} style={[p.action,s.action]}><ProfileEditIcon/><Text style={p.actionText}>프로필 편집</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>setShareOpen(true)} style={[p.action,s.action]}><ProfileShareIcon/><Text style={p.actionText}>프로필 공유</Text></Pressable></View>
     <View style={s.stats}>
-      {[{label:'본 영화',value:records===null||errors.includes('기록')?'—':summary.watchedMovies,action:()=>router.push('/archive')},{label:'리뷰',value:records===null||errors.includes('기록')?'—':summary.report.total,action:()=>router.push('/archive')},{label:'컬렉션',value:errors.includes('컬렉션')?'—':collectionCount??'—',action:()=>show('프로필 컬렉션은 준비 중이에요','마이페이지 컬렉션 모아보기는 보류 중이에요. 기존 컬렉션 관리 기능은 계정 설정에서 계속 사용할 수 있어요.')}].map((item,index)=><Pressable key={item.label} accessibilityRole="button" accessibilityLabel={`${item.label} ${item.value}`} onPress={item.action} style={s.stat}><Text style={s.statNumber}>{item.value}</Text><Text style={s.statLabel}>{item.label}</Text>{index<2?<View style={s.statDivider}/>:null}</Pressable>)}
+      {[{label:'본 영화',value:records===null||errors.includes('기록')?'—':summary.watchedMovies,action:()=>router.push('/archive')},{label:'리뷰',value:records===null||errors.includes('기록')?'—':summary.report.total,action:()=>router.push('/archive')},{label:'컬렉션',value:errors.includes('컬렉션')?'—':collectionCount??'—',action:()=>router.push('/collections')}].map((item,index)=><Pressable key={item.label} accessibilityRole="button" accessibilityLabel={`${item.label} ${item.value}`} onPress={item.action} style={s.stat}><Text style={s.statNumber}>{item.value}</Text><Text style={s.statLabel}>{item.label}</Text>{index<2?<View style={s.statDivider}/>:null}</Pressable>)}
     </View>
     <Pressable accessibilityRole="button" accessibilityLabel="나의 12가지 취향 리포트 보기" onPress={()=>router.push('/taste-insights')} style={s.taste}>
       <Text style={s.tasteHeader}>나의 취향 리포트</Text><DesignVector name="chevron" width={6} height={12} style={{position:'absolute',right:18,top:24}}/>
@@ -86,10 +90,10 @@ function MyProfile(){
       </Pressable>)}</View>
       {records!==null&&!summary.report.total?<View style={[p.empty,{marginTop:12}]}><Text style={p.body}>완료한 기록이 아직 없어요. 첫 감상을 기록하면 감상일에 영화 포스터가 나타나요.</Text><Pressable accessibilityRole="button" onPress={()=>router.push('/archive')}><Text style={p.link}>작성 중인 기록 확인</Text></Pressable></View>:null}
       <Pressable accessibilityRole="button" onPress={()=>router.push('/archive')} style={{alignSelf:'center',padding:16}}><Text style={p.link}>Light·Core·초안 전체 관리</Text></Pressable>
-    </View>:tab==='feed'?<View style={[p.empty,{marginTop:24,marginBottom:40}]}><Text style={p.title}>내 피드를 준비하고 있어요</Text><Text style={p.body}>영화 밖의 순간을 나누는 일상 피드는 추후 제공할 예정이에요. 작성한 영화 리뷰는 기존 기록 관리에서 확인할 수 있어요.</Text><Pressable accessibilityRole="button" onPress={()=>router.push('/archive')} style={p.action}><Text style={p.actionText}>내 리뷰 관리</Text></Pressable></View>:<SavedContent mode={mode} width={width} onInfo={show}/>}
+    </View>:tab==='feed'?<SocialPosts scope="mine"/>:<SavedContent mode={mode} width={width} onInfo={show}/>}
   </ScrollView>
   <Modal visible={selectedDate!==null} transparent animationType="slide" onRequestClose={()=>setSelectedDate(null)}><View style={s.scrim}><Pressable accessibilityRole="button" accessibilityLabel="날짜별 기록 닫기" style={StyleSheet.absoluteFill} onPress={()=>setSelectedDate(null)}/><View accessibilityViewIsModal style={s.sheet}><View style={s.sheetHeading}><Text style={p.title}>{selectedDate} 기록</Text><Pressable accessibilityRole="button" accessibilityLabel="날짜별 기록 창 닫기" onPress={()=>setSelectedDate(null)} style={s.close}><DesignVector name="cancel"/></Pressable></View><ScrollView contentContainerStyle={{paddingBottom:24}}>{!selected.length?<Text style={p.body}>이 날짜에 완료한 기록이 없어요.</Text>:selected.map(record=><Pressable key={record.id} accessibilityRole="button" accessibilityLabel={`${record.movie.title} ${record.mode==='light'?'Light':'Core'} 기록 열기`} onPress={()=>{setSelectedDate(null);router.push({pathname:'/(tabs)/record',params:{reviewId:record.id}});}} style={s.recordRow}><ProfilePoster path={record.movie.posterPath} title={record.movie.title} width={44} height={63}/><View style={{flex:1}}><Text numberOfLines={1} style={s.recordTitle}>{record.movie.title}</Text><Text style={p.body}>{record.mode==='light'?'Light':'Core'} · ★{record.rating??'—'} · {record.visibility==='public'?'전체 공개':'나만 보기'}</Text></View><DesignVector name="chevron" width={6}/></Pressable>)}</ScrollView></View></View></Modal>
-  <Modal visible={shareOpen} transparent animationType="fade" onRequestClose={()=>setShareOpen(false)}><View style={s.shareScrim}><View accessibilityViewIsModal style={s.shareDialog}><Text style={p.title}>프로필 소개 공유</Text><Text style={p.body}>공개 프로필 페이지는 준비 중이에요. 닉네임과 서비스 소개만 공유하며 이메일·비공개 기록·취향 데이터는 포함하지 않아요.</Text><Text selectable style={s.shareText}>{shareText}</Text><Pressable accessibilityRole="button" onPress={()=>void share()} style={p.action}><ProfileShareIcon/><Text style={p.actionText}>공유 화면 열기</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>setShareOpen(false)} style={p.action}><Text style={p.actionText}>닫기</Text></Pressable></View></View></Modal>
+  <Modal visible={shareOpen} transparent animationType="fade" onRequestClose={()=>setShareOpen(false)}><View style={s.shareScrim}><View accessibilityViewIsModal style={s.shareDialog}><Text style={p.title}>프로필 소개 공유</Text><Text style={p.body}>{community?.publicProfile?'공개 프로필 링크를 공유해요. 로그인한 회원에게 공개한 콘텐츠만 보입니다.':'현재 프로필은 비공개입니다. 아래는 서비스 소개 링크이며, 공개 프로필 링크는 공개 설정 후 공유할 수 있어요.'}</Text><Text selectable style={s.shareText}>{shareText}</Text><Pressable accessibilityRole="button" onPress={()=>{setShareOpen(false);router.push('/community-settings');}} style={p.action}><Text style={p.actionText}>공개 설정</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>void share()} style={p.action}><ProfileShareIcon/><Text style={p.actionText}>공유 화면 열기</Text></Pressable><Pressable accessibilityRole="button" onPress={()=>setShareOpen(false)} style={p.action}><Text style={p.actionText}>닫기</Text></Pressable></View></View></Modal>
   <HomeInfoDialog info={info} onClose={()=>setInfo(null)}/>
   </SafeAreaView>;
 }

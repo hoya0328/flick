@@ -267,8 +267,14 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const deleteAccount = useCallback(async () => {
     if (mode === 'supabase') {
       const client = requireBackend();
-      const { error: deleteError } = await client.functions.invoke('delete-account', { body: { confirm: 'DELETE' } });
-      if (deleteError) throw new Error('계정 삭제를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.');
+      const { data:deleteResult,error: deleteError } = await client.functions.invoke('delete-account', { body: { confirm: 'DELETE' } });
+      if (deleteError) {
+        let code=deleteResult?.code;
+        if(deleteError.context instanceof Response)try{code=(await deleteError.context.clone().json())?.code;}catch{}
+        if(code==='operational_account_protected')throw new Error('관리자 또는 운영 콘텐츠 작성 계정은 자동 탈퇴에서 보호합니다. 운영 권한·감사 기록·편집 콘텐츠를 먼저 점검해 주세요. 사진과 기록은 삭제하지 않았습니다.');
+        if(code==='account_cleanup_partial')throw new Error('계정 삭제 도중 연결이 끊기거나 오류가 발생했습니다. 일부 본인 사진 정리가 이미 반영됐을 수 있으며 삭제된 사진은 복원되지 않습니다. 다시 시도하거나 운영자에게 문의해 주세요.');
+        throw new Error('계정 삭제를 완료하지 못했습니다. 사진·연결 상태를 확인하고 다시 시도해 주세요. 반복된다면 운영자에게 문의해 주세요.');
+      }
       await client.auth.signOut({ scope: 'local' });
     }
     await clearLocalFlickData();

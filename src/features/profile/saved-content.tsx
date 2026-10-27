@@ -9,6 +9,7 @@ import { CorePhoto } from '@/features/reviews/core-photo';
 import { listMySavedContent } from './profile-service';
 import { mergeSavedPage,type SavedItem,type SavedKind,type SavedPage } from './profile-model';
 import { ProfilePoster,p } from './profile-ui';
+import { SocialPosts } from '@/features/community/social-ui';
 
 const labels:Record<SavedKind,string>={movies:'보관 영화',reviews:'스크랩한 리뷰',magazines:'스크랩한 매거진',collections:'스크랩한 컬렉션'};
 function open(item:SavedItem){
@@ -51,7 +52,7 @@ export function SavedContent({mode,onInfo,width}:{mode:'demo'|'supabase';onInfo:
   return <View style={{paddingTop:24,paddingBottom:40}}>
     <SavedSection kind="movies" mode={mode} width={width} onInfo={onInfo}/>
     <SavedSection kind="reviews" mode={mode} width={width} onInfo={onInfo}/>
-    <View style={s.section}><View style={s.heading}><Text accessibilityRole="header" style={s.headingText}>스크랩한 피드</Text><Text style={s.count}>준비 중</Text></View><View style={p.empty}><Text style={p.body}>일상 피드 작성·저장 기능은 아직 제공하지 않아요. 영화 리뷰와 매거진은 각각의 보관함에서 확인할 수 있어요.</Text></View></View>
+    <View style={s.section}><View style={s.heading}><Text accessibilityRole="header" style={s.headingText}>스크랩한 피드</Text></View><SocialPosts scope="saved"/></View>
     <SavedSection kind="magazines" mode={mode} width={width} onInfo={onInfo}/>
     <SavedSection kind="collections" mode={mode} width={width} onInfo={onInfo}/>
   </View>;

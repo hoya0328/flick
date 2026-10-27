@@ -173,17 +173,20 @@ export default function AccountSettingsScreen() {
       <Button label="취향 키워드 다시 고르기" onPress={() => void handleReset()} variant="secondary" />
       <Button label="나의 아카이브와 리포트" onPress={() => router.push('/archive' as Href)} variant="secondary" />
       <Button label="내 컬렉션 관리" onPress={() => router.push('/collections')} variant="secondary" />
+      <Button label="공개 프로필·알림·신고 권한 설정" onPress={() => router.push('/community-settings' as Href)} variant="secondary" />
+      <Button label="플리커 찾기" onPress={() => router.push('/people' as Href)} variant="secondary" />
+      <Button label="홈 화면에 FLICK 설치" onPress={() => router.push('/install' as Href)} variant="secondary" />
       <Button label="취향 인사이트와 다시보기" onPress={() => router.push('/taste-insights' as Href)} variant="secondary" />
       <Button label="FLICK 영화 취향 실험실" onPress={() => router.push('/experiments' as Href)} variant="secondary" />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>내 데이터 관리</Text>
-        <Text style={styles.help}>삭제 전에 현재 계정 정보, 취향과 기록을 JSON 텍스트로 내보낼 수 있어요.</Text>
+        <Text style={styles.help}>현재 계정 정보·취향·영화 기록을 JSON 텍스트로 내보낼 수 있어요. 이 내보내기는 일상 피드·사진 원본·서버 전체 백업이나 자동 복원 기능이 아닙니다.</Text>
         <Button label="내 데이터 내보내기" onPress={() => void handleExport()} variant="secondary" />
         {pendingDelete ? (
           <View style={styles.dangerBox}>
             <Text style={styles.dangerTitle}>계정과 모든 데이터를 영구 삭제할까요?</Text>
-            <Text style={styles.help}>기록, 질문, 태그, 보고서와 취향 설정을 삭제하면 복구할 수 없습니다.</Text>
+            <Text style={styles.help}>기록·질문·태그·취향·일상 글·댓글·팔로우·본인 사진을 삭제하면 복구할 수 없습니다. 사진 정리와 계정 삭제는 하나의 트랜잭션이 아니어서 통신 오류 시 일부만 반영될 수 있습니다. 관리자·감사 기록·운영 콘텐츠가 있는 계정은 자동 탈퇴에서 보호됩니다.</Text>
             <Button label="취소" onPress={() => setPendingDelete(false)} variant="ghost" />
             <Button label="계정과 데이터 영구 삭제" loading={working} onPress={() => void handleDelete()} variant="secondary" />
           </View>

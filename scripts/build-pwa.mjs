@@ -1,0 +1,11 @@
+import { readFile,writeFile,readdir } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
+const root=path.resolve('dist'),bundlePath=path.join(root,'_expo','static','js','web');
+const names=(await readdir(bundlePath)).sort();
+const id=createHash('sha256').update(names.join('\n')).digest('hex').slice(0,16);
+const worker=await readFile(path.join(root,'sw.js'),'utf8');
+if(!worker.includes('__BUILD_ID__'))throw new Error('Missing service worker build marker');
+await writeFile(path.join(root,'sw.js'),worker.replace('__BUILD_ID__',id));
+for(const file of ['icons/flick-192.png','icons/flick-512.png','icons/apple-touch-icon.png','manifest.webmanifest','offline.html'])await readFile(path.join(root,file));
+console.log(`PWA static-only cache version ${id}`);

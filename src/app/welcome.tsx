@@ -13,7 +13,7 @@ import {
   validatePasswordConfirmation,
 } from '@/features/session/account-logic';
 import { useSession } from '@/features/session/session-provider';
-import { safeSharedReviewPath } from '@/features/reviews/review-logic';
+import { safeCommunityPath } from '@/features/community/social-service';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 type AuthMode = 'signIn' | 'signUp';
@@ -21,7 +21,7 @@ type AuthMode = 'signIn' | 'signUp';
 export default function WelcomeScreen() {
   const params = useLocalSearchParams<{ returnTo?: string }>();
   const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
-  const returnTo = safeSharedReviewPath(returnToParam);
+  const returnTo = safeCommunityPath(returnToParam);
   const { backendConfigured, sendPasswordReset, signIn, signUp, startDemo } = useSession();
   const [authMode, setAuthMode] = useState<AuthMode>('signIn');
   const [nickname, setNickname] = useState('');

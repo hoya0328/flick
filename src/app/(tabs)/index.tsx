@@ -15,6 +15,7 @@ import { getDiscoveryRankings, listPublishedCurations, type DiscoveryRankings, t
 import { hasCurrentRankings, keywordRows, movieRating } from '@/features/home/home-model';
 import { getKeywordLabels } from '@/features/onboarding/keywords';
 import { useSession } from '@/features/session/session-provider';
+import { NotificationBell } from '@/features/community/notification-bell';
 
 export default function HomeScreen() {
   const { mode, selectedKeywords } = useSession();
@@ -98,7 +99,7 @@ export default function HomeScreen() {
           <DesignVector label="FLICK 심볼" name="symbol" width={28} />
           <DesignVector label="FLICK" name="wordmark" width={116.4} height={22} style={styles.wordmark} />
           <View style={styles.headerActions}>
-            <Pressable accessibilityRole="button" accessibilityLabel="알림" onPress={() => setInfo({ title: '알림', body: '새 알림이 없습니다. 알림 수신 기능은 준비 중이에요.' })} style={styles.headerButton}><HomeIcon name="bell" width={23} height={25} /></Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="알림" onPress={() => router.push('/notifications')} style={styles.headerButton}><NotificationBell width={23} height={25}/></Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="메시지" onPress={() => setInfo({ title: '메시지', body: '메시지 기능은 준비 중이에요. 지금은 공개 리뷰의 댓글로 감상을 나눌 수 있어요.' })} style={styles.headerButton}><HomeIcon name="message" width={27} height={25} /></Pressable>
           </View>
         </View>

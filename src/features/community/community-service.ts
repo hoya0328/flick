@@ -8,6 +8,7 @@ const EVENT_SESSION_KEY = 'flick.stage5a.event-session';
 export type PublicReviewCard = {
   reviewId: string;
   authorDisplayName: string;
+  authorProfileId?: string;
   movieId: string;
   movieTitle: string;
   posterPath: string | null;
@@ -102,9 +103,11 @@ export async function listPublicReviewFeed(mode: 'light' | 'core' | null = null,
     .in('id', reviews.map((review) => review.reviewId))
     .eq('visibility', 'public').eq('status', 'completed');
   if (keywordError) throw communityError(keywordError);
+  const {data:authorProfiles}=await client().rpc('list_public_author_profiles',{p_review_ids:reviews.map(review=>review.reviewId)});
+  const profiles=new Map((Array.isArray(authorProfiles)?authorProfiles:[]).map((row:{reviewId:string;profileId:string})=>[row.reviewId,row.profileId]));
   return mergeRepresentativeKeywords(reviews, keywords ?? []).map((review) => {
     const cover = keywords?.find((row) => row.id === review.reviewId)?.core_cover;
-    return { ...review, coreCover: typeof cover === 'string' && /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(cover) ? cover : null };
+    return { ...review, authorProfileId:profiles.get(review.reviewId),coreCover: typeof cover === 'string' && /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.jpg$/.test(cover) ? cover : null };
   });
 }
 

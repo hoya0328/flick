@@ -8,6 +8,12 @@ export default function Html({ children }: PropsWithChildren) {
       <meta charSet="utf-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
       <title>FLICK · 영화의 여운을 기록하다</title>
+      <meta name="theme-color" content="#F8233C"/>
+      <meta name="apple-mobile-web-app-capable" content="yes"/>
+      <meta name="apple-mobile-web-app-title" content="FLICK"/>
+      <link rel="manifest" href="/manifest.webmanifest"/>
+      <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"/>
+      <link rel="icon" type="image/png" href="/icons/flick-192.png"/>
       <ScrollViewStyleReset />
       <style dangerouslySetInnerHTML={{ __html: '@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/InterVariable.woff2) format("woff2")} @font-face{font-family:Pretendard;font-style:normal;font-weight:45 920;font-display:swap;src:url(/fonts/PretendardVariable.woff2) format("woff2")} :focus-visible{outline:2px solid #F8233C;outline-offset:3px}' }} />
     </head>

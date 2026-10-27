@@ -1,4 +1,5 @@
-import { Redirect, router } from 'expo-router';
+import { type Href,Redirect, router,useLocalSearchParams } from 'expo-router';
+import { safeCommunityPath } from '@/features/community/social-service';
 import { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
@@ -17,6 +18,7 @@ import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 export default function OnboardingScreen() {
+  const params=useLocalSearchParams<{returnTo?:string}>(),returnTo=safeCommunityPath(params.returnTo);
   const { completeOnboarding, mode, selectedKeywords, status } = useSession();
   const [selection, setSelection] = useState<string[]>(selectedKeywords);
   const [busy, setBusy] = useState(false);
@@ -31,7 +33,7 @@ export default function OnboardingScreen() {
     setError(null);
     try {
       await completeOnboarding(selection);
-      router.replace('/(tabs)');
+      router.replace((returnTo??'/(tabs)') as Href);
     } catch {
       setError('취향 키워드를 저장하지 못했어요. 입력은 유지되니 다시 시도해 주세요.');
     } finally {

@@ -3,6 +3,7 @@ import Svg,{Circle} from 'react-native-svg';
 import { DesignVector } from '@/components/design-vector';
 import { homeFont } from '@/components/home-ui';
 import { CorePhoto } from '@/features/reviews/core-photo';
+import { NotificationBell } from '@/features/community/notification-bell';
 
 export const profileColor={accent:'#F8233C',ink:'#0A0A0A',muted:'#6A7282',border:'#D1D5DC'};
 export function ProfileAvatar({path,name,size=84}:{path:string|null;name:string;size?:number}){
@@ -12,7 +13,7 @@ export function ProfileHeader({onSettings,onInfo,onHome}:{onSettings:()=>void;on
   return <View style={p.header}>
     <Pressable accessibilityRole="button" accessibilityLabel="FLICK 홈으로" onPress={onHome} style={p.home}><DesignVector name="symbol"/></Pressable>
     <View accessibilityLabel="FLICK" style={p.wordmark}><DesignVector name="wordmark"/></View>
-    <Pressable accessibilityRole="button" accessibilityLabel="알림 준비 안내" onPress={onInfo} style={p.bell}><DesignVector name="bell"/></Pressable>
+    <Pressable accessibilityRole="button" accessibilityLabel="알림함 열기" onPress={onInfo} style={p.bell}><NotificationBell/></Pressable>
     <Pressable accessibilityRole="button" accessibilityLabel="계정과 취향 설정" onPress={onSettings} style={p.settings}><DesignVector name="profileSettings"/></Pressable>
   </View>;
 }

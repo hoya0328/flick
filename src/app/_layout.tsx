@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { SessionProvider } from '@/features/session/session-provider';
 import { RecordingLauncherProvider } from '@/features/reviews/recording-launcher';
 import { colors } from '@/theme/tokens';
+import { PwaBootstrap } from '@/features/pwa/install';
 
 export default function RootLayout() {
   return (
@@ -14,6 +15,7 @@ export default function RootLayout() {
         <RecordingLauncherProvider>
         <View style={styles.app}>
           <StatusBar style="dark" />
+          <PwaBootstrap/>
           <Stack screenOptions={{ animation: 'fade', contentStyle: styles.content, headerShown: false }} />
         </View>
         </RecordingLauncherProvider>

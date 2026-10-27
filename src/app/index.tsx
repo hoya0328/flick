@@ -1,16 +1,16 @@
-import { Redirect, useLocalSearchParams } from 'expo-router';
+import { type Href,Redirect, useLocalSearchParams } from 'expo-router';
 
 import { Button } from '@/components/button';
 import { LoadingScreen } from '@/components/loading-screen';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { useSession } from '@/features/session/session-provider';
-import { safeSharedReviewPath } from '@/features/reviews/review-logic';
+import { safeCommunityPath } from '@/features/community/social-service';
 
 export default function IndexScreen() {
   const params = useLocalSearchParams<{ returnTo?: string }>();
   const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
-  const returnTo = safeSharedReviewPath(returnToParam);
+  const returnTo = safeCommunityPath(returnToParam);
   const { error, mode, onboardingComplete, retry, status } = useSession();
 
   if (status === 'loading') return <LoadingScreen />;
@@ -25,7 +25,8 @@ export default function IndexScreen() {
   }
 
   if (mode === 'none') return <Redirect href={returnTo ? { pathname: '/welcome', params: { returnTo } } : '/welcome'} />;
-  if (mode === 'supabase' && returnTo) return <Redirect href={{ pathname: '/review/[id]', params: { id: returnTo.slice('/review/'.length) } }} />;
+  if (mode === 'supabase' && returnTo && onboardingComplete) return <Redirect href={returnTo as Href} />;
+  if (!onboardingComplete && returnTo) return <Redirect href={{pathname:'/onboarding',params:{returnTo}}}/>;
   if (!onboardingComplete) return <Redirect href="/onboarding" />;
   return <Redirect href="/(tabs)" />;
 }
