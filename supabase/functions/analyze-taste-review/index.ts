@@ -17,6 +17,7 @@ export async function handler(request:Request){
     const userResponse=await fetch(`${url}/auth/v1/user`,{headers:{apikey:anon,Authorization:authorization},signal:AbortSignal.timeout(8000)});
     if(!userResponse.ok)return json({code:'invalid_session'},401);
     const user=await userResponse.json();if(typeof user.id!=='string')return json({code:'invalid_session'},401);
+    if(user.is_anonymous===true)return json({code:'exhibition_member_required'},403);
     const body=await request.json().catch(()=>null);
     if(!body||typeof body!=='object')return json({code:'invalid_request'},400);
     if(body.action==='status')return json({freeAvailable,verifiedUntil:freeAvailable?until:null,version:EXTRACTOR_VERSION});

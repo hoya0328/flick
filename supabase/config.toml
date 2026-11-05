@@ -1,0 +1,9 @@
+# Deliberately minimal: unlisted remote properties must remain unchanged.
+project_id = "flick-app"
+
+[auth]
+enable_anonymous_sign_ins = true
+
+[auth.hook.before_user_created]
+enabled = true
+uri = "pg-functions://postgres/public/exhibition_before_user_created"

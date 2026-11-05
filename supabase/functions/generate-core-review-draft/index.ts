@@ -7,7 +7,7 @@ const corsHeaders = {
 
 type Turn = { question?: unknown; answer?: unknown };
 type RequestBody = { movieId?: unknown; turns?: unknown; mode?: unknown; keywords?: unknown; aspects?: unknown; consent?: unknown };
-type QuotaClaim = { event_id: string | null; allowed: boolean; remaining: number; daily_limit: number; limit_kind: 'daily' | 'burst' | null; retry_after_seconds: number };
+type QuotaClaim = { event_id: string | null; allowed: boolean; remaining: number; daily_limit: number; limit_kind: string | null; retry_after_seconds: number };
 type Usage = { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
 
 const safetySettings = [
@@ -94,7 +94,7 @@ async function handler(request: Request) {
   const light = body.mode === 'light';
   const magazine = body.mode === 'core-magazine';
   if ((light || magazine) && body.consent !== true) return json({ code: 'consent_required' }, 400);
-  if (magazine && (Deno.env.get('CORE_FREE_AI_VERIFIED') !== 'true' || geminiModel !== 'gemini-3.5-flash-lite')) return json({ code: 'free_tier_not_verified' }, 503);
+  if (Deno.env.get('CORE_FREE_AI_VERIFIED') !== 'true' || geminiModel !== 'gemini-3.5-flash-lite') return json({ code: 'free_tier_not_verified' }, 503);
   const turns = cleanTurns(body.turns, light, magazine);
   const keywords = light && Array.isArray(body.keywords) ? [...new Set(body.keywords.filter((word): word is string => typeof word === 'string' && word.trim().length > 0 && word.length <= 30))].slice(0, 15) : [];
   if (light && (!keywords.length || !turns.some((turn) => turn.answer))) return json({ code: 'keywords_required' }, 400);
@@ -102,7 +102,7 @@ async function handler(request: Request) {
 
   let quota: QuotaClaim;
   try { quota = await claimAi(supabaseUrl, serviceRole, userId); } catch { return json({ code: 'quota_guard_unavailable' }, 503); }
-  if (!quota.allowed) return json({ code: `${quota.limit_kind}_limit`, quota: { remaining: quota.remaining, dailyLimit: quota.daily_limit, retryAfterSeconds: quota.retry_after_seconds } }, 429);
+  if (!quota.allowed) return json({ code: ['daily','burst','project_daily','project_burst','guest'].includes(quota.limit_kind ?? '') ? `${quota.limit_kind}_limit` : quota.limit_kind, quota: { remaining: quota.remaining, dailyLimit: quota.daily_limit, retryAfterSeconds: quota.retry_after_seconds } }, 429);
   const startedAt = Date.now();
   const quotaResult = { remaining: quota.remaining, dailyLimit: quota.daily_limit };
   const fail = async (code: string, status: number, usage: Usage = {}) => {

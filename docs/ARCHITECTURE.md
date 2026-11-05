@@ -156,3 +156,6 @@ Core 리뷰 초안 함수도 Supabase JWT와 영화 ID를 검증하고 Q1~Q5의 
 - 웹 호스팅 제공자와 도메인
 - 분석·오류 관측 제공자
 - 공개 피드용 검색·모더레이션 구조
+# Exhibition boundary (2026-11-05)
+
+See [EXHIBITION_IMPLEMENTATION.md](EXHIBITION_IMPLEMENTATION.md): separate guest Auth client, private guest records, immutable guest identification, ordinary-write guards and atomic project-wide AI reservations. Existing member storage and normal reviews remain separate.

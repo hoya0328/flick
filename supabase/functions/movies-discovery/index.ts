@@ -256,6 +256,10 @@ async function handler(request: Request) {
   if (!userResponse.ok) {
     return Response.json({ code: 'invalid_session' }, { status: 401, headers: corsHeaders });
   }
+  const user = await userResponse.json();
+  if (user.is_anonymous === true) {
+    return Response.json({ code: 'exhibition_member_required' }, { status: 403, headers: corsHeaders });
+  }
 
   const body = (await request.json()) as RequestBody;
   if (!['search', 'recommend', 'detail'].includes(body.action)) {

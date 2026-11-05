@@ -1,5 +1,18 @@
 # DECISIONS
 
+## 2026-11-05 무료 전시 개발 승인 및 운영 경계
+
+- 사용자가 게스트 체험·공유 AI 한도·기존 Supabase 변경·외부 beta 배포를 승인했다. 앞선 읽기 전용 비용 검토와 구분한다. 결제·유료 모델·SMTP·CAPTCHA 서비스 추가는 하지 않는다.
+- `/exhibition`과 별도 Auth storage `flick-exhibition-auth-v1`, 별도 owner-only 기록 테이블을 사용한다. 게스트는 실제 Auth anonymous 플래그 또는 불변 enrollment로 판별한다. 기존 일반 테이블 쓰기는 definer RPC도 포함해 트리거로 차단, Storage는 restrictive RLS로 차단한다. 일반 회원 로그인/기록과 섞지 않는다.
+- 모든 Gemini claim에 프로젝트 공통 400/Pacific일·12/rolling분 예약을 적용하고 기존 개인 제한을 유지한다. 게스트 8회/1편/2시간, 미동의·18세 미만은 비AI. 7일 검증 TTL 만료 시 AI fail-closed. 남는 Google100RPD는 다른 클라이언트 사용을 보장하는 예산이 아니다.
+- Auth hook은 Free의 Before User Created 한 개만 추가(기존 훅 없음을 확인). 익명 신규 가입 150/UTC일·20/분·1,000/이벤트, 기존 IP30/h 유지. CAPTCHA 부재에 따른 소진/공용 Wi-Fi 위험은 수용하되 기록·관리자 권한을 늘리지 않는다.
+- 전체 config push는 검토에서 차단되어 실행되지 않았다. 대시보드에서 정확한 훅과 anonymous switch만 적용했다. 이후 config diff의 declared update=0, 기존 email/MFA/URL 설정 보존을 확인했다. 새 config.toml은 의도 기록용이며 무검토 전체 push를 하지 않는다.
+
+## 2026-11-05 졸업 전시 조건 확인 / 과금 미결정
+
+- 사용자 확정 조건은약7일·하루100명 미만이다. 비용/운영 **검토만 요청**했으므로 코드·과금·서버 설정·공개 권한·배포는 바꾸지 않는다.
+- 검토 근거/미확인/예상 비용/준비 제안은 `EXHIBITION_CAPACITY_2026-11-05.md`. 실제Free Gemini한도500RPD/15RPM,Light1/Core5완주6호출을 구분한다. FreeDB/Hosting 유지·AI 소액 유료·SMTP/게스트·프로젝트상한은 아직 채택/구현 결정이 아니다.
+
 ## 2026-11-05 low7 원인 최소 보완
 
 - 공식 deepmerge 수정판이 없어 SDK 강제 전환/경고 은폐 대신 실제 Expo CJS consumer의3개 쓰기만 own-data-property로 보완한다. 원본 SHA·경로·버전 검증과 설치/빌드 fail-closed,12개 추가 회귀를 유지한다. npm low7 표시는 유지하며 upstream 수정판 설치/경고0이라고 주장하지 않는다.

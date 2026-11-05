@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { useState, useSyncExternalStore } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
@@ -158,6 +158,7 @@ export default function WelcomeScreen() {
         </View>
 
         {!backendConfigured ? <Text style={styles.backendWarning}>계정 서버 설정이 없어 현재 회원가입과 로그인을 사용할 수 없습니다.</Text> : null}
+        <Button label="전시 체험 · 가입 없이 시작" onPress={() => router.push('/exhibition' as Href)} variant="secondary" />
         {presentation.showDemo ? (
           <View style={styles.demoArea}>
             <View style={styles.dividerRow}><View style={styles.divider} /><Text style={styles.dividerText}>또는</Text><View style={styles.divider} /></View>

@@ -1,5 +1,22 @@
 # HANDOFF
 
+## 2026-11-05 무료 전시 준비 (최신)
+
+- 요청/운영 변경 승인: `/exhibition` 독립 게스트 체험 + 공유 AI 한도 + 기존 EAS beta 게시. 앞선 비용 검토의 '미구현' 상태를 이 항목으로 대체한다. 결제 설정은 변경하지 않았다.
+- 승인된 migration `202611050002_exhibition.sql` **한 개만** rollback 사전검증 후 운영에 적용. 기존 migration ledger 없음 → `db push` 전체 재실행 금지. 별도 private 기록/UID, 일반 테이블 mutation guard, Storage restrictive policy. 전시/무료 AI 검증 만료 **2026-11-12 19:15:14 KST**. 실제 전시일은 미정이므로 개막 전에 무료 플랜/기간 재확인 필요.
+- 가입 제한 hook와 anonymous만 대시보드에서 적용했다. 전체 config push는 자동 검토 차단으로 실행 안 됨; 이메일 확인/MFA/기존 URL은 그대로. `config diff --remote=vthswebqroygpbmxpqaj` declared update=0. Auth Before User Created는 `public.exhibition_before_user_created` enabled.
+- 운영 네 함수 업데이트: generate-core-question, generate-core-review-draft, analyze-taste-review, movies-discovery. 기존 gateway JWT verification=true 유지, 서버 `/auth/v1/user` 검증 유지. 게스트 외부 TMDB 갱신·추가 취향 AI는 차단; Light/Core AI는 공유 claim 게이트 사용.
+- 검증: isolated PGlite exact DDL/roles, 운영 rollback 전후 exhibition + record_isolation + feed_blocks + figma_core/light SQL 통과. zero synthetic Auth residue / client quota 우회 불가 / 기존 테이블 전체 guard 검사 통과. Hosted postgres는 AuthAdmin으로 SET ROLE 불가하므로 production hook body+ACL과 로컬 실제 AuthAdmin 테스트를 구분한다. 실제 익명 Auth→Edge→Gemini HTTP 생성 E2E는 아직 미실행(에이전트가 영구 QA 계정을 생성하지 않음).
+- `npm run check`:40파일307테스트/type/lint 통과. 웹48routes·빌드 시 secret guard 통과. 로컬 390px overflow없음, 필수 안내/성인 동의/AI 선택 토글 확인. npm audit 현재 **low2**, critical/high/moderate0; 기존 deepmerge CJS own-property 보완 유지. 실제 휴대폰/동시부하/오늘 Expo 월잔여량은 미검증.
+- 운영/한계/중지 방법은 `EXHIBITION_IMPLEMENTATION.md`. Git/배포 ID는 최종 검증 후 아래에 기록한다.
+
+## 2026-11-05 졸업 전시 무료/비용 검토(기능 변경 없음)
+
+- 사용자:약일주일·일100명 미만,무료 한도/필요 비용/전시 고려 사항 확인 요청. 실제 AI Studio Klick Free:Gemini3.5FlashLite15RPM/250KTPM/500RPD. 최대700명,Light1/Core3종료4/Core5완주6호출. 모두Core면83명/일 이론상한,70Light/30Core100명은250호출/일. 실패/변경/추가분석·분당제한·공유프로젝트를 빼고 인원을 보장하지 않는다.
+- 운영 집계 읽기만 수행:DB21.7MB/계정2/완료17,사진4/.38MB→코드160장 중156여유. Auth emailAutoconfirm=false로 인증 필요. 실제 customSMTP와Expo월잔여량은 미확인(Expo브라우저로그인필요). AI로그소규모21성공(초안7/질문14) 평균으로 전체예산을 보장하지 않는다.
+- 보고서 `EXHIBITION_CAPACITY_2026-11-05.md`, 재현용 읽기 SQL `supabase/tests/exhibition_capacity.sql`. AI일/분쿼터·비용 예산$5~15·FreeDB/Hosting 유지·무료SMTP/게스트는 **제안/미구현**. 현재12유형 추가AI30회/일·기록된11월3일확인기한,사진160,유형3편/대표8편·Gemini연령/무료데이터 조건도 전시 준비 대상이다.
+- 설정·과금·키·사용자 데이터·기능·외부 배포 변경 없음. 이번 검토 문서는 로컬 기록만 하고 GitHub push/배포하지 않는다. 사용자가 전시 준비 개발/예산을 선택하면 P0부터 진행한다. QR은 아직 생성하지 않았다.
+
 ## 2026-11-05 보안 재검사 / low7 원인 CJS 보완
 
 - **저장/게시 완료:** 구현 `fe2a291`, [GitHub CI41996588797](https://github.com/hoya0328/flick/actions/runs/41996588797) 성공(재설치 보완·audit·type/lint·300테스트·웹). 기존 beta deployment `11sk5uwt71`에 반영했다. 외부 welcome/profile/report/feed/manifest/sw200, 외부 JS SHA256=검증 로컬 JS 확인. 화면 코드/런타임 번들은 이전과 동일하며 운영 서버 정책/기록을 바꾸지 않았다. 후속 커밋은 결과 문서뿐이다.

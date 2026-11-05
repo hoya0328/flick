@@ -7,7 +7,7 @@ const corsHeaders = {
 
 type Turn = { question?: unknown; answer?: unknown };
 type RequestBody = { movieId?: unknown; turns?: unknown; mode?: unknown; consent?: unknown; action?: unknown; question?: unknown };
-type QuotaClaim = { event_id: string | null; allowed: boolean; remaining: number; daily_limit: number; limit_kind: 'daily' | 'burst' | null; retry_after_seconds: number };
+type QuotaClaim = { event_id: string | null; allowed: boolean; remaining: number; daily_limit: number; limit_kind: string | null; retry_after_seconds: number };
 type Usage = { promptTokenCount?: number; candidatesTokenCount?: number; totalTokenCount?: number };
 
 const safetySettings = [
@@ -96,14 +96,14 @@ async function handler(request: Request) {
   if (flow && body.consent !== true) return json({ code: 'consent_required' }, 400);
   // Billing is an account setting, not a model property. Fail closed until the
   // operator has verified this key's actual project is on Google's Free tier.
-  if (flow && (Deno.env.get('CORE_FREE_AI_VERIFIED') !== 'true' || geminiModel !== 'gemini-3.5-flash-lite')) return json({ code: 'free_tier_not_verified' }, 503);
+  if (Deno.env.get('CORE_FREE_AI_VERIFIED') !== 'true' || geminiModel !== 'gemini-3.5-flash-lite') return json({ code: 'free_tier_not_verified' }, 503);
   const turns = cleanTurns(body.turns, flow);
   if (!/^[0-9a-f-]{36}$/i.test(movieId) || turns.length < (replace ? 0 : 1) || turns.length > (flow ? 5 : 4)
     || (flow && body.action !== 'replace' && body.action !== 'feedback')) return json({ code: 'invalid_request' }, 400);
 
   let quota: QuotaClaim;
   try { quota = await claimAi(supabaseUrl, serviceRole, userId); } catch { return json({ code: 'quota_guard_unavailable' }, 503); }
-  if (!quota.allowed) return json({ code: `${quota.limit_kind}_limit`, quota: { remaining: quota.remaining, dailyLimit: quota.daily_limit, retryAfterSeconds: quota.retry_after_seconds } }, 429);
+  if (!quota.allowed) return json({ code: ['daily','burst','project_daily','project_burst','guest'].includes(quota.limit_kind ?? '') ? `${quota.limit_kind}_limit` : quota.limit_kind, quota: { remaining: quota.remaining, dailyLimit: quota.daily_limit, retryAfterSeconds: quota.retry_after_seconds } }, 429);
   const startedAt = Date.now();
   const quotaResult = { remaining: quota.remaining, dailyLimit: quota.daily_limit };
   const fail = async (code: string, status: number, usage: Usage = {}) => {

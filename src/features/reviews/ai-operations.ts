@@ -40,6 +40,10 @@ export function aiOperationMessage(error: unknown): string {
   const code = error instanceof AiOperationError ? error.code : 'ai_unavailable';
   if (code === 'free_tier_not_verified') return '무료 등급 확인이 필요해 AI를 호출하지 않았어요. 직접 기록은 계속할 수 있어요.';
   if (code === 'daily_limit') return '오늘 사용할 수 있는 무료 AI 횟수를 모두 사용했어요. 내일 다시 시도해 주세요.';
+  if (code === 'project_daily_limit') return '서비스 전체의 오늘 무료 AI 한도에 도달했어요. 직접 기록은 계속할 수 있어요.';
+  if (code === 'project_burst_limit') return '다른 방문객도 AI를 사용 중이에요. 1분 뒤 다시 시도해 주세요.';
+  if (code === 'guest_limit') return '이 체험의 무료 AI 횟수를 모두 사용했어요. 직접 작성해 마무리해 주세요.';
+  if (code === 'guest_consent_required') return '체험 시간이 지났거나 AI 동의가 없어요. AI 없이 기록해 주세요.';
   if (code === 'burst_limit') return '요청이 잠시 많아요. 1분 뒤 다시 시도해 주세요.';
   if (code === 'free_tier_limit') return 'Gemini 무료 제공량이 소진됐어요. 기존 기록을 유지하고 나중에 다시 시도해 주세요.';
   if (code === 'sensitive_input') return '이메일·전화번호 등 개인정보로 보이는 내용이 있어 AI로 전송하지 않았어요. 해당 내용을 지운 뒤 다시 시도해 주세요.';

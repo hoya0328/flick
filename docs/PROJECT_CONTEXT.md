@@ -136,3 +136,8 @@ FLICK는 사용자가 감정 키워드로 다음 영화를 발견하고, 감상 
 - 차기 MVP 결과: 사용자가 홈이나 탐색에서 공개 콘텐츠를 발견해 반응 또는 저장하고, 영화 상세나 새 기록 시작까지 자연스럽게 이동한다.
 - 북극성 지표는 기존 `월간 의미 있는 감상 기록 완료 수`를 유지한다. 차기 기능의 선행 지표는 공개 콘텐츠→영화 상세 전환율, 저장률, 첫 기록 후 4주 내 두 번째 기록 완료율이다.
 - 차기 MVP 비목표: 팔로우·DM, 크리에이터 수익화, 초 단위 실시간 랭킹, 범용 게시물 블록 에디터, AI만으로 생성하는 전문가 콘텐츠.
+# Free exhibition (2026-11-05)
+
+- User approved one-week, <100 visitors/day free preparation and beta publication: isolated anonymous Light/Core trial, one private film per guest, no photos/social/admin writes, optional adult-consented Gemini only.
+- Shared server AI reservations:400/Pacific day,12/rolling minute,8/guest; no paid fallback. Anonymous admission hook150/UTC day,20/minute,1,000/event. Original IP cap preserved.
+- Initial exhibition and Free-verification expiry:2026-11-12 19:15:14 KST. Actual exhibition dates remain unspecified; operator must recheck Free tier and extend intentionally before the event. No guaranteed all-Core100/day capacity.
