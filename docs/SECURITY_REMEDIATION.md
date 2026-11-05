@@ -2,6 +2,8 @@
 
 ## 최신 추가 — 2026-11-05
 
+후속 보안 재검사에서 deepmerge 원인을 실제 재현해 Expo CJS data-property 보완과 설치/빌드 강제 검증을 추가했다. 공식 패키지 버전은 그대로라 npm low7 표시는 유지한다. 실제 보완 범위와12개 추가 회귀·권한 재검사는 `SECURITY_RECHECK_2026-11-05.md`를 따른다. 아래 ‘보완하지 않음’은 이 후속 요청 이전 이력이다.
+
 새 advisory 반영 후 decoder0.5.1/glob14.0.3/minimatch11.0.4로 high/moderate를 제거했다. 현재는 deepmerge 원인 low7개가 남으며 ‘알려진 경고0’은 아래10월28일 당시 결과다. SDK57을 강제로 올리거나 경고를 숨기지 않았다. 현재 근거·잔여 위험·검증은 `FIGMA_RELEASE_QA_2026-11-05.md`와 최신 HANDOFF를 따른다.
 
 ## 범위와 실제 위험

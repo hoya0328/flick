@@ -1,5 +1,13 @@
 # HANDOFF
 
+## 2026-11-05 보안 재검사 / low7 원인 CJS 보완
+
+- 사용자 요청: low7 포함 재검사와 발견 문제 수정. 시작 clean `edd009d`. 현재 계약/근거는 `SECURITY_RECHECK_2026-11-05.md`. registry 경고는 deepmerge4.3.1 원인1+전이6이고 최신 공식 수정판 없음. 실제 Expo CJS의 반환 객체 prototype poisoning을 재현하고3개 data-property 쓰기로 최소 보완했다. audit는 숨기지 않아 **low7 유지, high/moderate/critical0**.
+- `security-deepmerge.mjs`: 원본 SHA/실제 Expo consumer/실경로/버전 검사, 변조 시 거절. postinstall 적용, start/web/check/build 검사. SDK/lock/패키지 버전 유지. 정상 병합과 공격6종·보완 누락/변조·설치 재현12테스트 추가. npm ci·39파일300테스트/typecheck/lint·웹47경로 빌드 통과. 기존과 같은 bundle `entry-982b7369139e4303feb8c114aa0fa4fc.js`, PWA `009a745c07935fac`.
+- source/history/build 비밀값 검사 성공. 공개키 HTTP19+인증 없는Edge5=24개 차단. 운영 record_isolation/feed_blocks/free_community의 실제 restricted role 합성 rollback 모두 통과, 잔존auth/movie0. private bucket=true, 민감 테이블RLS=true, fixed search_path 누락0. DB정책·키·실계정 데이터·AI/과금 설정 변경 없음.
+- 실제JWT A/B·signed media/업로드HTTP E2E·실기기·전체복원/침투는 미검증. 이번 보완은 Expo CJS entry 한정, 새 UMD/index consumer/SDK 변경 시 재검토. 공식 수정판 출시 시 교체하고 회귀 재실행. 기존 release 전7경고 문구는 당시 기준이며 이번에는 exploit 보완을 추가했다.
+- source rollback `edd009d`, 기존 beta `4eqmlnnd9n`. 사용자 기본 게시 절차에 따라 검증 후 기존 GitHub/beta 반영, 최종 식별자는 아래에 확정한다. 실행코드 화면 변경은 없다.
+
 ## 2026-11-05 Figma 4~5단계 완료 / 최종 일괄 게시
 
 - **최종 완료:** 구현 `c3a5b6b`를 GitHub main에 push했고 [CI41988714417](https://github.com/hoya0328/flick/actions/runs/41988714417)에서 설치/audit/typecheck/lint/288테스트/웹 빌드 전부 성공했다. 기존 EAS beta에 deployment `4eqmlnnd9n`을 한 번 게시했다. 고정 주소 https://flick-film-journal--beta.expo.app 유지. 후속 커밋은 이 배포 결과를 적는 문서 변경뿐이다.

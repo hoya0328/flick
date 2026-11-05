@@ -1,5 +1,10 @@
 # DECISIONS
 
+## 2026-11-05 low7 원인 최소 보완
+
+- 공식 deepmerge 수정판이 없어 SDK 강제 전환/경고 은폐 대신 실제 Expo CJS consumer의3개 쓰기만 own-data-property로 보완한다. 원본 SHA·경로·버전 검증과 설치/빌드 fail-closed,12개 추가 회귀를 유지한다. npm low7 표시는 유지하며 upstream 수정판 설치/경고0이라고 주장하지 않는다.
+- 보안 재검사는 공개키/RLS/RPC/Storage/admin 경계까지 포함하되 실제 사용자 데이터·운영 정책·키·과금 설정은 바꾸지 않는다. 실제 JWT/Storage HTTP E2E와 역할 DB 검사는 구분한다. 근거와 운영 한계는 SECURITY_RECHECK_2026-11-05.
+
 ## 2026-11-05 Figma 4~5단계와 최종 게시
 
 - 프로필·리포트는 원본15:335/15:922와 실제 데이터 기반으로 구현한다.12유형 엔진은 유지하고 상세 분석/동의는 taste-details로 보존한다. 무료 Core 요약은 원문 단어 언급이지 AI 의미/선호 추정이 아니다. 공유는 검토한 집계 텍스트만, 개별 기록 공개는 하지 않는다.

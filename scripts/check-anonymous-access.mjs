@@ -26,6 +26,7 @@ try {
     ['save_core_review', '/rest/v1/rpc/save_core_review', { p_form: {}, p_review_id: null, p_complete: false }],
     ['admin_list_reviews', '/rest/v1/rpc/admin_list_reviews', { p_limit: 1 }],
     ['get_my_taste_source', '/rest/v1/rpc/get_my_taste_source', { p_review_id: '00000000-0000-4000-8000-000000000000' }],
+    ...['generate-core-question', 'generate-core-review-draft', 'analyze-taste-review', 'movies-discovery', 'delete-account'].map(name => [`edge:${name}`, `/functions/v1/${name}`, {}]),
   ];
   let failed = false;
   for (const [name, route, body] of cases) {
