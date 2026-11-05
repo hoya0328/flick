@@ -2,6 +2,8 @@
 
 ## 요약
 
+최종: 보완 commit `fe2a291`·CI41996588797 성공, 기존 EAS beta deployment `11sk5uwt71` 반영. 외부6경로200·실제 JS SHA256 로컬 일치. rollback tag `rollback/security-recheck-before-2026-11-05` 보관. 실행 코드와 사용자 화면은 바꾸지 않았고 운영 권한/데이터 변경도 없다. 결과 기록 후속 커밋은 문서만 변경한다.
+
 사용자가 기존 낮음7건을 포함해 재검사하고 발견 문제를 수정하도록 요청했다. 작업 시작 Git은 clean, HEAD `edd009d`, 기존 beta deployment `4eqmlnnd9n`. 실제 회원 기록/사진/계정·RLS·키·AI·과금 설정은 변경하지 않았다. 최종 저장/게시 식별자는 HANDOFF 최신 절을 따른다.
 
 | 검사 | 결과 |
@@ -14,6 +16,7 @@
 | 운영 DB A/B/anon | 합성 계정·기록으로 실제 authenticated/anon 역할을 사용해 positive owner control, 타인 CRUD/owner 위조/save RPC/admin 상승 거절, 비공개/초안/자식/사진 격리와 의도한 공개 완료 기록 읽기 성공 |
 | 새 피드·기존 커뮤니티 | 투표 유일성/질문/응답 식별자·타인 편집/직접 테이블 접근·댓글/팔로우/알림·사진/신고관리/휴지통 rollback 검사 통과 |
 | 메타데이터 | 검사 대상 민감 테이블 RLS=true, 사진 core-photos 버킷 private=true, public security-definer의 fixed search_path 누락0 |
+| 스키마 보호 | anon/authenticated의 public 스키마 CREATE 권한 모두false. 일반 회원이 public 스키마 객체를 만들어 함수를 가로채지 못함 |
 | 잔존 | 검사 전체 ROLLBACK 후 synthetic auth/movie0, 새 참여3테이블 직접 grant0 |
 
 ## 왜 경고는7개 그대로인가

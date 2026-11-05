@@ -2,6 +2,9 @@
 
 ## 2026-11-05 보안 재검사 / low7 원인 CJS 보완
 
+- **저장/게시 완료:** 구현 `fe2a291`, [GitHub CI41996588797](https://github.com/hoya0328/flick/actions/runs/41996588797) 성공(재설치 보완·audit·type/lint·300테스트·웹). 기존 beta deployment `11sk5uwt71`에 반영했다. 외부 welcome/profile/report/feed/manifest/sw200, 외부 JS SHA256=검증 로컬 JS 확인. 화면 코드/런타임 번들은 이전과 동일하며 운영 서버 정책/기록을 바꾸지 않았다. 후속 커밋은 결과 문서뿐이다.
+- rollback tag `rollback/security-recheck-before-2026-11-05`=`edd009d`도 GitHub에 저장했다. 이전 웹 `4eqmlnnd9n`. public 스키마 CREATE 권한은 anon/authenticated 모두false로 추가 확인했다. 잔여 경고와 미검증 범위는 아래/검사 문서를 유지한다.
+
 - 사용자 요청: low7 포함 재검사와 발견 문제 수정. 시작 clean `edd009d`. 현재 계약/근거는 `SECURITY_RECHECK_2026-11-05.md`. registry 경고는 deepmerge4.3.1 원인1+전이6이고 최신 공식 수정판 없음. 실제 Expo CJS의 반환 객체 prototype poisoning을 재현하고3개 data-property 쓰기로 최소 보완했다. audit는 숨기지 않아 **low7 유지, high/moderate/critical0**.
 - `security-deepmerge.mjs`: 원본 SHA/실제 Expo consumer/실경로/버전 검사, 변조 시 거절. postinstall 적용, start/web/check/build 검사. SDK/lock/패키지 버전 유지. 정상 병합과 공격6종·보완 누락/변조·설치 재현12테스트 추가. npm ci·39파일300테스트/typecheck/lint·웹47경로 빌드 통과. 기존과 같은 bundle `entry-982b7369139e4303feb8c114aa0fa4fc.js`, PWA `009a745c07935fac`.
 - source/history/build 비밀값 검사 성공. 공개키 HTTP19+인증 없는Edge5=24개 차단. 운영 record_isolation/feed_blocks/free_community의 실제 restricted role 합성 rollback 모두 통과, 잔존auth/movie0. private bucket=true, 민감 테이블RLS=true, fixed search_path 누락0. DB정책·키·실계정 데이터·AI/과금 설정 변경 없음.
