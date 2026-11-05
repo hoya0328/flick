@@ -2,6 +2,12 @@
 
 ## 2026-11-05 Figma 4~5단계 완료 / 최종 일괄 게시
 
+- **최종 완료:** 구현 `c3a5b6b`를 GitHub main에 push했고 [CI41988714417](https://github.com/hoya0328/flick/actions/runs/41988714417)에서 설치/audit/typecheck/lint/288테스트/웹 빌드 전부 성공했다. 기존 EAS beta에 deployment `4eqmlnnd9n`을 한 번 게시했다. 고정 주소 https://flick-film-journal--beta.expo.app 유지. 후속 커밋은 이 배포 결과를 적는 문서 변경뿐이다.
+- 외부12개 경로(welcome/intro/search/profile/report/details/Light/Core/feed/manifest/sw/offline) HTTP200. 실제 외부 JS SHA256이 로컬 검증 bundle `entry-982b7369139e4303feb8c114aa0fa4fc.js`와 일치한다. 기존 beta 데모 세션의 실제1개 기록/데이터 부족 리포트, 프로필→내 피드, 기록 플로팅→Light 검색, 새 피드·영화/투표/질문 카드 확인. 외부 profile320/402 넘침0·브라우저 콘솔 error/warn0. 실제 계정 쓰기/AI 요청은 안 했다. 새 익명 브라우저 E2E는 별도8084에서 실행했으며 기존 beta 데모를 익명 세션으로 오인하지 않는다.
+- 최종 외부 증거 ignored `tmp/figma-stage45-20261105/beta-report-402.png`, `beta-recording-sheet-402.png`; 로컬 최종 `final-report-320/402/1280.png`, `final-profile-402.png`, `light-question-402.png`. 임시8084 탭/서버 종료, viewport 복구. 외부 결과와 로컬8083 탭 유지/정적 preview 실행 중(새 수정 후 재빌드 필요).
+- 롤백 tag `rollback/figma-five-before-2026-11-05`=`3ad201b`도 GitHub 저장. 웹은 `npx eas-cli@27.4.1 deploy:alias --help`로 현재 문법을 확인해 기존 identifier `ypn609gfct`를 beta에 재연결한다. 소스만 복원해도 운영 DB 새 참여 데이터를 drop하지 않는다. 이 작업은 비용/유료 가입이나 새로운 배포 대상을 만들지 않았다.
+- 다음 선택 작업: 실제 일반 사용자 두 계정 JWT/Storage HTTP E2E, 실기기 PWA/native/접근성, 독립 DB/Auth/Storage 복원 리허설, Gemini 무료 등급 재확인. low7개 원인 deepmerge의 공식 수정판 추적, 소개 포스터 최적화·사용권 확인. 완료된 화면 개발과 이 운영 한계를 구분한다.
+
 - 사용자 최신 지시대로1~5단계와 로컬 통합 gate를 끝낸 후 GitHub/기존 beta 일괄 게시를 진행한다. 배포 식별자 확정 전에는 외부 완료로 안내하지 않는다. 이전 소스 main `3ad201b`, EAS `ypn609gfct`, 대상 `d701494e-4875-45b4-b9c4-feb15dac3e85`/alias `beta`.
 - 구현/자산/개인정보/초안 복구 계약: `PROFILE_REPORT_REDESIGN.md`. 프로필 내 피드/보관함, 실제12유형 리포트/그래프/Light·Core 근거/반별점/공유 미리보기·숨김, 상세/동의 보존, 기록 배치/gradient/태그·모달, 계정별 백업/JSON 방어/저장 후 정리 실패 보완.
 - check38파일288테스트, isolated feed SQL18검사, npm ci 재현, 웹47경로/97산출물 비밀 검사, iOS/Android JS export 성공. 웹 `entry-982b7369139e4303feb8c114aa0fa4fc.js`, PWA `009a745c07935fac`. source/history secret guard 성공. npm high/moderate0; deepmerge 원인 low7개는 미수정판/빌드 설정 경계로 문서화했다.
