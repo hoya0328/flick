@@ -31,9 +31,9 @@ const decoderPackage = JSON.parse(
 );
 if (
   decoderPackage.name !== "decode-uri-component" ||
-  decoderPackage.version !== "0.5.0"
+  decoderPackage.version !== "0.5.1"
 )
-  throw new Error("The reviewed fixed decoder 0.5.0 is required.");
+  throw new Error("The reviewed fixed decoder 0.5.1 is required.");
 
 const original = "const decodeComponent = require('decode-uri-component');";
 const adapted =
@@ -65,5 +65,5 @@ if (
 )
   throw new Error("Query-string decoder compatibility failed.");
 console.log(
-  "Verified patched URL decoder interop (query-string 7.1.3 / decode-uri-component 0.5.0).",
+  "Verified patched URL decoder interop (query-string 7.1.3 / decode-uri-component 0.5.1).",
 );

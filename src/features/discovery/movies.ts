@@ -142,6 +142,10 @@ function localResult(query: string, keywordIds: string[]): DiscoveryResult {
   return { movies: filtered, source: 'demo', notice: '영화 서버 연결 전이라 검증용 캐시를 보여드려요.' };
 }
 
+// Explicit local-only access for explore/demo QA: never calls an external API.
+export const discoverDemoMovies = (query = '', keywordIds: string[] = []): DiscoveryResult => localResult(query, keywordIds);
+export const getDemoMovie = (movieId: string): Movie | null => demoMovies.find(movie => movie.id === movieId) ?? null;
+
 async function cachedMovies(query: string, keywordIds: string[]): Promise<DiscoveryResult | null> {
   if (!supabase) return null;
   let request = supabase.from('movies').select('*').limit(20);

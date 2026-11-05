@@ -67,8 +67,11 @@ describe("fixed URL decoder: actual Expo query-string consumer", () => {
       ["scripts/security-compat.mjs", "--check"],
       { encoding: "utf8" },
     );
-    expect(output).toContain("decode-uri-component 0.5.0");
+    expect(output).toContain("decode-uri-component 0.5.1");
     expect(readFileSync(require.resolve("query-string"), "utf8")).toBe(before);
+  });
+  it("bounds distinct malformed percent runs in a timeout-limited child", () => {
+    expect(isolated("const q=require('query-string');let p='';for(let i=0;i<32000;i++)p+='%'+Math.floor(i/256).toString(16).padStart(2,'0')+'%'+(i%256).toString(16).padStart(2,'0')+'x';if(typeof q.parse('x='+p+'%zz').x!=='string')throw Error('decode');console.log('bounded');")).toBe('bounded');
   });
   it("fails closed on missing adaptation and changed upstream source, without rewriting either", () => {
     const base = path.resolve("tmp/security-compat-fixtures");
@@ -93,7 +96,7 @@ describe("fixed URL decoder: actual Expo query-string consumer", () => {
         path.join(decoderDir, "package.json"),
         JSON.stringify({
           name: "decode-uri-component",
-          version: "0.5.0",
+          version: "0.5.1",
           type: "module",
           main: "index.js",
         }),
@@ -284,8 +287,10 @@ describe("patched UUID and security maintenance gate", () => {
     const pkg = JSON.parse(readFileSync("package.json", "utf8"));
     expect(pkg.overrides["image-size"]).toBe("2.0.3");
     expect(pkg.overrides.zod).toBe("4.6.6");
+    expect(pkg.overrides['glob@13.0.6']).toBe('14.0.3');
+    expect(pkg.overrides['minimatch@10.2.6']).toBe('11.0.4');
     expect(pkg.overrides["query-string@7.1.3"]["decode-uri-component"]).toBe(
-      "0.5.0",
+      "0.5.1",
     );
     expect(pkg.scripts["build:web"]).toContain("security-compat.mjs --check");
   });

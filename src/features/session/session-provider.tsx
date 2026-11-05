@@ -5,6 +5,7 @@ import type { PropsWithChildren } from 'react';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { canCompleteOnboarding } from '@/features/onboarding/keywords';
+import { INTRO_INTENT_KEY, INTRO_INTENT_TTL, INTRO_SEEN_KEY, parseIntroIntent, type IntroIntent, type IntroMode } from '@/features/onboarding/intro-model';
 import {
   accountErrorMessage,
   normalizeEmail,
@@ -25,6 +26,10 @@ type SessionContextValue = {
   mode: SessionMode;
   selectedKeywords: string[];
   onboardingComplete: boolean;
+  introSeen: boolean;
+  introIntent: IntroIntent | null;
+  finishIntro: (mode?: IntroMode) => Promise<void>;
+  consumeIntroIntent: () => Promise<void>;
   error: string | null;
   backendConfigured: boolean;
   email: string | null;
@@ -56,7 +61,8 @@ function normalizeStoredKeywords(value: string | null): string[] {
 
 async function clearLocalFlickData() {
   const keys = await AsyncStorage.getAllKeys();
-  const flickKeys = keys.filter((key) => key.startsWith('flick.'));
+  // Device-only introductory preference is not personal account data.
+  const flickKeys = keys.filter((key) => key.startsWith('flick.') && key !== INTRO_SEEN_KEY);
   if (flickKeys.length) await AsyncStorage.multiRemove(flickKeys);
 }
 
@@ -72,6 +78,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [email, setEmail] = useState<string | null>(null);
   const [nickname, setNickname] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [introSeen, setIntroSeen] = useState(false);
+  const [introIntent, setIntroIntent] = useState<IntroIntent | null>(null);
 
   const applySupabaseSession = useCallback(async (session: Session | null) => {
     if (!session) {
@@ -109,10 +117,14 @@ export function SessionProvider({ children }: PropsWithChildren) {
     setError(null);
 
     try {
-      const [demoSession, onboarding] = await Promise.all([
+      const [demoSession, onboarding, seen, intent] = await Promise.all([
         AsyncStorage.getItem(DEMO_SESSION_KEY),
         AsyncStorage.getItem(ONBOARDING_KEY),
+        AsyncStorage.getItem(INTRO_SEEN_KEY),
+        AsyncStorage.getItem(INTRO_INTENT_KEY),
       ]);
+      setIntroSeen(seen === '1');
+      setIntroIntent(parseIntroIntent(intent));
       setMode(demoSession === 'active' ? 'demo' : 'none');
       setSelectedKeywords(normalizeStoredKeywords(onboarding));
 
@@ -128,6 +140,21 @@ export function SessionProvider({ children }: PropsWithChildren) {
       setStatus('error');
     }
   }, [applySupabaseSession]);
+
+  const finishIntro = useCallback(async (recordingMode?: IntroMode) => {
+    const intent = recordingMode ? { mode: recordingMode, expiresAt: Date.now() + INTRO_INTENT_TTL } : null;
+    if (intent) await AsyncStorage.setItem(INTRO_INTENT_KEY, JSON.stringify(intent));
+    else await AsyncStorage.removeItem(INTRO_INTENT_KEY);
+    await AsyncStorage.setItem(INTRO_SEEN_KEY, '1');
+    setIntroSeen(true);
+    setIntroIntent(intent);
+  }, []);
+
+  const consumeIntroIntent = useCallback(async () => {
+    setIntroIntent(null);
+    // Do not block an already-open recording screen if browser storage is unavailable.
+    await AsyncStorage.removeItem(INTRO_INTENT_KEY).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const hydrateTimer = setTimeout(() => void hydrate(), 0);
@@ -258,6 +285,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       if (signOutError) throw signOutError;
     }
     await clearLocalFlickData();
+    setIntroIntent(null);
     setMode('none');
     setSelectedKeywords([]);
     setNickname(null);
@@ -278,6 +306,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       await client.auth.signOut({ scope: 'local' });
     }
     await clearLocalFlickData();
+    setIntroIntent(null);
     setMode('none');
     setSelectedKeywords([]);
     setNickname(null);
@@ -296,6 +325,10 @@ export function SessionProvider({ children }: PropsWithChildren) {
     mode,
     nickname,
     onboardingComplete: canCompleteOnboarding(selectedKeywords),
+    introSeen,
+    introIntent,
+    finishIntro,
+    consumeIntroIntent,
     resetOnboarding,
     retry: hydrate,
     selectedKeywords,
@@ -306,7 +339,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
     status,
     updateNickname,
     updatePassword,
-  }), [clearSession, completeOnboarding, deleteAccount, email, error, hydrate, mode, nickname, resetOnboarding, selectedKeywords, sendPasswordReset, signIn, signUp, startDemo, status, updateNickname, updatePassword]);
+  }), [clearSession, completeOnboarding, consumeIntroIntent, deleteAccount, email, error, finishIntro, hydrate, introIntent, introSeen, mode, nickname, resetOnboarding, selectedKeywords, sendPasswordReset, signIn, signUp, startDemo, status, updateNickname, updatePassword]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

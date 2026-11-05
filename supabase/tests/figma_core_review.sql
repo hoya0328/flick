@@ -1,12 +1,13 @@
 -- All writes below are rolled back. Run as postgres after additive migration.
 begin;
+set local statement_timeout='25s';
+set local lock_timeout='3s';
 do $$
 declare owner_id uuid; movie_id uuid; form jsonb; record_id uuid; other_id uuid; photo_path text; forged_record_id uuid;
 begin
-  select id into owner_id from auth.users order by created_at limit 1;
-  select id into other_id from auth.users where id<>owner_id order by created_at limit 1;
-  select id into movie_id from public.movies m where not exists(select 1 from public.reviews r where r.movie_id=m.id and r.user_id=owner_id and r.status='draft') limit 1;
-  if owner_id is null or movie_id is null or other_id is null then raise exception 'QA_fixture_missing'; end if;
+  owner_id=gen_random_uuid();other_id=gen_random_uuid();
+  insert into auth.users(id,email,raw_user_meta_data)values(owner_id,owner_id||'@record-ui-check.invalid','{"display_name":"Core QA A"}'),(other_id,other_id||'@record-ui-check.invalid','{"display_name":"Core QA B"}');
+  insert into public.movies(provider,provider_id,title)values('qa','record-ui-'||gen_random_uuid(),'Synthetic Core fixture')returning id into movie_id;
   form=jsonb_build_object('movieId',movie_id,'mode','core','watchedAt',current_date,'rating',0.5,
     'body','도시의 빛과 인물의 외로운 선택이 오래 기억에 남았어요.','oneLine','나의 영화 감상', 'visibility','private','spoiler',false,
     'questions',jsonb_build_array(jsonb_build_object('key','core_q1','text','이 영화에서 가장 인상 깊은 장면은 무엇이었나요?','sourceRule','core-flow-v1','options','[]'::jsonb)),

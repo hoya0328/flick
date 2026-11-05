@@ -1,96 +1,87 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { type Href, Redirect,router, useFocusEffect } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
-
-import { Button } from '@/components/button';
-import { MovieCard } from '@/components/movie-card';
-import { Screen } from '@/components/screen';
-import { StateNotice } from '@/components/state-notice';
-import { discoverMovies, type Movie } from '@/features/discovery/movies';
-import { buildTastePersonalization } from '@/features/reports/taste-personalization';
-import { TwelveTastePanel } from '@/features/reports/twelve-taste-panel';
+import { type Href, Redirect, router, useFocusEffect } from 'expo-router';
+import { useCallback, useMemo, useRef, useState, type PropsWithChildren } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, Share, StyleSheet, Text, View } from 'react-native';
+import { DesignVector, type DesignVectorName } from '@/components/design-vector';
+import { homeFont } from '@/components/home-ui';
+import { ExploreButton, ExploreDialog, ExploreFrame, useExploreWidth } from '@/features/discovery/explore-ui';
+import { ProfileAvatar, ProfilePoster } from '@/features/profile/profile-ui';
+import { getMyProfileDetails, type ProfileDetails } from '@/features/profile/profile-service';
+import { pointDescriptions, ratingBars, recordingInsights, reportShareText, rewatchChoices } from '@/features/reports/report-model';
+import { tasteTypes } from '@/features/reports/taste-engine';
+import { useTwelveTaste } from '@/features/reports/use-twelve-taste';
 import { listReviews, type ReviewRecord } from '@/features/reviews/reviews';
+import { todayDate } from '@/features/reviews/review-logic';
+import { useRecordingLauncher } from '@/features/reviews/recording-launcher';
 import { useSession } from '@/features/session/session-provider';
-import { colors, radii, spacing, typography } from '@/theme/tokens';
-
-const preferenceKey = 'flick.stage5.personalization-enabled';
-
-export default function TasteInsightsScreen() {
-  const identity=useSession();
-  if(identity.status==='loading')return <Screen title="취향 리포트"><ActivityIndicator/></Screen>;
-  if(identity.mode==='none')return <Redirect href="/welcome"/>;
-  return <TasteInsights key={`${identity.mode}:${identity.email??''}`}/>;
+const red = '#F8233C';
+export default function TasteReportRoute() {
+  const session = useSession();
+  if (session.status === 'loading') return <ExploreFrame><ActivityIndicator color={red} /></ExploreFrame>;
+  if (session.mode === 'none' || session.status === 'error') return <Redirect href="/welcome" />;
+  if (!session.onboardingComplete) return <Redirect href="/onboarding" />;
+  return <Report key={`${session.mode}:${session.email}`} />;
 }
-function TasteInsights(){
-  const { mode, selectedKeywords } = useSession();
-  const [records, setRecords] = useState<ReviewRecord[]>([]);
-  const [contrastMovies, setContrastMovies] = useState<Movie[]>([]);
-  const [enabled, setEnabled] = useState(true);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-  const insights = useMemo(() => buildTastePersonalization(records, selectedKeywords), [records, selectedKeywords]);
-
-  const load = useCallback(async () => {
-    setStatus('loading');
-    try {
-      const [stored, reviews] = await Promise.all([
-        AsyncStorage.getItem(preferenceKey),
-        listReviews(mode === 'supabase' ? 'supabase' : 'demo'),
-      ]);
-      const nextInsights = buildTastePersonalization(reviews, selectedKeywords);
-      const result = nextInsights.contrastKeyword ? await discoverMovies('', [nextInsights.contrastKeyword.id]).catch(()=>null) : null;
-      const watched = new Set(reviews.map((review) => review.movieId));
-      setEnabled(stored !== 'false');
-      setRecords(reviews);
-      setContrastMovies((result?.movies ?? []).filter((movie) => !watched.has(movie.id)).slice(0, 3));
-      setStatus('ready');
-    } catch { setStatus('error'); }
-  }, [mode, selectedKeywords]);
-
-  useFocusEffect(useCallback(() => { void load(); }, [load]));
-
-  async function setPersonalization(next: boolean) {
-    setEnabled(next);
-    await AsyncStorage.setItem(preferenceKey, String(next));
-  }
-
-  if (status === 'loading') return <Screen eyebrow="5D · 나의 취향" title="취향 인사이트"><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>기록 속 반복 신호를 정리하고 있어요.</Text></Screen>;
-  if (status === 'error') return <Screen eyebrow="5D · 나의 취향" title="취향 인사이트"><StateNotice message="기록은 변경되지 않았어요. 연결을 확인하고 다시 시도해 주세요." title="인사이트를 만들지 못했어요" tone="danger" /><Button label="다시 시도" onPress={() => void load()} /></Screen>;
-
-  return (
-    <Screen eyebrow="5D · 설명 가능한 개인화" title="나의 영화 취향 인사이트">
-      <View style={styles.controlCard}>
-        <Text style={styles.body}>완료 기록의 키워드·질문 맥락·별점으로 12가지 취향을 계산합니다. 별도로 동의한 경우에만 Core 질문과 사용자 원문을 무료 AI로 분석합니다.</Text>
-        <Button label={enabled ? '개인화 결과 숨기기' : '개인화 결과 다시 보기'} onPress={() => void setPersonalization(!enabled)} variant="secondary" />
+function Report() {
+  const session = useSession(), mode = session.mode === 'supabase' ? 'supabase' : 'demo', launch = useRecordingLauncher();
+  const key = `flick.report.visible.v2.${mode}.${encodeURIComponent(session.email ?? 'demo')}`;
+  const [records, setRecords] = useState<ReviewRecord[] | null>(null), [profile, setProfile] = useState<ProfileDetails | null>(null), [visible, setVisible] = useState(true), [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading'), [message, setMessage] = useState(''), [share, setShare] = useState(false);
+  const generation = useRef(0), saving = useRef(false);
+  const taste = useTwelveTaste(records, mode), report = taste.report;
+  const narrative = useMemo(() => recordingInsights(records ?? []), [records]);
+  const rewatch = useMemo(() => rewatchChoices(records ?? [], session.selectedKeywords, todayDate())[0], [records, session.selectedKeywords]);
+  const bars = ratingBars(report), rated = bars.reduce((sum, item) => sum + item.count, 0), maxKeyword = Math.max(1, ...report.topKeywords.map(item => item.count));
+  const name = profile?.displayName ?? session.nickname ?? 'FLICK 사용자';
+  const load = useCallback(async () => { const token = ++generation.current; setStatus('loading'); try { const [rows, details, saved] = await Promise.all([listReviews(mode), getMyProfileDetails(mode), AsyncStorage.getItem(key).then(value => value ?? AsyncStorage.getItem('flick.stage5.personalization-enabled'))]); if (token !== generation.current) return; setRecords(rows); setProfile(details); setVisible(saved !== 'false'); setStatus('ready'); setMessage(''); } catch { if (token === generation.current) { setStatus('error'); setMessage('취향 리포트를 불러오지 못했어요. 기존 기록은 변경하지 않았습니다.'); } } }, [key, mode]);
+  useFocusEffect(useCallback(() => { void load(); return () => { generation.current++; }; }, [load]));
+  async function toggle() { if (saving.current) return; saving.current = true; const token = generation.current; try { await AsyncStorage.setItem(key, String(!visible)); if (token === generation.current) setVisible(!visible); } catch { if (token === generation.current) setMessage('표시 설정을 저장하지 못했어요. 다시 시도해 주세요.'); } finally { saving.current = false; } }
+  const shareText = reportShareText(name, report);
+  async function shareSummary() { try { await Share.share({ message: shareText, title: 'FLICK 취향 리포트' }); setShare(false); } catch { setMessage('공유 창을 열지 못했어요. 미리보기의 텍스트를 선택해 복사할 수 있습니다.'); } }
+  return <ExploreFrame><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 70 }}>
+    <View style={s.header}><Pressable accessibilityRole="button" accessibilityLabel="마이페이지로 돌아가기" onPress={() => router.replace('/profile')} hitSlop={10}><DesignVector name="exploreBack" width={12.5663} style={{ transform: [{ rotate: '180deg' }] }} /></Pressable><Text accessibilityRole="header" style={s.headerTitle}>취향 리포트</Text><Pressable accessibilityRole="button" accessibilityLabel="취향 리포트 공유 미리보기" disabled={status !== 'ready'} onPress={() => setShare(true)} hitSlop={10}><DesignVector name="reportShare" width={20.8008} /></Pressable></View>
+    {message ? <Text accessibilityRole="alert" style={[s.note, { margin: 21, color: '#B30A23' }]}>{message}</Text> : null}
+    {status === 'loading' ? <ActivityIndicator color={red} style={{ margin: 40 }} /> : status === 'error' ? <View style={{ padding: 21 }}><ExploreButton label="다시 불러오기" secondary onPress={() => void load()} /></View> : !visible ? <ReportCard title="취향 결과를 숨겼어요"><Text style={s.body}>기록과 선택값은 지우지 않았어요. 언제든 아래에서 다시 볼 수 있습니다.</Text></ReportCard> : <>
+      <View style={s.hero}>
+        <Text style={s.heroCount}>{report.totalMovies}편의 영화를 바탕으로 당신의 취향을 분석했어요.</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 19 }}><ProfileAvatar path={profile?.avatarPath ?? null} name={name} size={28} /><Text style={s.heroName}>{name}</Text></View>
+        <Text accessibilityRole="header" style={s.heroTitle}>{report.primary ? tasteTypes[report.primary].name : '취향을 발견하는 중'}</Text>
+        <Text style={s.heroSummary}>{report.primary ? tasteTypes[report.primary].summary : '서로 다른 영화 3편의 유효한 감상 근거가 필요해요.'}</Text>
+        <Text style={s.heroBody}>{report.primary ? tasteTypes[report.primary].description : '기록 수만으로 유형을 정하지 않아요. 직접 선택한 키워드와 감상 포인트가 쌓이면 결과가 나타납니다.'}</Text>
+        <Words words={report.topKeywords.slice(0, 4).map(item => item.label)} white />
+        <Text style={s.heroFoot}>{report.status === 'representative' ? '12가지 유형 중 내 기록에서 가장 큰 비중이에요.' : report.status === 'mixed' ? '두 유형이 비슷하거나 긍정 근거가 더 필요해요.' : report.status === 'provisional' ? '3~7편은 임시 유형이에요. 근거가 쌓이면 달라질 수 있어요.' : '유형을 정할 근거가 아직 부족해요.'}</Text>
       </View>
-
-      {!enabled ? <StateNotice message="취향 유형과 추천을 숨겼어요. 기록과 선택값은 삭제되지 않으며 언제든 다시 볼 수 있어요." title="개인화를 사용하지 않고 있어요" tone="warning" /> : null}
-
-      {enabled ? <>
-        <TwelveTastePanel records={records} mode={mode==='supabase'?'supabase':'demo'}/>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>다시보기 추천</Text>
-          <Text style={styles.muted}>별점 4점 이상 기록을 현재 취향과의 겹침·감상 시점으로 정렬했어요.</Text>
-          {insights.rewatch.length ? insights.rewatch.map((item) => <View key={item.reviewId} style={styles.rewatch}><View style={styles.flex}><Text style={styles.cardTitle}>{item.title}</Text><Text style={styles.muted}>{item.reason}</Text></View><Button label="영화 보기" onPress={() => router.push(`/movie/${item.movieId}` as Href)} variant="ghost" /></View>) : <Text style={styles.muted}>별점 4점 이상의 완료 기록이 생기면 다시 볼 영화를 제안해요.</Text>}
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>취향 밖 한 걸음</Text>
-          <Text style={styles.body}>{insights.contrastKeyword ? `${insights.contrastKeyword.label} · ${insights.contrastKeyword.reason}` : '현재 선택과 겹치지 않는 취향 축을 찾지 못했어요.'}</Text>
-          {contrastMovies.map((movie) => <MovieCard key={movie.id} movie={movie} reason={`${insights.contrastKeyword?.label ?? '새로운'} 방향으로 취향을 넓혀보세요`} />)}
-        </View>
-      </> : null}
-    </Screen>
-  );
+      <ReportCard title="자주 사용한 키워드" height={301} right={`${report.totalMovies}편 기준`}>
+        {report.topKeywords.length ? report.topKeywords.map(item => <View key={item.label} style={{ gap: 10, marginTop: 16 }}><View style={s.between}><Text style={s.keyword}>{item.label}</Text><Text style={s.small}>{item.count}편</Text></View><View style={s.track}><View style={[s.fill, { width: `${item.count / maxKeyword * 100}%` }]} /></View></View>) : <Text style={[s.body, { marginTop: 16 }]}>선택한 감상 키워드가 아직 없어요.</Text>}
+      </ReportCard>
+      <ReportCard title="감상 포인트 TOP 3" height={232}>
+        {report.topPoints.length ? report.topPoints.map((item, index) => <View key={item.label} style={{ flexDirection: 'row', gap: 12, marginTop: 16 }}><View style={{ width: 40, height: 40, alignItems: 'center', justifyContent: 'center' }}><DesignVector name={index ? 'reportRankOther' : 'reportRankFirst'} width={40} style={StyleSheet.absoluteFill} /><Text style={[s.rank, { color: index ? '#364153' : '#FFFFFF' }]}>{index + 1}</Text></View><View style={{ flex: 1, gap: 4 }}><View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><Text style={s.point}>{item.label}</Text><Text style={s.small}>{Math.round(item.percent)}%</Text></View><Text style={s.note}>{pointDescriptions[item.label] ?? '직접 감상 포인트로 선택한 항목이에요.'}</Text></View></View>) : <Text style={[s.body, { marginTop: 16 }]}>Light에서 좋았던 감상 포인트를 선택하면 보여드려요.</Text>}
+      </ReportCard>
+      <ReportCard title="점수별 키워드" height={305} asset="reportScoreCard">
+        <KeywordBox title="높은 별점을 준 영화에 자주 등장한 키워드" words={report.highKeywords.map(item => item.label)} /><KeywordBox title="낮은 별점을 준 영화에 자주 등장한 키워드" words={report.lowKeywords.map(item => item.label)} />
+        <Text style={[s.note, { marginTop: 12 }]}>높은 별점은4점 이상, 낮은 별점은2.5점 이하입니다. 동일 영화의 최신 완료 기록 기준이며 표현이 곧 선호라는 뜻은 아니에요.</Text>
+      </ReportCard>
+      <ReportCard title="별점 분포" height={354} asset="reportRatingCard">
+        <View accessibilityLabel={`별점 분포 ${bars.map(bar => `${bar.label}점 구간 ${bar.count}편`).join(', ')}`} style={s.chart}>{bars.map(bar => <View key={bar.label} style={s.barSlot}><Text style={s.note}>{bar.count}</Text><View style={[s.bar, { height: rated ? Math.max(bar.count ? 4 : 0, bar.percent * 1.48) : 0 }]} /><Text style={s.barLabel}>{bar.label}</Text></View>)}</View>
+        <Text style={s.average}>평균 별점 <Text style={{ color: red, fontSize: 20, fontWeight: '700' }}>{report.meanRating ?? '—'}</Text></Text><Text style={[s.note, { textAlign: 'center', marginTop: 8 }]}>{rated}개 평가 · 가장 많이 준 별점 <Text style={{ color: red }}>{report.modalRatings.length ? report.modalRatings.map(value => `★${value}`).join(' · ') : '아직 없어요'}</Text></Text><Text style={[s.note, { textAlign: 'center', marginTop: 12 }]}>0.5점 단위 평가는 오른쪽 정수 점수 구간에 합산해요. (예: 3.5·4.0→4.0) 같은 영화는 한 번만 집계합니다.</Text>
+      </ReportCard>
+      <ReportCard title="가볍게 기록에서 발견한 것" height={218} asset="reportLightCard"><Text style={[s.body, { marginTop: 16 }]}>{narrative.lightSummary}</Text><View style={{ gap: 10, marginTop: 16 }}>{narrative.lightLines.map((line, index) => <View key={index} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}><View style={{ width: 20, height: 20, alignItems: 'center', justifyContent: 'center' }}><DesignVector name="reportRankSmall" width={20} style={StyleSheet.absoluteFill} /><Text style={{ ...s.note, color: '#FFFFFF', fontWeight: '700' }}>{index + 1}</Text></View><Text style={[s.small, { flex: 1 }]}>{line}</Text></View>)}</View></ReportCard>
+      <ReportCard title="집중 리뷰에서 발견한 것" height={238} asset="reportCoreCard"><Text style={[s.body, { marginTop: 16 }]}>{narrative.coreSummary}</Text><View style={{ gap: 10, marginTop: 16 }}>{narrative.coreLines.length ? narrative.coreLines.map(line => <View key={line} style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}><DesignVector name="reportBullet" width={6} /><Text style={[s.small, { flex: 1 }]}>{line}</Text></View>) : <Text style={s.small}>아직 반복되는 표현 근거가 없어요. AI 분석이나 매거진 본문을 사용자 의견처럼 인용하지 않습니다.</Text>}</View></ReportCard>
+      <ReportCard title="지금 보면 다르게 느껴질 영화" height={246} asset="reportRewatchCard">{rewatch ? <><Pressable accessibilityRole="button" accessibilityLabel={`${rewatch.record.movie.title} 영화 상세`} onPress={() => router.push({ pathname: '/movie/[id]', params: { id: rewatch.record.movieId } })} style={{ flexDirection: 'row', gap: 16, marginTop: 16 }}><ProfilePoster path={rewatch.record.movie.posterPath} title={rewatch.record.movie.title} width={60} height={86} style={{ borderRadius: 10 }} /><View style={{ flex: 1, gap: 7 }}><Text numberOfLines={1} style={s.point}>{rewatch.record.movie.title}</Text><Text style={s.note}>{rewatch.days}일 전 기록</Text><Words words={rewatch.keywords} /><View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><DesignVector name="reportStar" width={16.9454} /><Text style={s.small}>{rewatch.record.rating}</Text></View></View></Pressable><Text style={[s.small, { marginTop: 12 }]}>{rewatch.reason}</Text><Pressable accessibilityRole="button" onPress={() => launch({ movieId: rewatch.record.movieId, title: rewatch.record.movie.title })} style={{ marginTop: 14 }}><Text style={s.link}>다시 기록하기 &gt;</Text></Pressable></> : <Text style={[s.body, { marginTop: 16 }]}>별점4점 이상의 완료 기록이 생기면, 과거와 지금의 감상을 비교할 영화를 제안해요. 취향이 변했다고 임의로 단정하지 않습니다.</Text>}</ReportCard>
+      <Text style={[s.small, { textAlign: 'center', marginHorizontal: 21, marginTop: 32 }]}>리뷰를 더 많이 남길수록 취향 리포트가 정교해져요.</Text><View style={{ alignSelf: 'center', marginTop: 20 }}><ExploreButton label="리뷰 더 쓰기" onPress={() => launch()} /></View>
+    </>}
+    {status === 'ready' ? <View style={{ margin: 21, gap: 12 }}><Pressable accessibilityRole="button" onPress={() => void toggle()}><Text style={s.link}>{visible ? '개인화 결과 숨기기' : '개인화 결과 다시 보기'}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.push('/taste-details' as Href)}><Text style={s.link}>분석 기준·12유형 상세·선택적 Core AI 분석</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.push('/explore-list?ratio=100' as Href)}><Text style={s.link}>취향 밖 한 걸음</Text></Pressable><Text style={s.note}>이 결과는 내 기록을 정리한 참고 정보이며 성격 검사가 아니에요. 원문 의미 해석은 별도 동의와 무료 연결이 있을 때만 사용합니다.</Text></View> : null}
+  </ScrollView>{share ? <ExploreDialog title="공유할 취향 요약 확인" onClose={() => setShare(false)}><Text style={[s.body, { marginVertical: 12 }]}>아래 요약만 공유합니다. 개별 비공개 기록·질문 답변·리포트 URL은 포함하지 않아요.</Text><Text selectable style={s.small}>{shareText}</Text><View style={{ marginTop: 18 }}><ExploreButton label="공유 화면 열기" onPress={() => void shareSummary()} /></View></ExploreDialog> : null}</ExploreFrame>;
 }
-
-const styles = StyleSheet.create({
-  muted: { ...typography.caption, color: colors.textMuted }, body: { ...typography.body, color: colors.text }, label: { ...typography.label, color: colors.text }, flex: { flex: 1 },
-  controlCard: { backgroundColor: colors.primarySoft, borderRadius: radii.lg, gap: spacing.md, padding: spacing.lg },
-  darkCard: { backgroundColor: colors.text, borderRadius: radii.lg, gap: spacing.sm, padding: spacing.xxl }, kicker: { ...typography.caption, color: '#FF9CAA', fontWeight: '800', letterSpacing: 1 }, darkTitle: { ...typography.title, color: colors.surface }, darkBody: { ...typography.body, color: colors.border }, darkEvidence: { ...typography.caption, color: '#FFCAD2' },
-  section: { backgroundColor: colors.surface, borderRadius: radii.lg, gap: spacing.md, padding: spacing.lg }, sectionTitle: { ...typography.heading, color: colors.text },
-  signal: { gap: spacing.xs }, signalHeader: { flexDirection: 'row', justifyContent: 'space-between' }, track: { backgroundColor: colors.border, borderRadius: radii.pill, height: 10, overflow: 'hidden' }, fill: { backgroundColor: colors.primary, borderRadius: radii.pill, height: 10 },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm }, chip: { backgroundColor: colors.primarySoft, borderRadius: radii.pill, paddingHorizontal: spacing.md, paddingVertical: spacing.sm }, chipText: { ...typography.label, color: colors.primary },
-  rewatch: { alignItems: 'center', borderColor: colors.border, borderRadius: radii.md, borderWidth: 1, flexDirection: 'row', gap: spacing.sm, padding: spacing.md }, cardTitle: { ...typography.heading, color: colors.text },
+function Words({ words, white = false }: { words: string[]; white?: boolean }) { return <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: white ? 18 : 0 }}>{words.map(word => <View key={word} style={{ backgroundColor: white ? '#FFFFFF' : '#F3F4F6', borderRadius: 14, paddingHorizontal: 10, paddingVertical: white ? 4.5 : 3, maxWidth: '100%' }}><Text style={[s.note, { color: '#364153', fontSize: white ? 12 : 11 }]}>{word}</Text></View>)}</View>; }
+function KeywordBox({ title, words }: { title: string; words: string[] }) { return <View style={{ minHeight: 82, backgroundColor: '#F9FAFB', borderRadius: 20, padding: 16, gap: 14, marginTop: 15 }}><Text style={[s.small, { fontWeight: '600' }]}>{title}</Text>{words.length ? <Words words={words.slice(0, 4)} /> : <Text style={s.note}>해당 별점 구간의 키워드가 아직 없어요.</Text>}</View>; }
+function ReportCard({ title, children, right, height, asset }: PropsWithChildren<{ title: string; right?: string; height?: number; asset?: DesignVectorName }>) {
+  const width = useExploreWidth() - 42, [actual, setActual] = useState(height ?? 0);
+  const useAsset = Boolean(asset && width >= 359.5 && actual <= (height ?? 0) + 1);
+  return <View onLayout={event => setActual(event.nativeEvent.layout.height)} style={[s.card, { minHeight: height }, !useAsset && { borderWidth: 1, borderColor: '#E5E7EB', paddingHorizontal: 17, paddingVertical: 14 }]}>{useAsset ? <DesignVector name={asset!} width={360} style={{ position: 'absolute', left: 0, top: 0 }} /> : null}<View style={s.between}><Text accessibilityRole="header" style={s.sectionTitle}>{title}</Text>{right ? <Text style={s.note}>{right}</Text> : null}</View>{children}</View>;
+}
+const s = StyleSheet.create({
+  header: { marginTop: 81, height: 54, paddingBottom: 12, paddingHorizontal: 23, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, headerTitle: { fontFamily: homeFont, fontSize: 20, fontWeight: '700', lineHeight: 24, color: '#000000' },
+  hero: { backgroundColor: red, minHeight: 352, paddingHorizontal: 39, paddingTop: 21, paddingBottom: 22 }, heroCount: { fontFamily: homeFont, fontSize: 13, lineHeight: 19.5, color: '#FFFFFF' }, heroName: { fontFamily: homeFont, fontSize: 15, lineHeight: 22.5, fontWeight: '700', color: '#FFFFFF' }, heroTitle: { fontFamily: homeFont, fontSize: 28, lineHeight: 42, fontWeight: '700', color: '#FFFFFF', marginTop: 21 }, heroSummary: { fontFamily: homeFont, fontSize: 15, lineHeight: 22.5, fontWeight: '600', color: '#FFFFFF', marginTop: 8 }, heroBody: { fontFamily: homeFont, fontSize: 13, lineHeight: 21.125, color: '#FFFFFF', marginTop: 12 }, heroFoot: { fontFamily: homeFont, fontSize: 11, lineHeight: 16.5, color: '#FFFFFF', marginTop: 16 },
+  card: { marginHorizontal: 21, marginTop: 20, borderRadius: 20, paddingHorizontal: 18, paddingVertical: 15, backgroundColor: '#FFFFFF', overflow: 'hidden' }, between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6, flexWrap: 'wrap' }, sectionTitle: { fontFamily: homeFont, fontSize: 16, lineHeight: 24, fontWeight: '700', color: '#0A0A0A' }, body: { fontFamily: homeFont, fontSize: 14, lineHeight: 22.75, color: '#1E2939' }, small: { fontFamily: homeFont, fontSize: 13, lineHeight: 21.125, color: '#364153' }, note: { fontFamily: homeFont, fontSize: 12, lineHeight: 18, color: '#6A7282' }, keyword: { fontFamily: homeFont, fontSize: 14, lineHeight: 21, fontWeight: '500', color: '#0A0A0A' }, point: { fontFamily: homeFont, fontSize: 15, lineHeight: 22.5, fontWeight: '600', color: '#0A0A0A' }, rank: { fontFamily: homeFont, fontSize: 16, lineHeight: 24, fontWeight: '700' }, track: { height: 7, borderRadius: 10, backgroundColor: '#F9FAFB', overflow: 'hidden' }, fill: { height: 7, borderRadius: 10, backgroundColor: red },
+  chart: { height: 188, flexDirection: 'row', gap: 16, alignItems: 'flex-end', marginTop: 8 }, barSlot: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 }, bar: { width: '100%', backgroundColor: red, borderTopLeftRadius: 5, borderTopRightRadius: 5 }, barLabel: { fontFamily: homeFont, fontSize: 12, lineHeight: 18, fontWeight: '500', color: '#364153' }, average: { fontFamily: homeFont, fontSize: 15, lineHeight: 30, fontWeight: '600', color: '#0A0A0A', marginTop: 12, textAlign: 'center' }, link: { fontFamily: homeFont, fontSize: 14, lineHeight: 21, fontWeight: '600', color: red },
 });

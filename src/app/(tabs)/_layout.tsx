@@ -9,6 +9,12 @@ import { homeFont, homeTheme } from '@/components/home-ui';
 import { useRecordingLauncher } from '@/features/reviews/recording-launcher';
 
 function TabGlyph({ name, focused }: { name: 'home' | 'search' | 'feed' | 'profile'; focused: boolean }) {
+  if (name === 'profile' && focused) return <DesignVector name="reportNavProfile" width={27} height={27} />;
+  if (name === 'feed' && focused) return <DesignVector name="feedNavFeed" width={22.46} height={20.7537} />;
+  if (name === 'home' && !focused) return <DesignVector name="exploreNavHome" width={21.6468} height={22.5405} />;
+  if (name === 'search' && focused) return <DesignVector name="exploreNavSearch" width={21.4} height={21.4} />;
+  if (name === 'feed' && !focused) return <DesignVector name="exploreNavFeed" width={22.46} height={20.7537} />;
+  if (name === 'profile' && !focused) return <DesignVector name="exploreNavProfile" width={22.5398} height={22.5398} />;
   return <DesignVector name={name} width={21} height={21} tint={focused ? homeTheme.accent : '#99A1AF'} />;
 }
 

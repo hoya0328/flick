@@ -14,6 +14,17 @@ export type LightFlowState = {
   draftSource: 'gemini' | 'manual' | 'demo';
 };
 
+export function normalizeLightFlow(value: unknown): LightFlowState | undefined {
+  if (!value || typeof value !== 'object') return undefined;
+  const flow = value as Record<string, unknown>;
+  if (flow.version !== 1 || !flow.responses || typeof flow.responses !== 'object' || Array.isArray(flow.responses)) return undefined;
+  const responses: LightFlowState['responses'] = {};
+  for (const [key, state] of Object.entries(flow.responses)) { if (!/^light_q[1-5]$/.test(key) || (state !== 'answered' && state !== 'skipped')) return undefined; responses[key] = state; }
+  const list = (raw: unknown, max: number, limit: number): raw is string[] => Array.isArray(raw) && raw.length <= max && raw.every(item => typeof item === 'string' && item.length <= limit);
+  if (!list(flow.changed, 5, 8) || !flow.changed.every(key => /^light_q[1-5]$/.test(key)) || !list(flow.aspects, 7, 40) || !list(flow.representativeKeywords, 5, 40) || !['gemini', 'manual', 'demo'].includes(String(flow.draftSource))) return undefined;
+  return { version: 1, responses, changed: [...new Set(flow.changed)], aspects: [...new Set(flow.aspects)], representativeKeywords: [...new Set(flow.representativeKeywords)], draftSource: flow.draftSource as LightFlowState['draftSource'] };
+}
+
 export type ReviewForm = {
   movieId: string;
   mode: ReviewMode;

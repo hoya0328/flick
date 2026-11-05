@@ -2,8 +2,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { supabase } from '@/lib/supabase';
 import { normalizeCoreFlow } from '@/features/reviews/core-magazine-logic';
-import { emptyReviewForm, type LightQuestion, type LightTagOption, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
+import { normalizeLightFlow, type LightQuestion, type LightTagOption, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
 import { analyzeSavedTaste } from '@/features/reports/taste-service';
+import { normalizeBackupForm } from './review-backup';
 
 export type ReviewRecord = ReviewForm & {
   id: string;
@@ -58,7 +59,7 @@ function fromRow(row: ReviewRow): ReviewRecord {
     rating: row.rating === null ? null : Number(row.rating), body: row.body, oneLine: row.one_line,
     spoiler: row.spoiler, visibility: row.visibility ?? 'private', status: row.status, createdAt: row.created_at, updatedAt: row.updated_at,
     answers: Object.fromEntries((row.review_answers ?? []).map((item) => [item.question_key, item.answer])),
-    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, lightFlow: row.light_flow ?? undefined, coreFlow: normalizeCoreFlow(row.core_flow), movie: normalizedMovie(row.movies, row.movie_id),
+    keywordIds: (row.review_keywords ?? []).map((item) => item.keyword_id), questions, questionTags, lightFlow: normalizeLightFlow(row.light_flow), coreFlow: normalizeCoreFlow(row.core_flow), movie: normalizedMovie(row.movies, row.movie_id),
   };
 }
 
@@ -157,19 +158,27 @@ export async function deleteReview(reviewId: string, sessionMode: 'demo' | 'supa
   if (!data?.length) throw new Error('본인의 기록만 삭제할 수 있어요.');
 }
 
-export async function saveLocalReviewBackup(form: ReviewForm, reviewId: string | null, movieTitle: string): Promise<void> {
-  await AsyncStorage.setItem(`${DRAFT_PREFIX}${form.movieId}`, JSON.stringify({ form, reviewId, movieTitle, savedAt: new Date().toISOString() }));
+export type ReviewBackupIdentity = { mode: 'demo' | 'supabase'; email: string | null };
+export function scopedReviewBackupKey(movieId: string, identity: ReviewBackupIdentity) {
+  if (identity.mode === 'supabase' && !identity.email?.trim()) throw new Error('초안의 계정을 확인하지 못했어요.');
+  const scope = identity.mode === 'demo' ? 'demo' : `supabase.${encodeURIComponent(identity.email!.trim().toLowerCase())}`;
+  return `${DRAFT_PREFIX}v2.${scope}.${encodeURIComponent(movieId)}`;
+}
+export async function saveLocalReviewBackup(form: ReviewForm, reviewId: string | null, movieTitle: string, identity: ReviewBackupIdentity): Promise<void> {
+  await AsyncStorage.setItem(scopedReviewBackupKey(form.movieId, identity), JSON.stringify({ form, reviewId, movieTitle, savedAt: new Date().toISOString() }));
 }
 
-export async function loadLocalReviewBackup(movieId: string): Promise<{ form: ReviewForm; reviewId: string | null; movieTitle: string } | null> {
-  const stored = await AsyncStorage.getItem(`${DRAFT_PREFIX}${movieId}`);
+export async function loadLocalReviewBackup(movieId: string, identity: ReviewBackupIdentity): Promise<{ form: ReviewForm; reviewId: string | null; movieTitle: string } | null> {
+  // Legacy unscoped backups have no verifiable owner. Preserve, but never auto-import them.
+  const stored = await AsyncStorage.getItem(scopedReviewBackupKey(movieId, identity));
   if (!stored) return null;
   try {
     const parsed = JSON.parse(stored) as { form?: ReviewForm; reviewId?: string | null; movieTitle?: string };
-    return parsed.form?.movieId === movieId ? { form: { ...emptyReviewForm(movieId), ...parsed.form }, reviewId: parsed.reviewId ?? null, movieTitle: parsed.movieTitle ?? '' } : null;
+    const form = normalizeBackupForm(parsed.form, movieId);
+    return form && (parsed.reviewId === null || parsed.reviewId === undefined || typeof parsed.reviewId === 'string') ? { form, reviewId: parsed.reviewId ?? null, movieTitle: typeof parsed.movieTitle === 'string' ? parsed.movieTitle : '' } : null;
   } catch { return null; }
 }
 
-export async function clearLocalReviewBackup(movieId: string): Promise<void> {
-  await AsyncStorage.removeItem(`${DRAFT_PREFIX}${movieId}`);
+export async function clearLocalReviewBackup(movieId: string, identity: ReviewBackupIdentity): Promise<void> {
+  await AsyncStorage.removeItem(scopedReviewBackupKey(movieId, identity));
 }

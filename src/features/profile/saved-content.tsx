@@ -9,7 +9,7 @@ import { CorePhoto } from '@/features/reviews/core-photo';
 import { listMySavedContent } from './profile-service';
 import { mergeSavedPage,type SavedItem,type SavedKind,type SavedPage } from './profile-model';
 import { ProfilePoster,p } from './profile-ui';
-import { SocialPosts } from '@/features/community/social-ui';
+import { EmbeddedFeed } from '@/features/community/embedded-feed';
 
 const labels:Record<SavedKind,string>={movies:'보관 영화',reviews:'스크랩한 리뷰',magazines:'스크랩한 매거진',collections:'스크랩한 컬렉션'};
 function open(item:SavedItem){
@@ -52,7 +52,7 @@ export function SavedContent({mode,onInfo,width}:{mode:'demo'|'supabase';onInfo:
   return <View style={{paddingTop:24,paddingBottom:40}}>
     <SavedSection kind="movies" mode={mode} width={width} onInfo={onInfo}/>
     <SavedSection kind="reviews" mode={mode} width={width} onInfo={onInfo}/>
-    <View style={s.section}><View style={s.heading}><Text accessibilityRole="header" style={s.headingText}>스크랩한 피드</Text></View><SocialPosts scope="saved"/></View>
+    <View style={s.section}><View style={s.heading}><Text accessibilityRole="header" style={s.headingText}>스크랩한 피드</Text></View><EmbeddedFeed mode={mode} scope="saved"/></View>
     <SavedSection kind="magazines" mode={mode} width={width} onInfo={onInfo}/>
     <SavedSection kind="collections" mode={mode} width={width} onInfo={onInfo}/>
   </View>;

@@ -1,7 +1,9 @@
 import { type Href,Redirect, useLocalSearchParams } from 'expo-router';
+import { useEffect, useState } from 'react';
 
 import { Button } from '@/components/button';
-import { LoadingScreen } from '@/components/loading-screen';
+import { IntroSplash } from '@/features/onboarding/intro-screen';
+import { introEntryTarget } from '@/features/onboarding/intro-model';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { useSession } from '@/features/session/session-provider';
@@ -11,9 +13,11 @@ export default function IndexScreen() {
   const params = useLocalSearchParams<{ returnTo?: string }>();
   const returnToParam = Array.isArray(params.returnTo) ? params.returnTo[0] : params.returnTo;
   const returnTo = safeCommunityPath(returnToParam);
-  const { error, mode, onboardingComplete, retry, status } = useSession();
+  const { error, mode, onboardingComplete, introSeen, introIntent, retry, status } = useSession();
+  const [splashComplete, setSplashComplete] = useState(false);
+  useEffect(() => { const timer = setTimeout(() => setSplashComplete(true), 650); return () => clearTimeout(timer); }, []);
 
-  if (status === 'loading') return <LoadingScreen />;
+  if (status === 'loading' || !splashComplete) return <IntroSplash />;
 
   if (status === 'error') {
     return (
@@ -24,8 +28,11 @@ export default function IndexScreen() {
     );
   }
 
-  if (mode === 'none') return <Redirect href={returnTo ? { pathname: '/welcome', params: { returnTo } } : '/welcome'} />;
-  if (returnTo && onboardingComplete) return <Redirect href={returnTo as Href} />;
+  const target = introEntryTarget({ mode, onboardingComplete, introSeen, intent: introIntent, hasSharedLink: Boolean(returnTo) });
+  if (target === 'intro') return <Redirect href={'/intro' as Href} />;
+  if (target === 'welcome') return <Redirect href={returnTo ? { pathname: '/welcome', params: { returnTo } } : '/welcome'} />;
+  if (target === 'shared' && returnTo) return <Redirect href={returnTo as Href} />;
+  if (target === 'light' || target === 'core') return <Redirect href={target === 'light' ? '/light-record' : '/core-record'} />;
   if (!onboardingComplete && returnTo) return <Redirect href={{pathname:'/onboarding',params:{returnTo}}}/>;
   if (!onboardingComplete) return <Redirect href="/onboarding" />;
   return <Redirect href="/(tabs)" />;

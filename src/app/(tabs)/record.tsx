@@ -26,11 +26,15 @@ function ensureModeQuestions(form: ReviewForm, movie: Movie | null, title: strin
 }
 
 export default function RecordScreen() {
+  const identity = useSession();
+  return <RecordFlow key={`${identity.mode}:${identity.email ?? ''}`} />;
+}
+function RecordFlow() {
   const params = useLocalSearchParams<{ movieId?: string; reviewId?: string; title?: string; mode?: string }>();
   const movieIdParam = one(params.movieId);
   const reviewIdParam = one(params.reviewId);
   const titleParam = one(params.title);
-  const { mode: sessionMode } = useSession();
+  const { mode: sessionMode, email: sessionEmail } = useSession();
   const storageMode = sessionMode === 'supabase' ? 'supabase' : 'demo';
   const [form, setForm] = useState<ReviewForm | null>(null);
   const [reviewId, setReviewId] = useState<string | null>(null);
@@ -99,7 +103,7 @@ export default function RecordScreen() {
             }
             throw new Error('기록을 찾을 수 없어요.');
           }
-          const [backup, movie] = await Promise.all([loadLocalReviewBackup(record.movieId), getMovie(record.movieId)]);
+          const [backup, movie] = await Promise.all([loadLocalReviewBackup(record.movieId, { mode: storageMode, email: sessionEmail }), getMovie(record.movieId)]);
           if (!active) return;
           setMovie(movie);
           setForm(ensureModeQuestions(backup?.form ?? record, movie, record.movie.title));
@@ -111,7 +115,7 @@ export default function RecordScreen() {
         } else if (movieIdParam) {
           const [draft, backup, movie] = await Promise.all([
             getDraftForMovie(movieIdParam, storageMode),
-            loadLocalReviewBackup(movieIdParam),
+            loadLocalReviewBackup(movieIdParam, { mode: storageMode, email: sessionEmail }),
             getMovie(movieIdParam),
           ]);
           if (!active) return;
@@ -140,7 +144,7 @@ export default function RecordScreen() {
     }
     void initialize();
     return () => { active = false; };
-  }, [loadList, movieIdParam, reviewIdParam, storageMode, titleParam, params.mode]);
+  }, [loadList, movieIdParam, reviewIdParam, storageMode, sessionEmail, titleParam, params.mode]);
 
   const change = useCallback((update: (current: ReviewForm) => ReviewForm) => {
     revision.current += 1;
@@ -166,11 +170,13 @@ export default function RecordScreen() {
 
   useEffect(() => {
     if (!form || !dirty || loading) return;
+    let active = true;
     const currentRevision = revision.current;
     const timer = setTimeout(() => {
       void (async () => {
         try {
-          await saveLocalReviewBackup(form, reviewId, movieTitle);
+          await saveLocalReviewBackup(form, reviewId, movieTitle, { mode: storageMode, email: sessionEmail });
+          if (!active) return;
           if (recordStatus === 'draft') {
             const savedId = await saveReview(form, reviewId, false, storageMode, movieTitle);
             setReviewId(savedId);
@@ -185,8 +191,8 @@ export default function RecordScreen() {
         }
       })();
     }, 900);
-    return () => clearTimeout(timer);
-  }, [dirty, form, loading, movieTitle, recordStatus, reviewId, storageMode]);
+    return () => { active = false; clearTimeout(timer); };
+  }, [dirty, form, loading, movieTitle, recordStatus, reviewId, storageMode, sessionEmail]);
 
   async function persist(complete: boolean) {
     if (!form) return;
@@ -204,7 +210,7 @@ export default function RecordScreen() {
     setNotice(null);
     try {
       if (!complete && recordStatus === 'completed') {
-        await saveLocalReviewBackup(form, reviewId, movieTitle);
+        await saveLocalReviewBackup(form, reviewId, movieTitle, { mode: storageMode, email: sessionEmail });
         setDirty(false);
         setAutosave('수정 내용을 이 기기에 임시 보관했어요.');
         setNotice({ tone: 'success', title: '수정 내용을 임시 보관했어요', message: '기존 완료 기록은 유지되며, 수정 완료를 누르면 서버에 반영돼요.' });
@@ -214,12 +220,12 @@ export default function RecordScreen() {
       setReviewId(savedId);
       setRecordStatus(complete ? 'completed' : 'draft');
       setDirty(false);
-      await clearLocalReviewBackup(form.movieId);
+      await clearLocalReviewBackup(form.movieId, { mode: storageMode, email: sessionEmail });
       setAutosave(complete ? '' : '초안을 저장했어요.');
       setNotice({ tone: 'success', title: complete ? '감상 기록을 남겼어요' : '초안을 저장했어요', message: complete ? '기록 탭에서 언제든 다시 읽고 수정할 수 있어요.' : '다음에 이어서 작성할 수 있어요.' });
       if (complete) setTimeout(() => router.replace('/(tabs)/record'), 500);
     } catch (error) {
-      await saveLocalReviewBackup(form, reviewId, movieTitle);
+      await saveLocalReviewBackup(form, reviewId, movieTitle, { mode: storageMode, email: sessionEmail });
       setNotice({ tone: 'danger', title: '서버에 저장하지 못했어요', message: `${error instanceof Error ? error.message : '잠시 뒤 다시 시도해 주세요.'} 작성 내용은 이 기기에 보관했어요.` });
     } finally {
       setSaving(false);
@@ -231,7 +237,7 @@ export default function RecordScreen() {
     try {
       const target = records.find((record) => record.id === id);
       await deleteReview(id, storageMode);
-      if (target) await clearLocalReviewBackup(target.movieId);
+      if (target) await clearLocalReviewBackup(target.movieId, { mode: storageMode, email: sessionEmail });
       setPendingDelete(null);
       await loadList();
       setNotice({ tone: 'success', title: '기록을 삭제했어요', message: '선택한 기록과 연결된 질문·태그·답변이 함께 삭제됐어요.' });

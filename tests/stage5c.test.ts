@@ -5,8 +5,10 @@ import { describe, expect, it } from 'vitest';
 
 const migration = readFileSync('supabase/migrations/202608110003_stage5c_discovery_editorial.sql', 'utf8');
 const home = readFileSync('src/app/(tabs)/index.tsx', 'utf8');
-const feed = readFileSync('src/app/(tabs)/feed.tsx', 'utf8');
+const feed = readFileSync('src/features/community/feed-library.tsx', 'utf8');
 const search = readFileSync('src/app/(tabs)/search.tsx', 'utf8');
+const explore = readFileSync('src/features/discovery/explore-hub.tsx', 'utf8');
+const exploreModel = readFileSync('src/features/discovery/explore-model.ts', 'utf8');
 const admin = readFileSync('src/app/admin-curations.tsx', 'utf8');
 const publicDetail = readFileSync('src/app/curation/[id].tsx', 'utf8');
 
@@ -36,8 +38,10 @@ describe('Stage 5C discovery and editorial contract', () => {
   });
 
   it('exposes emotion curation with reasons and manual niche curation controls', () => {
-    expect(search).toContain('지금 원하는 감정으로 고르기');
-    expect(search).toContain('recommendationReason');
+    expect(search).toContain('@/features/discovery/explore-hub');
+    expect(explore).toContain('오늘은 어떤 영화가 필요해?');
+    expect(explore).toContain('exploreReason');
+    expect(exploreModel).toContain('키워드와 연결돼요');
     expect(admin).toContain('니치 큐레이션');
     expect(admin).toContain('addAdminCurationMovie');
     expect(feed).toContain('상황별 편집 큐레이션');

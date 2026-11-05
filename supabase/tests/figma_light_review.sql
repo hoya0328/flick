@@ -1,18 +1,18 @@
 -- Run in the SQL editor as postgres. All QA writes are rolled back.
 begin;
+set local statement_timeout='25s';
+set local lock_timeout='3s';
 do $$
 declare
-  v_owner uuid;
+  v_owner uuid=gen_random_uuid();
+  v_other uuid=gen_random_uuid();
   v_movie uuid;
   v_form jsonb;
   v_id uuid;
   v_count integer;
 begin
-  select id into v_owner from auth.users order by created_at limit 1;
-  select id into v_movie from public.movies m where not exists (
-    select 1 from public.reviews r where r.movie_id = m.id and r.user_id = v_owner and r.status = 'draft'
-  ) limit 1;
-  if v_owner is null or v_movie is null then raise exception 'QA_fixture_missing'; end if;
+  insert into auth.users(id,email,raw_user_meta_data)values(v_owner,v_owner||'@record-ui-check.invalid','{"display_name":"Light QA A"}'),(v_other,v_other||'@record-ui-check.invalid','{"display_name":"Light QA B"}');
+  insert into public.movies(provider,provider_id,title)values('qa','record-ui-'||gen_random_uuid(),'Synthetic Light fixture')returning id into v_movie;
   select jsonb_build_object(
     'movieId', v_movie, 'mode', 'light', 'watchedAt', current_date::text, 'rating', 0.5,
     'body', '트랜잭션으로만 검증하는 QA 감상입니다.', 'oneLine', '', 'spoiler', false, 'visibility', 'private',
@@ -38,7 +38,7 @@ begin
   exception when others then
     if sqlerrm <> 'review_content_required' then raise; end if;
   end;
-  perform set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000099', true);
+  perform set_config('request.jwt.claim.sub', v_other::text, true);
   if exists (select 1 from public.reviews where id = v_id) then raise exception 'QA_private_read_leak'; end if;
   begin
     perform public.save_light_review(v_form, v_id, true);

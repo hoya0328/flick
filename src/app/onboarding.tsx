@@ -33,7 +33,7 @@ export default function OnboardingScreen() {
     setError(null);
     try {
       await completeOnboarding(selection);
-      router.replace((returnTo??'/(tabs)') as Href);
+      router.replace((returnTo??'/') as Href);
     } catch {
       setError('취향 키워드를 저장하지 못했어요. 입력은 유지되니 다시 시도해 주세요.');
     } finally {

@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const migration = readFileSync('supabase/migrations/202608110002_stage5b_collections.sql', 'utf8');
 const home = readFileSync('src/app/(tabs)/index.tsx', 'utf8');
-const feed = readFileSync('src/app/(tabs)/feed.tsx', 'utf8');
+const feed = readFileSync('src/features/community/feed-library.tsx', 'utf8');
 const collections = readFileSync('src/app/collections.tsx', 'utf8');
 const picker = readFileSync('src/app/collection-picker.tsx', 'utf8');
 const detail = readFileSync('src/app/collection/[id].tsx', 'utf8');

@@ -31,6 +31,11 @@
 
 ## Continuity
 
+### Active Figma five-stage batch (2026-11-05)
+
+- User override for this batch: each of stages 1–5 is implemented and validated locally only. Do not commit, push to GitHub, or deploy intermediate stages. After all five stages and final regression/security validation are complete, commit/push and publish the existing `beta` target once. This supersedes the default per-feature publication rule for this active batch only.
+- Track scope, stage status, local QA and the publication hold in `docs/FIGMA_IMPLEMENTATION_PLAN.md` and `docs/HANDOFF.md`.
+
 - Record durable product facts in `docs/PROJECT_CONTEXT.md`.
 - Record material choices in `docs/DECISIONS.md` and the next action in `docs/HANDOFF.md`.
 - Use `FLICK.code-workspace` as the named VS Code entry point.

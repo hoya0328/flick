@@ -7,11 +7,13 @@ import { SessionProvider } from '@/features/session/session-provider';
 import { RecordingLauncherProvider } from '@/features/reviews/recording-launcher';
 import { colors } from '@/theme/tokens';
 import { PwaBootstrap } from '@/features/pwa/install';
+import { IntroIntentConsumer } from '@/features/onboarding/intro-intent-consumer';
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
+        <IntroIntentConsumer />
         <RecordingLauncherProvider>
         <View style={styles.app}>
           <StatusBar style="dark" />

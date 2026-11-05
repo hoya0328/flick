@@ -1,368 +1,50 @@
-import {
-  type Href,
-  router,
-  useFocusEffect,
-  useLocalSearchParams,
-} from "expo-router";
-import { useCallback, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  ScrollView,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { Button } from "@/components/button";
-import { Screen } from "@/components/screen";
-import {
-  BackButton,
-  CommunityGate,
-  Message,
-  SocialPostCard,
-} from "@/features/community/social-ui";
-import {
-  addPostComment,
-  listPostComments,
-  listPosts,
-  mergeById,
-  reactToPost,
-  removePost,
-  removePostComment,
-  reportPost,
-  type SocialComment,
-  type SocialPost,
-} from "@/features/community/social-service";
-import { p } from "@/features/profile/profile-ui";
-import { useSession } from "@/features/session/session-provider";
-import { CorePhoto } from "@/features/reviews/core-photo";
-
-export default function PostDetail() {
-  const { id } = useLocalSearchParams<{ id: string }>(),
-    s = useSession();
-  return (
-    <CommunityGate returnTo={`/post/${id}`}>
-      <Detail key={`${s.email}:${id}`} id={typeof id === "string" ? id : ""} />
-    </CommunityGate>
-  );
+import { Redirect, router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { DesignVector } from '@/components/design-vector';
+import { ExploreButton, ExploreFrame, ExploreMessage } from '@/features/discovery/explore-ui';
+import { createFeedApi } from '@/features/community/feed-service';
+import { FeedPostCard, FeedIconButton, f } from '@/features/community/feed-ui';
+import { FeedOverlays } from '@/features/community/feed-overlays';
+import { timeAgo, UUID, type FeedComment, type FeedPost } from '@/features/community/feed-model';
+import { mergeById, safeCommunityPath } from '@/features/community/social-service';
+import { ProfileAvatar } from '@/features/profile/profile-ui';
+import { useSession } from '@/features/session/session-provider';
+export default function PostDetailRoute() {
+  const session = useSession(), params = useLocalSearchParams<{ id?: string }>(), id = typeof params.id === 'string' ? params.id : '';
+  if (session.status === 'loading') return <ExploreFrame><ActivityIndicator color="#F8233C" /></ExploreFrame>;
+  if (session.mode === 'none' || session.status === 'error') return <Redirect href={{ pathname: '/welcome', params: { returnTo: safeCommunityPath(`/post/${id}`) ?? '' } }} />;
+  if (!session.onboardingComplete) return <Redirect href="/onboarding" />;
+  return <Detail key={`${session.mode}:${session.email}:${id}`} id={id} />;
 }
 function Detail({ id }: { id: string }) {
-  const [post, setPost] = useState<SocialPost | null>(null),
-    [comments, setComments] = useState<SocialComment[]>([]),
-    [body, setBody] = useState(""),
-    [ready, setReady] = useState(false),
-    [busy, setBusy] = useState(false),
-    [message, setMessage] = useState(""),
-    [more, setMore] = useState(false),
-    [confirmDelete, setConfirmDelete] = useState(false),
-    [report, setReport] = useState(false),
-    [reason, setReason] = useState("other"),
-    [detail, setDetail] = useState("");
-  const generation = useRef(0),
-    lock = useRef(false),
-    offset = useRef(0),
-    input = useRef<TextInput>(null),
-    scroll = useRef<ScrollView>(null);
+  const session = useSession(), api = useMemo(() => createFeedApi(session.mode === 'supabase' ? 'supabase' : 'demo'), [session.mode]);
+  const [post, setPost] = useState<FeedPost | null>(null), [comments, setComments] = useState<FeedComment[]>([]), [busy, setBusy] = useState(false), [ready, setReady] = useState(false), [message, setMessage] = useState(''), [more, setMore] = useState(false);
+  const [body, setBody] = useState(''), [reply, setReply] = useState<FeedComment | null>(null), [kind, setKind] = useState<'menu' | 'question' | 'photos' | null>(null), [inputIssue, setInputIssue] = useState('');
+  const generation = useRef(0), lock = useRef(false), offset = useRef(0), input = useRef<TextInput>(null);
+  const invalidate = useCallback(() => { generation.current++; }, []);
   const load = useCallback(async () => {
-    const token = generation.current;
-    setBusy(true);
-    try {
-      const rows = await listPosts("detail", 0, null, id);
-      if (token !== generation.current) return;
-      setPost(rows[0] ?? null);
-      if (rows[0]) {
-        const next = await listPostComments(id);
-        if (token !== generation.current) return;
-        setComments(next);
-        offset.current = next.length;
-        setMore(next.length === 30);
-      }
-      setReady(true);
-    } catch (error) {
-      if (token === generation.current)
-        setMessage(
-          error instanceof Error ? error.message : "불러오지 못했어요.",
-        );
-    } finally {
-      if (token === generation.current) setBusy(false);
-    }
-  }, [id]);
-  useFocusEffect(
-    useCallback(() => {
-      generation.current++;
-      void load();
-      return () => {
-        generation.current++;
-      };
-    }, [load]),
-  );
-  async function act(task: () => Promise<unknown>, after?: () => void) {
-    if (lock.current) return;
-    lock.current = true;
-    setBusy(true);
-    setMessage("");
-    const token = generation.current;
-    try {
-      await task();
-      if (token === generation.current) {
-        after?.();
-        await load();
-      }
-    } catch (error) {
-      if (token === generation.current)
-        setMessage(
-          error instanceof Error ? error.message : "변경하지 못했어요.",
-        );
-    } finally {
-      lock.current = false;
-      if (token === generation.current) setBusy(false);
-    }
+    const token = generation.current; setBusy(true);
+    try { if (!UUID.test(id)) throw new Error('잘못된 게시물 주소예요.'); const rows = await api.list('detail', 0, id); const nextComments = rows[0] ? await api.comments(id) : []; if (token !== generation.current) return; setPost(rows[0] ?? null); setComments(nextComments); offset.current = nextComments.filter(item => !item.parentId).length; setMore(offset.current === 30); setReady(true); }
+    catch (caught) { if (token === generation.current) setMessage(caught instanceof Error ? caught.message : '게시물을 불러오지 못했어요.'); }
+    finally { if (token === generation.current) setBusy(false); }
+  }, [api, id]);
+  useFocusEffect(useCallback(() => { invalidate(); const timer = setTimeout(() => void load(), 0); return () => { clearTimeout(timer); invalidate(); }; }, [invalidate, load]));
+  async function act(task: () => Promise<unknown>) {
+    if (lock.current) return; lock.current = true; setBusy(true); setMessage(''); const token = generation.current;
+    try { await task(); if (token === generation.current) await load(); }
+    catch (caught) { if (token === generation.current) setMessage(caught instanceof Error ? caught.message : '처리하지 못했어요.'); }
+    finally { lock.current = false; if (token === generation.current) setBusy(false); }
   }
-  async function moreComments() {
-    if (lock.current) return;
-    lock.current = true;
-    setBusy(true);
-    const token = generation.current;
-    try {
-      const rows = await listPostComments(id, offset.current);
-      if (token === generation.current) {
-        offset.current += rows.length;
-        setComments((old) => mergeById(old, rows));
-        setMore(rows.length === 30);
-      }
-    } catch {
-      setMessage("댓글을 더 불러오지 못했어요.");
-    } finally {
-      lock.current = false;
-      if (token === generation.current) setBusy(false);
-    }
-  }
-  function send() {
-    if (!body.trim()) {
-      setMessage("댓글을 입력해야 합니다.");
-      scroll.current?.scrollToEnd({ animated: true });
-      input.current?.focus();
-      return;
-    }
-    void act(
-      () => addPostComment(id, body),
-      () => setBody(""),
-    );
-  }
-  return (
-    <Screen title="일상 기록" scrollViewRef={scroll}>
-      <Message message={message} />
-      {busy ? <ActivityIndicator color="#F8233C" /> : null}
-      {ready && !post ? (
-        <Text style={p.body}>
-          게시물이 비공개·삭제되었거나 접근할 수 없어요.
-        </Text>
-      ) : null}
-      {!ready ? (
-        <Button
-          label="다시 불러오기"
-          disabled={busy}
-          variant="secondary"
-          onPress={() => void load()}
-        />
-      ) : null}
-      {post ? (
-        <>
-          <SocialPostCard
-            post={post}
-            busy={busy}
-            onReact={(kind) =>
-              void act(() =>
-                reactToPost(
-                  id,
-                  kind,
-                  kind === "like" ? !post.viewerLiked : !post.viewerSaved,
-                ),
-              )
-            }
-          />
-          {post.photos.length > 1 ? (
-            <View style={{ gap: 10 }}>
-              <Text style={p.body}>
-                첨부 사진을 아래에서 모두 확인할 수 있어요.
-              </Text>
-              {post.photos.map((path) => (
-                <Photo key={path} path={path} />
-              ))}
-            </View>
-          ) : null}
-          {post.isMine ? (
-            <>
-              <Button
-                label={confirmDelete ? "삭제 취소" : "게시물 삭제"}
-                variant="ghost"
-                disabled={busy}
-                onPress={() => setConfirmDelete(!confirmDelete)}
-              />
-              {confirmDelete ? (
-                <>
-                  <Text style={p.body}>
-                    삭제하면 피드에서 즉시 숨겨지고 7일 동안 나만 보기로 복원할
-                    수 있어요.
-                  </Text>
-                  <Button
-                    label="삭제 확인"
-                    disabled={busy}
-                    onPress={() =>
-                      void act(
-                        () => removePost(id, true),
-                        () => router.replace("/post-trash" as Href),
-                      )
-                    }
-                  />
-                </>
-              ) : null}
-            </>
-          ) : (
-            <>
-              <Button
-                label="신고하기"
-                variant="ghost"
-                disabled={busy}
-                onPress={() => setReport(!report)}
-              />
-              {report ? (
-                <>
-                  <Text style={p.body}>
-                    신고 사유를 선택해 주세요. 신고 즉시 자동 삭제되지는 않아요.
-                  </Text>
-                  {(
-                    [
-                      ["spoiler", "스포일러"],
-                      ["harassment", "괴롭힘"],
-                      ["personal_info", "개인정보"],
-                      ["copyright", "저작권"],
-                      ["other", "기타"],
-                    ] as const
-                  ).map(([value, label]) => (
-                    <Button
-                      key={value}
-                      label={`${reason === value ? "✓ " : ""}${label}`}
-                      variant="secondary"
-                      disabled={busy}
-                      onPress={() => setReason(value)}
-                    />
-                  ))}
-                  <TextInput
-                    accessibilityLabel="신고 설명"
-                    placeholder="추가 설명 (선택, 500자 이내)"
-                    value={detail}
-                    maxLength={500}
-                    onChangeText={setDetail}
-                    editable={!busy}
-                    multiline
-                    style={{
-                      borderWidth: 1,
-                      borderColor: "#D1D5DC",
-                      padding: 12,
-                      minHeight: 80,
-                    }}
-                  />
-                  <Button
-                    label="신고 제출"
-                    disabled={busy}
-                    onPress={() =>
-                      void act(
-                        () => reportPost(id, reason, detail),
-                        () => {
-                          setReport(false);
-                          setMessage("신고가 접수됐어요.");
-                        },
-                      )
-                    }
-                  />
-                </>
-              ) : null}
-            </>
-          )}
-          <Text style={p.title}>댓글 {post.commentCount}</Text>
-          {comments.map((c) => (
-            <View
-              key={c.id}
-              style={{
-                gap: 6,
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderColor: "#E5E7EB",
-              }}
-            >
-              <Text
-                style={p.actionText}
-                onPress={
-                  c.authorProfileId
-                    ? () => router.push(`/people/${c.authorProfileId}` as Href)
-                    : undefined
-                }
-              >
-                {c.name}
-              </Text>
-              <Text style={{ fontSize: 14, lineHeight: 23 }}>{c.body}</Text>
-              <Text style={p.body}>
-                {new Date(c.createdAt).toLocaleString("ko-KR")}
-              </Text>
-              {c.isMine ? (
-                <Button
-                  label="내 댓글 삭제"
-                  variant="ghost"
-                  disabled={busy}
-                  onPress={() => void act(() => removePostComment(c.id))}
-                />
-              ) : null}
-            </View>
-          ))}
-          {more ? (
-            <Button
-              label="댓글 더 보기"
-              variant="secondary"
-              disabled={busy}
-              onPress={() => void moreComments()}
-            />
-          ) : null}
-          {post.visibility === "public" ? (
-            <>
-              <TextInput
-                ref={input}
-                accessibilityLabel="댓글 입력"
-                placeholder="댓글을 입력해 주세요"
-                value={body}
-                onChangeText={setBody}
-                maxLength={500}
-                multiline
-                editable={!busy}
-                style={{
-                  minHeight: 80,
-                  borderWidth: 1,
-                  borderColor: "#D1D5DC",
-                  borderRadius: 10,
-                  padding: 12,
-                }}
-              />
-              <Text style={p.body}>
-                {body.length}/500자 · 하루 50개, 분당 5개까지
-              </Text>
-              <Button label="댓글 남기기" loading={busy} onPress={send} />
-            </>
-          ) : (
-            <Text style={p.body}>
-              나만 보기에서는 댓글·공감·저장을 받지 않아요.
-            </Text>
-          )}
-        </>
-      ) : null}
-      <BackButton />
-    </Screen>
-  );
-}
-function Photo({ path }: { path: string }) {
-  return (
-    <CorePhoto
-      path={path}
-      label="첨부 사진"
-      style={{ height: 240, borderRadius: 10 }}
-    />
-  );
+  async function comment() { if (!body.trim() || body.trim().length > 500) { setInputIssue('댓글을 1~500자로 입력해야 합니다.'); input.current?.focus(); return; } await act(async () => { await api.comment(id, body, reply?.id ?? null); setBody(''); setReply(null); setInputIssue(''); }); }
+  async function loadMore() { if (lock.current) return; lock.current = true; setBusy(true); const token = generation.current; try { const rows = await api.comments(id, offset.current); if (token === generation.current) { setComments(old => mergeById(old, rows)); const roots = rows.filter(item => !item.parentId).length; offset.current += roots; setMore(roots === 30); } } catch { if (token === generation.current) setMessage('댓글을 더 불러오지 못했어요.'); } finally { lock.current = false; if (token === generation.current) setBusy(false); } }
+  const commentCard = (item: FeedComment) => <View key={item.id} style={{ paddingVertical: 12, marginLeft: item.parentId ? 36 : 0, gap: 8 }}><View style={f.row}><Pressable accessibilityRole="button" accessibilityLabel={`${item.name} 댓글 작성자 프로필`} disabled={item.removed || !item.authorProfileId || api.mode === 'demo'} onPress={() => { if (item.authorProfileId) router.push({ pathname: '/people/[id]', params: { id: item.authorProfileId } }); }} style={[f.row, { flexShrink: 1 }]}><ProfileAvatar size={29} path={item.removed ? null : item.avatar ?? null} name={item.removed ? '삭제' : item.name} /><Text style={[f.name, { fontSize: 15, flexShrink: 1 }]}>{item.removed ? '삭제된 댓글' : item.name}</Text></Pressable><Text style={f.small}>{timeAgo(item.createdAt)}</Text>{item.isPostAuthor && !item.removed ? <Text style={{ ...f.small, color: '#F8233C', fontSize: 11 }}>작성자</Text> : null}{item.isMine && !item.removed ? <Pressable accessibilityRole="button" accessibilityLabel="내 댓글 삭제" disabled={busy} onPress={() => void act(() => api.removeComment(item.id))} style={{ marginLeft: 'auto', padding: 4 }}><Text style={f.small}>삭제</Text></Pressable> : null}</View><Text style={f.text}>{item.removed ? '작성자가 삭제한 댓글이에요.' : item.body}</Text>{!item.removed ? <View style={f.row}><FeedIconButton icon="feedLike" label={`댓글 공감 ${item.likeCount ?? 0}`} active={item.viewerLiked} disabled={busy || post?.visibility !== 'public'} onPress={() => void act(() => api.likeComment(item.id, !item.viewerLiked))}><Text style={f.small}>{item.likeCount ?? 0}</Text></FeedIconButton>{!item.parentId ? <Pressable accessibilityRole="button" disabled={busy || post?.visibility !== 'public'} onPress={() => { setReply(item); setInputIssue(''); input.current?.focus(); }}><Text style={[f.small, { textDecorationLine: 'underline' }]}>답글 달기</Text></Pressable> : null}</View> : null}</View>;
+  return <ExploreFrame><ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 22 }}>
+    <View style={{ marginTop: 81, height: 44, paddingHorizontal: 21, flexDirection: 'row', alignItems: 'center', marginBottom: 19 }}><Pressable accessibilityRole="button" accessibilityLabel="피드로 돌아가기" onPress={() => router.replace('/feed')} hitSlop={10}><DesignVector name="exploreBack" width={12.5663} style={{ transform: [{ rotate: '180deg' }] }} /></Pressable><Text accessibilityRole="header" style={{ ...f.name, flex: 1, textAlign: 'center', fontSize: 20, fontWeight: '700', marginRight: 12 }}>피드</Text></View>
+    {message ? <Text accessibilityRole="alert" style={{ ...f.error, paddingHorizontal: 21, marginBottom: 15 }}>{message}</Text> : null}
+    {!ready ? <ExploreMessage title={message ? '게시물을 불러오지 못했어요' : '게시물을 불러오는 중이에요'} onRetry={() => void load()}>{message || '잠시만 기다려 주세요.'}</ExploreMessage> : !post ? <ExploreMessage title="게시물을 볼 수 없어요">비공개·삭제되었거나 접근 권한이 없는 글이에요.</ExploreMessage> : <><FeedPostCard post={post} api={api} act={task => void act(task)} onMenu={() => setKind('menu')} onQuestion={() => setKind('question')} onPhotos={() => setKind('photos')} detail busy={busy} onComment={() => input.current?.focus()} />
+      <View style={{ borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#F3F4F6', paddingHorizontal: 21, paddingVertical: 14 }}><Text accessibilityRole="header" style={{ ...f.name, fontSize: 20, fontWeight: '700' }}>댓글 {post.commentCount}</Text></View><View style={{ paddingHorizontal: 21 }}>{comments.filter(item => !item.parentId).map(root => <View key={root.id}>{commentCard(root)}{comments.filter(item => item.parentId === root.id).map(commentCard)}</View>)}{!comments.length ? <Text style={{ ...f.small, paddingVertical: 20 }}>아직 댓글이 없어요.</Text> : null}<Text style={f.small}>댓글은30개씩, 한 댓글의 답글은최대30개까지 표시해요.</Text>{more ? <ExploreButton label="댓글 더 보기" secondary busy={busy} onPress={() => void loadMore()} /> : null}</View></>}
+  </ScrollView>{post?.visibility === 'public' ? <View style={{ padding: 16, paddingTop: 8, backgroundColor: '#FFFFFF', gap: 5 }}>{reply ? <View style={f.row}><Text style={[f.small, { flex: 1 }]}>{reply.name}님에게 답글</Text><Pressable accessibilityRole="button" onPress={() => setReply(null)}><Text style={f.small}>답글 취소</Text></Pressable></View> : null}<View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 24, paddingHorizontal: 8 }}><ProfileAvatar size={29} path={null} name={session.nickname ?? '나'} /><TextInput ref={input} placeholderTextColor="#99A1AF" accessibilityLabel={reply ? '답글 작성' : '댓글 작성'} placeholder={reply ? '답글 작성하기' : '댓글 작성하기'} value={body} onChangeText={setBody} maxLength={500} multiline style={{ ...f.text, flex: 1, minHeight: 41, maxHeight: 100, paddingVertical: 9 }} /><Pressable accessibilityRole="button" accessibilityLabel="댓글 등록" disabled={busy} onPress={() => void comment()} style={{ paddingHorizontal: 8, minHeight: 41, justifyContent: 'center' }}><Text style={{ ...f.small, color: '#F8233C' }}>등록</Text></Pressable></View>{inputIssue ? <Text accessibilityRole="alert" style={f.error}>{inputIssue}</Text> : null}</View> : null}
+    <FeedOverlays key={`${post?.id}:${kind}`} selected={post} kind={kind} api={api} close={() => setKind(null)} act={task => void act(task)} />
+  </ExploreFrame>;
 }

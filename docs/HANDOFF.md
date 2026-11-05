@@ -1,5 +1,56 @@
 # HANDOFF
 
+## 2026-11-05 Figma 4~5단계 완료 / 최종 일괄 게시
+
+- 사용자 최신 지시대로1~5단계와 로컬 통합 gate를 끝낸 후 GitHub/기존 beta 일괄 게시를 진행한다. 배포 식별자 확정 전에는 외부 완료로 안내하지 않는다. 이전 소스 main `3ad201b`, EAS `ypn609gfct`, 대상 `d701494e-4875-45b4-b9c4-feb15dac3e85`/alias `beta`.
+- 구현/자산/개인정보/초안 복구 계약: `PROFILE_REPORT_REDESIGN.md`. 프로필 내 피드/보관함, 실제12유형 리포트/그래프/Light·Core 근거/반별점/공유 미리보기·숨김, 상세/동의 보존, 기록 배치/gradient/태그·모달, 계정별 백업/JSON 방어/저장 후 정리 실패 보완.
+- check38파일288테스트, isolated feed SQL18검사, npm ci 재현, 웹47경로/97산출물 비밀 검사, iOS/Android JS export 성공. 웹 `entry-982b7369139e4303feb8c114aa0fa4fc.js`, PWA `009a745c07935fac`. source/history secret guard 성공. npm high/moderate0; deepmerge 원인 low7개는 미수정판/빌드 설정 경계로 문서화했다.
+- 로컬8083 데모 Light3편/Core1편 완료·초안 저장/새로고침 복원·Q1~Q5/수동 매거진 편집·대표 키워드 제거/추가·캘린더4·평균4.9·유효3편 임시 장면형·12유형 상세·공유 집계/숨김 복원·내 피드/보관함 확인. 리포트/프로필320·402·1280 넘침0. 익명 별도8084에서 report/details/Light/Core/profile 로그인 차단 확인. 증거 ignored tmp/figma-stage45-20261105.
+- 사용자 승인 후 `202611050001_feed_blocks.sql`만 명시적 remote `vthswebqroygpbmxpqaj`로 적용했다. SHA256 `a36da7817365790c605d67373d4188a9df129c9b4e47b6c5c7ed2aab76ca1092`. migration ledger 없음→db push/과거 전체 replay 금지. 사전/사후 restricted role·RLS/direct grant/postcondition 통과. 공개키 HTTP19개 차단, synthetic auth/movie 잔존0.
+- 기존 record_isolation/free_community/Light/Core rollback 검사 통과. 구 Light/Core 검증이 기존 회원을 fixture owner로 선택하는 점을 발견해 합성 계정/영화로 변경 후 재실행했다. 첫 실행도 전부 rollback됐으며 기존 기록 영구 변경 없음. 실 JWT A/B·signed URL/업로드 HTTP·Gemini 생성/기기 권한/OS 공유·기기 바이너리/전체 DB 복원은 미검증이다.
+- 무료 정책: 비디오/유료 티켓/유료 AI는 UI 안내만.12유형 무료 AI 확인 기한(11월3일) 자동 연장 없음. 규칙 리포트와 수동 기록 유지. 기존 계정 미표시 전역 로컬 백업은 원본 보존/자동 불러오기 금지, 서버 초안 유지.
+- 최종 외부/CI/Git 결과는 아래에 확정한다. 롤백은 소스 tag/기존 EAS alias만, 새 테이블·참여 데이터 삭제 금지. 상세 한계와 재현은 `FIGMA_RELEASE_QA_2026-11-05.md`.
+
+## 2026-11-05 Figma 3단계 로컬 완료 / 다음4단계
+
+- **우선 지시 유지:** 다섯 단계와 최종 통합·보안 검증 전 stage/commit/push/tag/외부 배포 금지. 1·2단계의 미커밋 변경을 보존했으며 main HEAD `3ad201b`, 기존 beta deployment `ypn609gfct`는 그대로다. 운영 DB/키/정책/사용자 데이터를 변경하지 않았다.
+- 화면·데이터·권한·무료 경계는 `FEED_REDESIGN.md`. 원본26:208의7개 화면/카드를 대조해 새 인기/팔로우 피드·상세·작성, 영화/투표/익명 질문 블록·댓글/한 단계 답글/공감·사진/저장/신고·내 글/저장한 글·7일 휴지통·계정별 수동 초안을 연결했다. 기존 Light/Core/랭킹/큐레이션/컬렉션은 `feed-library.tsx`로 이동하고 section 링크와 신고 사유/댓글 작성자 프로필 연결을 보존한다.
+- 비디오는 원본 버튼과 비용/쿼터 미승인 안내만 제공한다. 업로드·변환/유료 API·새 AI를 연결하지 않았다. 인기/검색은 불러온 최근20개씩의 데이터 안에서만 계산/검색한다고 표시한다. 메시지 슬롯은 다른 콘텐츠 메뉴/DM 준비 안내다.
+- 새 `202611050001_feed_blocks.sql`은 **운영 미적용**. Postgres/WASM 메모리 DB에 실제 community baseline+새 migration을 실행해 합성 authenticated/anon A/B/C 역할로18개 검사 성공. 새 테이블 직접 접근/anon RPC/타인 편집/사진 위조 차단, 중복 투표/한 번의 팔로워 익명 응답, 응답 DTO 식별자 비노출, 답글 깊이/공감/삭제 표식, 잠금/숨김 후 재응답 거절/응답50개 제한/비공개 전환을 검사했다. 설치/실행은 해당 계약 문서와 `npm run test:feed-db` 참고. 제품 dependency/lock 변경 없이 ignored tmp에 PGlite0.5.15만 사용했다.
+- 실계정은 새 capability 미설치 시 기존 RPC로 기존 글/사진/공감/루트 댓글을 유지한다. 새 투표·질문·답글·댓글 공감은 최종 DB 적용 대기 메시지로 실패하며 새 블록을 버려 저장하지 않는다. 새 기능 전체는 지금 **로컬 데모와 격리 DB에서만 검증**된 상태다. 운영 전 실제 JWT 두 계정·Storage signed URL/소유권 및 migration 전체 조합 검증/필요한 변경 승인 게이트가 남았다.
+- 최종 `npm run check`: 원본 SVG20개+기존 자산 일치, typecheck/lint,36개 파일265개 테스트 성공(3단계34개 추가), source secret guard439개 성공. `npm run build:web`:46경로/산출물96파일 secret guard 성공. 최종 번들 `entry-a3de324526d23d20cf6fb2171563d659.js`, PWA cache `02f42fded07dbbd9`. 개발 빌드의 NO_COLOR/FORCE_COLOR 안내는 브라우저 오류와 구분한다.
+- 브라우저8083 데모: 투표/변경(인원1 유지), 익명 동의 누락 안내/응답 저장, 타인 메뉴의 편집/삭제 없음, 빈 댓글 포커스/저장/답글/댓글 공감, 본문 누락 스크롤·포커스, 영화·투표·질문 동시 작성/공개 확인/저장, 참여 후 투표 변경 거절, 비공개 전환·내 글 조회, 삭제 이중 확인→휴지통→비공개 복원, 미완성 초안 저장/복원/명시적 버리기, 기존 Light 섹션/일상 복귀, 비디오 미연결 안내를 확인했다. 실제 계정/게시물/사진 업로드·신고 제출/AI는 실행하지 않았다.
+- 피드·상세·작성 각각320/402/1280px 넘침0. 최종 bundle 로드·브라우저 콘솔 error/warn0. 작성 질문 카드는 source와 동일한 x21/y366/359×118, 입력 x35/331×39를 측정했다. 네이티브 키보드/기기 글꼴 래스터화·실데이터 줄바꿈까지 오차0이라고 주장하지 않는다. OS 상태바/키보드 비트맵은 그리지 않는다. 증거는 ignored `tmp/figma-stage3-20261105`의 원본2장, `final-feed-*`, `final-detail-*`, `final-editor-*`, `editor-restored-402.png`.
+- 새 비로그인8084 origin에서 `/post/<id>`→returnTo를 보존한 welcome, `/post-edit`→welcome 차단을 확인했다. 임시 탭8은 닫고 서버8084(session59634)를 종료했다. 실제 사용자8081 저장소를 건드리지 않았다. 최종 `/feed` 결과 탭6 유지/임시 viewport 복구. 기존 정적 preview8083(session85011)는 실행 중이며 변경 후 재빌드/새로고침 필요.
+- 다음: **4단계 프로필/취향 리포트(`15:335`)**, 기존12유형 엔진·무료/동의 조건 유지. 이후5단계 기록 잔여/전체 통합·계정 격리/보안 검증, 승인된 운영 DB 적용, 롤백 기준 확인 후 GitHub+기존 beta 일괄 게시. 아직4·5단계나 최종 운영 검증을 완료한 것으로 안내하지 않는다.
+
+## 2026-11-05 Figma 2단계 로컬 완료 / 다음3단계
+
+- 우선 지시 유지: **5단계와 최종 회귀·보안 검증이 모두 끝나기 전 stage/commit/push/tag/배포 금지**. 1단계 미커밋 작업을 보존하며 main HEAD3ad201b·외부 beta deployment `ypn609gfct`를 변경하지 않았다. 새 서버/유료 서비스를 연결하지 않았다.
+- 2단계 범위와 한계는 `EXPLORE_REDESIGN.md`. `/search` 허브, `/explore-list` 목록/URL 필터·검색, 기존 `/movie/[id]` 상세를 재구성했다. 무료 후보 혼합·완료 기록/초기 취향 기반 이유·상황/니치·취향 밖 공개·공개 컬렉션·연관 영화, 기존 기록 시트/보고 싶어요/컬렉션/상세 메타·OTT·출처 진입을 연결했다. 공개 리뷰/매거진은 기존 최신50개 중 일치분으로 명시한다.
+- 데이터/권한: DB/RLS/RPC/Edge Functions/계정/기록을 변경하지 않았다. 예시 UUID를 실후보에 섞지 않고 실계정 예시 저장을 막는다. 개인화/보고 싶어요 비동기 결과를 계정별로 분리한다. 공감/댓글 요약 카드는 기록 상세에서 기존 동작을 사용한다. 개인정보·동의·무료 AI 기한을 테스트로 바꾸지 않았다.
+- 원본 자산: 상황 사진3개+SVG18개, 기존 폰트·벡터 렌더러·rail 재사용. 내비게이션 대응 활성/비활성 상태도 원본으로 보완했다. `npm run design:check`를 check/build에 연결해 소개7개와 탐색18개 XML·intrinsic 크기를 검사한다. 기기 문자 렌더링/OS chrome/실데이터 줄바꿈까지 오차0이라고 주장하지 않는다.
+- 최종 검증: `npm run check` typecheck/lint·34개 파일231개 테스트 성공(2단계22개 추가). `npm run build:web`46경로·source406/output96파일 secret guard 성공. 최종 번들 `entry-1f4fafa9c45a9959a5b72572bd96bc9c.js`, PWA cache `d65849298e3e8ba3`. `git diff --check` 성공(CRLF 안내만 있음), lockfile/의존성 변경 없음.
+- 로컬 브라우저: 비율0/100/70 키보드 조절·새로고침 복원, 상황→목록, SF/4.0/정렬 필터·URL 복원, 취향 밖 영화 공개, 기존 `/search?query=`→검색 목록, 빈 검색0편/초기화8편, 인셉션 상세→기록 시트→Light 영화 확인, 데모 보고 싶어요 실계정 게이트를 확인했다. 실제 계정 쓰기/공감/사진/공유 제출/실제 OTT 최신성·실기기/native 바이너리는 미검증이다.
+- 320px 목록/상세·허브, 402px 허브, 1280px 허브 가로 넘침0. 최종 콘솔 error/warn0·최종 번들 로드, 상황 이미지3개160×160 로드 성공. 402px 대표 제목 y470은 source와 일치, 키워드 섹션 제목은 source796/실제797로1px 차이가 있다. Figma 샘플이 아닌 실제/데모 데이터와 빈 상태에 따라 카드 길이는 달라진다. 증거는 ignored `tmp/figma-stage2-20261105`의 ref3장, `final-hub-402.png`, `final-hub-320.png`, `list-320.png`, `detail-320.png`, `detail-402.png`.
+- 익명 게이트는 새 loopback8084 origin의 `/explore-list`→welcome으로 확인했다. QA 탭은 닫고 해당 임시 서버는 종료한다. 사용자 실제8081 저장소는 변경하지 않았다. `http://localhost:8083/search` 결과 탭을 유지하고 임시 viewport를 복구했다. 8083 정적 미리보기(session85011)는 계속 실행한다. 수정 후에는 재빌드/새로고침이 필요하다.
+- 다음: **3단계 피드·상세·작성·첨부/투표/익명 질문·댓글/답글**. 먼저 Figma 문맥·기존 데이터/RPC/권한을 대조하고 운영 적용은5단계 일괄 게시 게이트와 필요한 승인에 맞춘다. 현재1·2단계 변경/문서/자산을 함께 보존한다.
+
+## 2026-11-05 Figma 5단계 · 1단계 로컬 완료 / 게시 보류
+
+- **우선 지시:** `FIGMA_IMPLEMENTATION_PLAN.md`의 5단계를 단계별 로컬 실행/검증한다. 전 단계 및 최종 회귀·보안 검증 후에만 GitHub commit/push와 기존 beta 배포를 한 번에 한다. 이번 단계에는 stage/commit/push/tag/배포하지 않았다. main HEAD3ad201b와 기존 외부 beta `ypn609gfct`는 그대로다.
+- 1단계: 원본 스플래시·소개4장, 벡터7개/포스터4개, 다음/건너뛰기/예시 체험, 인증·필수 취향 설정을 거치는 일회성 Light/Core 진입. 기존 사용자·공유 링크 우선순위/서버 권한/실제 기록은 보존했다. 30분 의도와 기기 소개 표식만 로컬 저장한다.
+- 최종 `npm run check`: typecheck/lint·32개 파일209개 테스트 통과. `build:web`:45경로·소스/출력 secret guard 통과. manifest7개 원본 크기/XML 일치, `git diff --check` 통과. 최종 번들 `entry-4c9869ea9a2450b9530e210c07eeceab.js`, PWA cache `6b4bc3e5fe1d9a58`.
+- 브라우저 정적 빌드: 다음/예시 체험·Core→로그인 안내→로컬 데모→취향→Core·홈 재방문·Light·건너뛰기, 320/402/1280px 넘침0/긴 소개 스크롤/직접 page3·4 hydration·콘솔 error/warn0. 실제 계정/AI/마이크/서버 데이터 쓰기는 하지 않았다. OS chrome은 앱 콘텐츠와 구분하고 영화 포스터 원본을 유지한다. 실기기 검증은 미실행.
+- 실행 중: `npm run preview:web`, localhost8083, exec session85011. 사용자 결과 탭 `http://localhost:8083/intro`를 유지하고 viewport를 복구했다. 원래 사용자8081 브라우저 저장소는 바꾸지 않았다. 우리가 시작했던 dev8082(session85022)는 정적 최종 빌드 전에 종료했다. preview는 HMR가 없으므로 후속 수정 후 build:web/새로고침한다.
+- 로컬 QA 증거: ignored `tmp/figma-stage1-20261105`. 다음 작업은 **2단계 탐색/영화 목록·상세**. 이전 검토 문서와 현재 미커밋 작업을 보존하고 이후 단계도 게시하지 않는다. 최초 원본/자산 맥락과 구현 계약은 plan 및 `assets/figma-intro/README.md`에 남겼다.
+
+## 2026-11-05 Figma 회색 5개 구역 구현 대조 (검토만)
+
+- 최신 비교는 `FIGMA_GAP_AUDIT_2026-11-05.md`. Figma 파일의 리뷰2:453/프로필15:335/피드26:208/탐색26:776/스플래시+온보딩26:1619를 현재 beta 데모 UI와 소스3ad201b에 대조했다. 홈1:27은 회색 구역 밖이다.
+- 리뷰 핵심·프로필 기본·12유형 계산은 재사용 가능. 새 온보딩4장/스플래시, 탐색 허브·추천비율·목록/상세, 피드 새 UI·영화/투표/익명질문/비디오·일상 답글/댓글 공감, 리포트 상세 UI·분리 서술 인사이트가 주요 잔여다. 고정 실험실 투표/리뷰 답글은 피드 새 기능과 별개다.
+- Figma5개 구역 및 앱 대표 화면을 ignored `tmp/figma-audit-20261105`에 저장·열어 확인했다. 데모이므로 실계정 피드/저장·AI 실제 호출은 미검증. 코드/DB/사용자 데이터 변경·Git push·배포 없이 검토 문서만 로컬 작성했다. 추천 다음 단계는 온보딩→탐색/영화상세→피드→리포트/잔여 마감이며 사용자 개발 지시를 기다린다.
+
 ## 2026-10-28 공개키·계정 격리 확인 및 공통 검사 등록
 
 - 사용자가 공개 Supabase 키로 타인 기록 조회/수정이 가능한지 확인하고 모든 프로젝트의 보안 검사에 같은 항목을 넣도록 요청했다. `ACCOUNT_ISOLATION_QA.md`가 최신 결과와 한계다. 운영 프로젝트의 공개키만 사용한 실제 HTTP12개 모두 거절/빈 결과. 관리자 조회 RPC의400은 명시적 `admin_view_reviews_required`이며401만 기대하는 잘못된 판정을 보완했다.
