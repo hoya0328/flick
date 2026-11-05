@@ -3,12 +3,15 @@
 ## 2026-11-05 무료 전시 준비 (최신)
 
 - 요청/운영 변경 승인: `/exhibition` 독립 게스트 체험 + 공유 AI 한도 + 기존 EAS beta 게시. 앞선 비용 검토의 '미구현' 상태를 이 항목으로 대체한다. 결제 설정은 변경하지 않았다.
-- 승인된 migration `202611050002_exhibition.sql` **한 개만** rollback 사전검증 후 운영에 적용. 기존 migration ledger 없음 → `db push` 전체 재실행 금지. 별도 private 기록/UID, 일반 테이블 mutation guard, Storage restrictive policy. 전시/무료 AI 검증 만료 **2026-11-12 19:15:14 KST**. 실제 전시일은 미정이므로 개막 전에 무료 플랜/기간 재확인 필요.
+- 승인된 새 migration `202611050002_exhibition.sql` +003(차단 요청 로그 증가 방지)+004(전시 선정 영화만 조회·저장)만 각각 rollback 사전검증 후 운영에 적용. 기존 migration ledger 없음 → `db push` 전체 재실행 금지. 별도 private 기록/UID, 일반 테이블 mutation guard, Storage restrictive policy. 전시/무료 AI 검증 만료 **2026-11-12 19:15:14 KST**. 실제 전시일은 미정이므로 개막 전에 무료 플랜/기간 재확인 필요.
 - 가입 제한 hook와 anonymous만 대시보드에서 적용했다. 전체 config push는 자동 검토 차단으로 실행 안 됨; 이메일 확인/MFA/기존 URL은 그대로. `config diff --remote=vthswebqroygpbmxpqaj` declared update=0. Auth Before User Created는 `public.exhibition_before_user_created` enabled.
 - 운영 네 함수 업데이트: generate-core-question, generate-core-review-draft, analyze-taste-review, movies-discovery. 기존 gateway JWT verification=true 유지, 서버 `/auth/v1/user` 검증 유지. 게스트 외부 TMDB 갱신·추가 취향 AI는 차단; Light/Core AI는 공유 claim 게이트 사용.
-- 검증: isolated PGlite exact DDL/roles, 운영 rollback 전후 exhibition + record_isolation + feed_blocks + figma_core/light SQL 통과. zero synthetic Auth residue / client quota 우회 불가 / 기존 테이블 전체 guard 검사 통과. Hosted postgres는 AuthAdmin으로 SET ROLE 불가하므로 production hook body+ACL과 로컬 실제 AuthAdmin 테스트를 구분한다. 실제 익명 Auth→Edge→Gemini HTTP 생성 E2E는 아직 미실행(에이전트가 영구 QA 계정을 생성하지 않음).
+- 검증: isolated PGlite exact DDL/roles, 운영 rollback 전후 exhibition + record_isolation + feed_blocks + figma_core/light SQL 통과. rollback fixture Auth residue0 / client quota 우회 불가 / 기존 테이블 전체 guard 검사 통과. Hosted postgres는 AuthAdmin으로 SET ROLE 불가하므로 production hook body+ACL과 로컬 실제 AuthAdmin 테스트를 구분한다.
+- **추가 실사용 검증 사용자 승인 후** 외부 beta에서 게스트 **1개만** 생성했다. Light 4.5별점→태그/skip/질문1회교체→Q5 새로고침 복원→실제 Gemini 초안 **1회**→대표키워드2개로 수정/예문 본문편집→비공개 저장→체험 종료/첫 화면 복귀 성공. 오늘 공유400→399/개인8→7 차감. 서버에 승인된 비공개 예시1건과 익명 계정1개를 남겼으며, 브라우저 세션과 임시 초안은 종료했다. 이 보존 계정과 rollback fixture residue0는 구분한다. 실제 Core Gemini 연계질문 HTTP/동시부하는 미실행(기존 회귀/DB는 통과).
 - `npm run check`:40파일307테스트/type/lint 통과. 웹48routes·빌드 시 secret guard 통과. 로컬 390px overflow없음, 필수 안내/성인 동의/AI 선택 토글 확인. npm audit 현재 **low2**, critical/high/moderate0; 기존 deepmerge CJS own-property 보완 유지. 실제 휴대폰/동시부하/오늘 Expo 월잔여량은 미검증.
-- 운영/한계/중지 방법은 `EXHIBITION_IMPLEMENTATION.md`. Git/배포 ID는 최종 검증 후 아래에 기록한다.
+- **GitHub/외부 게시 완료:** 앱 구현 `6b5e773`, [CI42010756054](https://github.com/hoya0328/flick/actions/runs/42010756054) 성공. 기존 beta deployment **owipwwm4lx**, JS `entry-fd38fdd0912bc27151a164307329eab6.js`, PWA `8a0b3e2a7990e09b`; 공개 URL과 JS bytes=검증 로컬 export 확인. rollback tag `rollback/exhibition-before-2026-11-05`=`077e9bf` push 완료. 직전 web `11sk5uwt71`.
+- 추가003/004는 서버 쿼터/전시 선정작만 변경하며 앱 번들 재배포는 불필요하다. 최신 검사 `node scripts/check-exhibition-release.mjs`는 공개키만으로 새 private 테이블5개 접근 거부와 anonymous활성/email확인유지·beta200·JS일치를 확인한다. 스크린샷은 ignored `tmp/exhibition-qa/beta-saved.png`(예문뿐, 사용자 비밀 없음).
+- 운영/한계/중지 방법은 `EXHIBITION_IMPLEMENTATION.md`. 다음: 개막일 확정 → Free/기간 재확인 → 실제 휴대폰·현장 Wi-Fi 리허설. 유료 연결은 금지 상태 유지.
 
 ## 2026-11-05 졸업 전시 무료/비용 검토(기능 변경 없음)
 

@@ -23,6 +23,8 @@ try {
  create function public.claim_taste_analysis(uuid,uuid,text)returns jsonb language sql as $$select '{"allowed":false,"code":"source_changed"}'::jsonb$$;`);
  await db.exec(await readFile('supabase/migrations/202608070007_ai_operations.sql','utf8'));
  await db.exec(await readFile('supabase/migrations/202611050002_exhibition.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/202611050003_exhibition_quota_hardening.sql','utf8'));
+ await db.exec(await readFile('supabase/migrations/202611050004_exhibition_movie_choices.sql','utf8'));
  const results = await db.exec(await readFile('supabase/tests/exhibition.sql','utf8'));
  console.log(results.at(-1).rows);
  console.log('PASS isolated exact exhibition DDL + restricted-role rollback tests.');

@@ -6,6 +6,7 @@ Approved: anonymous Auth, additive private guest storage and shared AI quota; no
 
 - QR `/exhibition`: dedicated Auth storage/client, cached movie selection, Light tags or Core answers, optional AI, editable summary, private guest save and explicit session end. No email required. No photos, publishing, social writes or admin access.
 - Guest identity is verified from `auth.users.is_anonymous` or immutable server enrollment, never editable user metadata. Ordinary table mutations are denied by triggers even through old SECURITY DEFINER RPCs; guest records live separately with owner-only RLS.
+- Exhibition catalogue is an operator-selected cached subset (`exhibition_movie_choices`), not the unmoderated full TMDB cache. Direct saves of unselected movie IDs are denied too. Selection is not a guarantee of suitability for every age; staff must review the actual audience/ratings.
 - One saved film per guest; two-hour write/AI session. Session loss cannot be recovered by email. No automatic deletion is promised; operators must review retention after the exhibition.
 - Adult confirmation and separate AI consent; under-18/nonconsenting visitors use non-AI recording. Google free input can be reviewed/used for improvement. Do not enter personal/sensitive information. This UI does not itself establish compliance with Google's age/audience terms.
 
@@ -18,7 +19,7 @@ Approved: anonymous Auth, additive private guest storage and shared AI quota; no
 
 ## Acceptance / rollback
 
-Run synthetic isolated SQL, rollback-only production role tests, normal member positive controls, guest A/B/anon isolation, storage/public-write/admin guards, quota boundaries, full app checks and web build. Apply this migration only (no historical replay). Install the hook before enabling anonymous Auth. Existing beta alias only. Revert web to prior deployment; close exhibition and AI gates for immediate rollback without deleting records.
+Run synthetic isolated SQL, rollback-only production role tests, normal member positive controls, guest A/B/anon isolation, storage/public-write/admin guards, quota boundaries, full app checks and web build. Apply only the reviewed new migrations002→003→004 (no historical replay). Install the hook before enabling anonymous Auth. Existing beta alias only. Revert web to prior deployment; close exhibition and AI gates for immediate rollback without deleting records.003 rejects global/guest-limit attempts without adding usage rows; personal-denied reservations are removed before any provider request. Provider failures are never refunded.
 
 ## Operator runbook
 
@@ -52,3 +53,7 @@ npm run build:web
 ```
 
 The preflight command is **only before this migration is installed**. For later regression runs, use exhibition.sql, not the migration composer. Local SQL runner uses the existing ignored PGlite0.5.15 installation under `tmp/feed-db-qa`; a fresh clone needs `npm install --prefix tmp/feed-db-qa --no-save @electric-sql/pglite@0.5.15`. Hosted postgres cannot impersonate Supabase AuthAdmin: production hook checks its ACL/body; the isolated local test exercises the actual AuthAdmin role. Other owner/guest/member/anon/service roles are exercised in production rollback transactions. No permanent QA Auth users, email or real provider calls were created by those tests.
+
+Separate user-approved browser acceptance test: one retained anonymous guest + one private clearly-labelled example review, real Light Gemini draft once, edited keywords/text, save and session end all passed on beta. No existing member record changed. Core real-provider and simultaneous-load tests remain unexecuted. Approved test evidence is ignored local `tmp/exhibition-qa/beta-saved.png`.
+
+Published web: `owipwwm4lx`, beta alias unchanged, source app `6b5e773`, CI42010756054 success. Server-only003/004 and test/runbook follow-up do not change the checked client bytes. `node scripts/check-exhibition-release.mjs` verifies beta status/public-key-only denials and exact client bundle hash without printing credentials.

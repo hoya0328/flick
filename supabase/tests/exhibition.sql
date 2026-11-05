@@ -8,7 +8,7 @@ begin
  raise exception 'QA_expected_error_missing: %',expected;
 end $$;
 do $$
-declare a uuid=gen_random_uuid(); b uuid=gen_random_uuid(); member uuid=gen_random_uuid(); movie uuid; result jsonb; q record; i int; n int;
+declare a uuid=gen_random_uuid(); b uuid=gen_random_uuid(); member uuid=gen_random_uuid(); movie uuid; unselected uuid; result jsonb; q record; i int; n int;
 begin
  -- Local PostgreSQL can exercise the Auth role. Hosted postgres cannot SET ROLE
  -- supabase_auth_admin: assert its ACL there, then run the body as owner.
@@ -24,6 +24,8 @@ begin
  (b,b||'@exhibition-qa.invalid',true,'{"display_name":"Exhibition QA B"}'),
  (member,member||'@exhibition-qa.invalid',false,'{"display_name":"Exhibition QA member"}');
  insert into public.movies(provider,provider_id,title) values('qa','exhibition-'||gen_random_uuid(),'Synthetic exhibition film') returning id into movie;
+ insert into public.exhibition_movie_choices(movie_id) values(movie);
+ insert into public.movies(provider,provider_id,title) values('qa','exhibition-'||gen_random_uuid(),'Synthetic unselected film') returning id into unselected;
  perform set_config('request.jwt.claim.sub',a::text,true);
  perform set_config('request.jwt.claims',jsonb_build_object('sub',a,'role','authenticated','is_anonymous',true)::text,true);
  perform set_config('role','authenticated',true);
@@ -40,6 +42,7 @@ begin
  perform pg_temp.exhibition_expect_error(format('insert into storage.objects(bucket_id,name,owner_id)values(''core-photos'',%L,%L)',a||'/'||gen_random_uuid()||'.jpg',a),'42501');
  perform pg_temp.exhibition_expect_error('select public.admin_set_my_permissions(true,true,true,true)','admin_required');
  perform pg_temp.exhibition_expect_error('select public.save_social_post_v3(null,''Synthetic public post'',''{}'',''public'',''[]'')','42501');
+ perform pg_temp.exhibition_expect_error(format('select public.save_exhibition_record(%L,''light'',4,''not selected'',''{}'',''[{"question":"Q","answer":"A"}]'')',unselected),'exhibition_movie_not_selected');
  perform public.save_exhibition_record(movie,'light',4,'Synthetic private guest text',array['따뜻한'],'[{"question":"Synthetic question","answer":"따뜻한"}]');
  if not exists(select 1 from public.exhibition_records where user_id=a and body='Synthetic private guest text') then raise exception 'QA_owner_read_positive_control'; end if;
  perform pg_temp.exhibition_expect_error(format('select public.save_exhibition_record(%L,''light'',4,''duplicate'',''{}'',''[{"question":"Q","answer":"A"}]'')',movie),'23505');
@@ -83,6 +86,14 @@ begin
  perform set_config('role','service_role',true);
  select * into q from public.claim_ai_request(b,'core_review_draft');
  if q.allowed or q.limit_kind<>'guest' then raise exception 'QA_guest_eight_cap_failed'; end if;
+ -- Repeated guest-cap denials do not insert either usage or reservation rows.
+ perform set_config('role','postgres',true);
+ select count(*) into n from public.ai_usage_events where user_id=b;
+ perform set_config('role','service_role',true);
+ for i in 1..25 loop perform public.claim_ai_request(b,'core_review_draft'); end loop;
+ perform set_config('role','postgres',true);
+ if (select count(*) from public.ai_usage_events where user_id=b)<>n then raise exception 'QA_rejected_log_growth'; end if;
+ if (select count(*) from public.ai_project_reservations where user_id=b)<>8 then raise exception 'QA_rejected_reservation_growth'; end if;
  perform set_config('role','postgres',true);
  insert into public.ai_project_reservations(user_id,feature) select member,'synthetic' from generate_series(1,12);
  perform set_config('role','service_role',true);
