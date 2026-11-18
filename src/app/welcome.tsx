@@ -136,7 +136,7 @@ export default function WelcomeScreen() {
             <View style={styles.field}>
               <Text style={styles.label}>닉네임</Text>
               <TextInput accessibilityLabel="닉네임" autoCapitalize="none" autoComplete="nickname" editable={!busy} maxLength={20} onChangeText={setNickname} placeholder="2~20자" placeholderTextColor={colors.textMuted} returnKeyType="next" style={styles.input} value={nickname} />
-              <Text style={styles.helper}>글자, 숫자, 공백, ., _, -를 사용할 수 있어요.</Text>
+
             </View>
           ) : null}
           <View style={styles.field}>

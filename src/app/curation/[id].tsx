@@ -54,7 +54,7 @@ export default function CurationDetailScreen() {
         {saveError?<Text accessibilityRole="alert" style={styles.note}>{saveError}</Text>:null}
         {saved===null&&saveError?<Button label="저장 상태 다시 확인" onPress={()=>void load()} variant="ghost"/>:null}
         <Text style={styles.description}>{curation.description}</Text>
-        {curation.kind === 'expert' ? <StateNotice message={`${curation.curatorName}의 관점으로 구성했으며, 관리자가 작성자·출처·게시 권한을 확인한 콘텐츠입니다.`} title="출처가 확인된 전문가 콘텐츠" tone="success" /> : <StateNotice message="대중적인 순위가 아니라 구체적인 상황과 분위기를 기준으로 관리자가 고른 목록입니다." title="선정 기준" tone="info" />}
+        {curation.curatorName ? <Text style={styles.author}>{curation.curatorName}</Text> : null}
         {curation.sourceUrl ? <Button label="원문·출처 확인" onPress={() => void Linking.openURL(curation.sourceUrl)} variant="secondary" /> : null}
       </View>
       {curation.items.map((item, index) => <View key={item.movie.id} style={styles.item}><Text style={styles.number}>{String(index + 1).padStart(2, '0')}</Text><MovieCard movie={item.movie} />{item.note ? <Text style={styles.note}>{item.note}</Text> : null}</View>)}
@@ -67,6 +67,7 @@ export default function CurationDetailScreen() {
 const styles = StyleSheet.create({
   intro: { backgroundColor: colors.surface, borderRadius: radii.lg, gap: spacing.lg, padding: spacing.xl },
   description: { ...typography.body, color: colors.text },
+  author: { ...typography.caption, color: colors.textMuted },
   item: { gap: spacing.sm },
   number: { ...typography.title, color: colors.primary },
   note: { ...typography.body, backgroundColor: colors.primarySoft, borderRadius: radii.md, color: colors.text, padding: spacing.lg },

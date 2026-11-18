@@ -15,7 +15,6 @@ import { colors, radii, spacing, typography } from '@/theme/tokens';
 
 export default function AccountSettingsScreen() {
   const {
-    backendConfigured,
     clearSession,
     deleteAccount,
     email,
@@ -148,7 +147,6 @@ export default function AccountSettingsScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>닉네임</Text>
             <TextInput accessibilityLabel="닉네임" autoCapitalize="none" autoComplete="nickname" editable={!working} maxLength={20} onChangeText={setNicknameInput} placeholder="2~20자" placeholderTextColor={colors.textMuted} style={styles.input} value={nicknameInput} />
-            <Text style={styles.help}>글자, 숫자, 공백, ., _, -를 사용할 수 있어요.</Text>
           </View>
           <Button label="닉네임 저장" loading={working} onPress={() => void handleNicknameUpdate()} variant="secondary" />
           {editingPassword ? (
@@ -168,7 +166,6 @@ export default function AccountSettingsScreen() {
 
       <Text style={styles.label}>선택한 키워드</Text>
       <Text style={styles.value}>{getKeywordLabels(selectedKeywords).join(' · ')}</Text>
-      <StateNotice message={backendConfigured ? 'Supabase 계정·기록 서버가 연결되어 있습니다.' : '환경 변수 연결 전까지 기기 안의 데모 데이터만 사용합니다.'} title={mode === 'demo' ? '데모 모드' : '계정 모드'} tone={backendConfigured ? 'success' : 'warning'} />
       {adminAvailable ? <Button label="Super Admin 콘솔" onPress={() => router.push('/admin' as Href)} /> : null}
       <Button label="취향 키워드 다시 고르기" onPress={() => void handleReset()} variant="secondary" />
       <Button label="나의 아카이브와 리포트" onPress={() => router.push('/archive' as Href)} variant="secondary" />

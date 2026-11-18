@@ -292,7 +292,7 @@ function RecordFlow() {
       <View onLayout={rememberSection('watchedAt')} ref={rememberSectionNode('watchedAt')} style={[styles.section, completionIssue?.field === 'watchedAt' && styles.sectionError]}>
         <Text style={styles.sectionTitle}>감상일</Text>
         <TextInput accessibilityLabel="감상일" maxLength={10} onChangeText={(watchedAt) => change((current) => ({ ...current, watchedAt }))} placeholder="YYYY-MM-DD" style={styles.input} value={form.watchedAt} />
-        <Text style={styles.help}>예: 2026-08-07 · 미래 날짜는 저장할 수 없어요.</Text>
+
         {completionIssue?.field === 'watchedAt' ? <Text accessibilityLiveRegion="polite" style={styles.requirementError}>확인 필요 · {completionIssue.message}</Text> : null}
       </View>
 
@@ -332,7 +332,7 @@ function RecordFlow() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>공개 범위</Text>
         <View style={styles.actions}>{([['private', '나만 보기'], ['public', '전체 공개']] as [ReviewVisibility, string][]).map(([value, label]) => <Pressable accessibilityRole="radio" accessibilityState={{ checked: form.visibility === value }} key={value} onPress={() => change((current) => ({ ...current, visibility: value }))} style={[styles.visibility, form.visibility === value && styles.visibilitySelected]}><Text style={[styles.modeTitle, form.visibility === value && styles.modeTitleSelected]}>{label}</Text><Text style={styles.modeCaption}>{value === 'private' ? '내 계정에서만 확인' : sessionMode === 'supabase' ? '완료 후 Flick 사용자에게 공개' : '데모에서는 이 기기에만 저장'}</Text></Pressable>)}</View>
-        <Text style={styles.help}>초안은 선택한 범위와 관계없이 항상 나만 볼 수 있어요.</Text>
+
       </View>
       <Button label={recordStatus === 'completed' ? '수정 완료' : '기록 완료'} loading={saving} onPress={() => void persist(true)} />
       {completionIssue ? <Text accessibilityLiveRegion="polite" style={styles.completionError}>완료할 수 없어요 · {completionIssue.message} 안내된 위치로 이동했어요.</Text> : <Text style={styles.completionHelp}>필수 입력이 빠져 있으면 해당 위치로 자동 이동해 알려드려요.</Text>}

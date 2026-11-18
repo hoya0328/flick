@@ -57,8 +57,8 @@ export default function ExperimentsScreen() {
     finally { setBusyKey(null); }
   }
 
-  if (sessionStatus === 'loading' || status === 'loading') return <Screen eyebrow="5E · FLICK LAB" title="참여형 실험"><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>해금 상태와 투표를 확인하고 있어요.</Text></Screen>;
-  if (mode !== 'supabase') return <Screen eyebrow="5E · FLICK LAB" title="참여형 실험"><StateNotice message="정답·보상·중복 투표를 서버에서 안전하게 판정하기 위해 이메일 계정이 필요해요." title="로그인 후 참여할 수 있어요" tone="warning" /><Button label="로그인하기" onPress={() => router.push('/welcome' as Href)} /></Screen>;
+  if (sessionStatus === 'loading' || status === 'loading') return <Screen eyebrow="FLICK LAB" title="참여형 실험"><ActivityIndicator color={colors.primary} /><Text style={styles.muted}>해금 상태와 투표를 확인하고 있어요.</Text></Screen>;
+  if (mode !== 'supabase') return <Screen eyebrow="5E · FLICK LAB" title="참여형 실험"><StateNotice message="로그인하고 히든 블록을 모아보세요." title="로그인 후 참여할 수 있어요" tone="warning" /><Button label="로그인하기" onPress={() => router.push('/welcome' as Href)} /></Screen>;
   if (status === 'error') return <Screen eyebrow="5E · FLICK LAB" title="참여형 실험"><StateNotice message="참여 상태는 변경되지 않았어요." title="실험을 불러오지 못했어요" tone="danger" /><Button label="다시 시도" onPress={() => void load()} /></Screen>;
 
   const unlocked = quizzes.filter((quiz) => quiz.unlocked);
@@ -67,7 +67,7 @@ export default function ExperimentsScreen() {
       {notice ? <StateNotice {...notice} /> : null}
       <View style={styles.rewardSection}>
         <Text style={styles.sectionTitle}>나의 히든 블록</Text>
-        <Text style={styles.muted}>정답은 서버에서만 판정하며 퀴즈마다 최대 3번 도전할 수 있어요.</Text>
+
         <View style={styles.blocks}>{unlocked.length ? unlocked.map((quiz) => <View accessibilityLabel={`${quiz.rewardLabel} 해금됨`} key={quiz.rewardKey} style={styles.blockWrap}><View style={[styles.block, { backgroundColor: blockColors[quiz.rewardKey] ?? colors.primary }]} /><Text style={styles.blockLabel}>{quiz.rewardLabel}</Text></View>) : <Text style={styles.muted}>퀴즈를 맞히면 이곳에 블록이 나타납니다.</Text>}</View>
       </View>
 

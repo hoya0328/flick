@@ -83,14 +83,14 @@ export default function HomeScreen() {
     finally { setBusyReviewId(null); }
   };
 
-  const preview = (title: string) => setInfo({ title, body: '디자이너가 제공한 화면 구성 예시입니다. 실제 사용자의 리뷰나 게시가 승인된 전문가 원문이 아니므로 공감·댓글·저장에는 반영되지 않아요. 공개 콘텐츠가 등록되면 실제 기록으로 바뀝니다.' });
+  const preview = (title: string) => setInfo({ title, body: '화면을 둘러보기 위한 샘플 콘텐츠예요.' });
   const openFeed = (section: string) => router.push({ pathname: '/feed' as Href, params: { section } } as Href);
   const currentRankings = hasCurrentRankings(rankings);
   const rankedMovies = currentRankings ? rankings.movies.slice(0, 10) : [];
   const keywordItems = currentRankings ? rankings.keywords.slice(0, 10) : [];
   const recommendedMovies = result?.source === 'demo' ? [] : result?.movies.slice(0, 10) ?? [];
   const experts = curations.filter((curation) => curation.kind === 'expert');
-  const rankCaption = mode === 'demo' ? '데모 · 집계 전에는 실제 주간 순위를 표시하지 않아요.' : result?.source === 'demo' ? '영화 서버 연결 대기 중 · 아래는 디자인 예시입니다.' : !currentRankings ? '주간 집계 준비 중 · 지금은 취향 추천을 보여드려요.' : undefined;
+
 
   return <SafeAreaView edges={['top', 'left', 'right']} style={styles.safeArea}>
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -109,7 +109,7 @@ export default function HomeScreen() {
         {status === 'error' ? <View style={styles.notice}><StateNotice title="영화를 불러오지 못했어요" message="네트워크를 확인한 뒤 다시 시도해 주세요." tone="warning" /><Button label="영화 다시 불러오기" onPress={() => void load()} variant="secondary" /></View> : null}
         {actionMessage ? <Pressable accessibilityRole="button" accessibilityLabel="안내 닫기" onPress={() => setActionMessage(null)} style={styles.notice}><Text accessibilityLiveRegion="polite" style={homeText.body}>{actionMessage} ×</Text></Pressable> : null}
 
-        <HomeSection first title={<>이번 주 <Text style={homeText.accent}>플리커</Text> Top 10 영화</>} moreLabel="주간 영화 랭킹 더보기" onMore={() => openFeed('rankings')} caption={rankCaption}>
+        <HomeSection first title={currentRankings ? <>이번 주 <Text style={homeText.accent}>플리커</Text> Top 10 영화</> : '지금 눈여겨볼 영화'} moreLabel="주간 영화 랭킹 더보기" onMore={() => openFeed('rankings')}>
           <HomeRail label="이번 주 영화, 가로로 스크롤">
             {rankedMovies.length ? rankedMovies.map((movie) => <Pressable accessibilityRole="button" accessibilityLabel={`${movie.rank}위 ${movie.title}, 최근 공개 리뷰 ${movie.score}편`} key={movie.movieId} onPress={() => router.push(`/movie/${movie.movieId}` as Href)} style={styles.movieCard}>
               <HomePicture source={movie.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${movie.posterPath}` } : null} label={movie.title} width={140} height={200} />
@@ -124,15 +124,15 @@ export default function HomeScreen() {
             </Pressable>) : previewMovies.map((movie) => <Pressable accessibilityRole="button" accessibilityLabel={`${movie.title} 디자인 예시, 검색`} key={movie.title} onPress={() => router.push({ pathname: '/search', params: { query: movie.title } })} style={styles.movieCard}>
               <HomePicture source={movie.image} label={movie.title} width={140} height={200} />
               <Text numberOfLines={1} style={homeText.title}>{movie.title}</Text>
-              <View style={styles.rating}><HomeIcon name="star" width={18} /><Text style={homeText.body}>{movie.rating}</Text><Text style={styles.example}>예시</Text></View>
+              <View style={styles.rating}><HomeIcon name="star" width={18} /><Text style={homeText.body}>{movie.rating}</Text><Text style={styles.example}>샘플</Text></View>
               <View style={styles.movieTags}>{movie.tags.map((tag) => <View style={styles.movieTag} key={tag}><Text style={styles.movieTagText}>{tag}</Text></View>)}</View>
             </Pressable>)}
           </HomeRail>
         </HomeSection>
 
-        <HomeSection title={<>이번 주 <Text style={homeText.accent}>플리커</Text> 키워드</>} moreLabel="주간 키워드 더보기" onMore={() => openFeed('rankings')}>
+        <HomeSection title={keywordItems.length ? <>이번 주 <Text style={homeText.accent}>플리커</Text> 키워드</> : '영화를 만나는 키워드'} moreLabel="주간 키워드 더보기" onMore={() => openFeed('rankings')}>
           <HomeRail label="플리커 키워드 두 줄, 가로로 스크롤">
-            <View style={styles.keywordRows}>{keywordRows(keywordItems.length ? keywordItems : previewKeywords.map((label) => ({ key: label, label, score: 0 }))).map((row, index) => <View key={index} style={styles.keywordRow}>{row.map((keyword, itemIndex) => <Pressable accessibilityRole="button" accessibilityLabel={`${keyword.label} 키워드 ${keywordItems.length ? keyword.score + '회 선택' : '디자인 예시'}`} key={keyword.key} onPress={() => setInfo({ title: keyword.label, body: keywordItems.length ? `최근 7일 공개 완료 기록에서 ${keyword.score}회 선택됐어요. 영화 탐색 화면에서 감정과 분위기에 맞는 영화를 찾아보세요.` : '주간 키워드를 집계할 공개 기록이 더 필요해요. 지금 보이는 키워드는 디자인 예시이며 사용 횟수는 만들지 않습니다.' })} style={[styles.keyword, index === 0 && (itemIndex < 3 ? styles.keywordPrimary : styles.keywordOutline)]}><Text style={[styles.keywordLabel, index === 0 && (itemIndex < 3 ? styles.keywordLight : styles.keywordPink)]}>{keyword.label}</Text><Text style={[styles.keywordCount, index === 0 && (itemIndex < 3 ? styles.keywordLight : styles.keywordPink)]}>{keywordItems.length ? keyword.score.toLocaleString('ko-KR') : itemIndex === 0 ? '예시' : '—'}</Text></Pressable>)}</View>)}</View>
+            <View style={styles.keywordRows}>{keywordRows(keywordItems.length ? keywordItems : previewKeywords.map((label) => ({ key: label, label, score: 0 }))).map((row, index) => <View key={index} style={styles.keywordRow}>{row.map((keyword, itemIndex) => <Pressable accessibilityRole="button" accessibilityLabel={`${keyword.label} 키워드 ${keywordItems.length ? keyword.score + '회 선택' : '디자인 예시'}`} key={keyword.key} onPress={() => setInfo({ title: keyword.label, body: keywordItems.length ? `이번 주 ${keyword.score}회 선택된 키워드예요.` : '영화를 둘러보기 위한 샘플 키워드예요.' })} style={[styles.keyword, index === 0 && (itemIndex < 3 ? styles.keywordPrimary : styles.keywordOutline)]}><Text style={[styles.keywordLabel, index === 0 && (itemIndex < 3 ? styles.keywordLight : styles.keywordPink)]}>{keyword.label}</Text><Text style={[styles.keywordCount, index === 0 && (itemIndex < 3 ? styles.keywordLight : styles.keywordPink)]}>{keywordItems.length ? keyword.score.toLocaleString('ko-KR') : itemIndex === 0 ? '샘플' : '—'}</Text></Pressable>)}</View>)}</View>
           </HomeRail>
         </HomeSection>
 
@@ -147,7 +147,7 @@ export default function HomeScreen() {
 
         <HomeSection title={<>이번 주 <Text style={homeText.accent}>플리커</Text> 매거진</>} moreLabel="Core 매거진 더보기" onMore={() => openFeed('core')}>
           <HomeRail label="집중 기록 매거진, 가로로 스크롤">
-            {coreReviews.length ? coreReviews.map((review) => <HomeMagazineCard review={review} key={review.reviewId} onPreview={preview} />) : <><HomeMagazineCard onPreview={preview} /><HomeMagazineCard alternate onPreview={preview} /></>}
+            {coreReviews.length ? coreReviews.map((review) => <HomeMagazineCard width={Math.min(contentWidth - 42, 311)} review={review} key={review.reviewId} onPreview={preview} />) : <><HomeMagazineCard width={Math.min(contentWidth - 42, 311)} onPreview={preview} /><HomeMagazineCard width={Math.min(contentWidth - 42, 311)} alternate onPreview={preview} /></>}
           </HomeRail>
         </HomeSection>
 

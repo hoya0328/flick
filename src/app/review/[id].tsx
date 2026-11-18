@@ -168,7 +168,6 @@ export default function PublicReviewScreen() {
   if (mode !== 'supabase') {
     return (
       <Screen eyebrow="공개 기록" title="로그인 후 볼 수 있어요">
-        <StateNotice message="공개 기록도 Flick 이메일 계정 사용자에게만 읽기를 허용합니다. 작성자 외에는 기록 본문을 수정하거나 삭제할 수 없어요." title="계정 보호" tone="warning" />
         <Button label="이메일로 로그인" onPress={() => router.replace({ pathname: '/welcome', params: returnTo ? { returnTo } : {} })} />
       </Screen>
     );
@@ -183,8 +182,7 @@ export default function PublicReviewScreen() {
   }
 
   return (
-    <Screen eyebrow="공개 기록 · 읽기 전용" title={record.movie.title}>
-      <StateNotice message="기록 본문은 작성자만 수정·삭제할 수 있습니다. 다른 사용자는 공감·저장·댓글만 남길 수 있어요." title="안전한 공개 기록" tone="success" />
+    <Screen eyebrow="공개 기록" title={record.movie.title}>
       {notice ? <StateNotice {...notice} /> : null}
       <View style={styles.summary}>
         <Text style={styles.meta}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'}</Text>
@@ -198,11 +196,11 @@ export default function PublicReviewScreen() {
       {record.spoiler ? <StateNotice message="아래 내용에 영화의 주요 장면이나 결말이 포함될 수 있어요." title="스포일러 주의" tone="warning" /> : null}
       {questionRows.map((row, index) => (
         <View key={row.key} style={styles.section}>
-          <Text style={styles.question}>Q{index + 1}. {row.question}</Text>
-          <Text style={styles.response}>{row.response}</Text>
+          <Text testID="readable-copy" style={styles.question}>Q{index + 1}. {row.question}</Text>
+          <Text testID="readable-copy" style={styles.response}>{row.response}</Text>
         </View>
       ))}
-      {record.coreFlow?.version === 1 ? <CoreMagazine flow={record.coreFlow} cover /> : record.body ? <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><Text style={styles.response}>{record.body}</Text></View> : null}
+      {record.coreFlow?.version === 1 ? <CoreMagazine flow={record.coreFlow} cover /> : record.body ? <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><Text testID="readable-copy" style={styles.response}>{record.body}</Text></View> : null}
       <ReviewKeywords keywords={record.lightFlow?.representativeKeywords} />
 
       <View style={styles.section}>
@@ -211,7 +209,7 @@ export default function PublicReviewScreen() {
         <TextInput accessibilityLabel="댓글 내용" maxLength={500} multiline onChangeText={setCommentText} placeholder="영화와 기록에 대한 생각을 남겨보세요." placeholderTextColor={colors.textMuted} style={styles.input} value={commentText} />
         <Text style={styles.count}>{commentText.length}/500</Text>
         <Button disabled={!commentText.trim() || busy} label={replyTo ? '답글 등록' : '댓글 등록'} onPress={() => void submitComment()} />
-        {!comments.length ? <Text style={styles.meta}>첫 댓글을 남겨보세요.</Text> : comments.map((comment) => (
+        {comments.map((comment) => (
           <View key={comment.commentId} style={[styles.comment, Boolean(comment.parentId) && styles.reply]}>
             <Text style={styles.commentAuthor}>{comment.authorDisplayName} · {shortDate(comment.createdAt)}</Text>
             <Text style={comment.status === 'removed' ? styles.removed : styles.response}>{comment.status === 'removed' ? '삭제된 댓글입니다.' : comment.body}</Text>

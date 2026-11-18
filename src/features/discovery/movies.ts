@@ -139,7 +139,7 @@ function localResult(query: string, keywordIds: string[]): DiscoveryResult {
   const filtered = normalized
     ? demoMovies.filter((movie) => `${movie.title} ${movie.originalTitle ?? ''}`.toLocaleLowerCase('ko-KR').includes(normalized))
     : rankMovies(demoMovies, keywordIds);
-  return { movies: filtered, source: 'demo', notice: '영화 서버 연결 전이라 검증용 캐시를 보여드려요.' };
+  return { movies: filtered, source: 'demo', notice: '영화 연결이 원활하지 않아 샘플을 표시해요.' };
 }
 
 // Explicit local-only access for explore/demo QA: never calls an external API.

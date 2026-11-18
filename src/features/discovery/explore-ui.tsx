@@ -70,7 +70,7 @@ export { HomePicture };
 export const ui = StyleSheet.create({
   outer: { flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center' }, frame: { flex: 1, width: '100%', maxWidth: 402, backgroundColor: '#FFFFFF' },
   section: { marginTop: 40, gap: 20 }, sectionHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 21, minHeight: 24 },
-  heading: { fontFamily: homeFont, fontSize: 20, lineHeight: 24, fontWeight: '700', letterSpacing: -.2, color: '#000000' },
+  heading: { flexShrink: 1, fontFamily: homeFont, fontSize: 20, lineHeight: 24, fontWeight: '700', letterSpacing: -.2, color: '#000000' },
   more: { marginLeft: 'auto', width: 36, minHeight: 24, justifyContent: 'center', alignItems: 'flex-end' },
   title: { fontFamily: homeFont, fontSize: 16, lineHeight: 24, fontWeight: '600', color: '#0A0A0A' },
   body: { fontFamily: homeFont, fontSize: 14, lineHeight: 22.75, color: '#364153' },

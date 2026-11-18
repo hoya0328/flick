@@ -34,7 +34,9 @@ describe('Stage 5C discovery and editorial contract', () => {
     expect(migration).toContain("raise exception 'expert_rights_required'");
     expect(migration).toContain("coalesce(p_source_url, '') !~ '^https?://'");
     expect(admin).toContain('게시 권한 확인');
-    expect(publicDetail).toContain('출처가 확인된 전문가 콘텐츠');
+    expect(publicDetail).toContain('curation.curatorName');
+    expect(publicDetail).toContain('curation.sourceUrl');
+    expect(publicDetail).toContain('원문·출처 확인');
   });
 
   it('exposes emotion curation with reasons and manual niche curation controls', () => {

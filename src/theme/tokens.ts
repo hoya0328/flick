@@ -1,3 +1,7 @@
+import { Platform } from 'react-native';
+
+const fontFamily = Platform.OS === 'web' ? 'Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' : undefined;
+
 export const colors = {
   primary: '#F2233C',
   primaryPressed: '#D91D34',
@@ -33,10 +37,10 @@ export const radii = {
 } as const;
 
 export const typography = {
-  display: { fontSize: 32, lineHeight: 39, fontWeight: '800' as const },
-  title: { fontSize: 24, lineHeight: 31, fontWeight: '800' as const },
-  heading: { fontSize: 19, lineHeight: 26, fontWeight: '700' as const },
-  body: { fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
-  label: { fontSize: 14, lineHeight: 20, fontWeight: '700' as const },
-  caption: { fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
+  display: { fontFamily, fontSize: 32, lineHeight: 39, fontWeight: '800' as const },
+  title: { fontFamily, fontSize: 24, lineHeight: 31, fontWeight: '800' as const },
+  heading: { fontFamily, fontSize: 19, lineHeight: 26, fontWeight: '700' as const },
+  body: { fontFamily, fontSize: 16, lineHeight: 24, fontWeight: '400' as const },
+  label: { fontFamily, fontSize: 14, lineHeight: 20, fontWeight: '700' as const },
+  caption: { fontFamily, fontSize: 13, lineHeight: 18, fontWeight: '400' as const },
 } as const;

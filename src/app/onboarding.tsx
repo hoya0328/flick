@@ -47,7 +47,7 @@ export default function OnboardingScreen() {
       footer={<Button disabled={!canComplete} label="내 취향으로 시작하기" loading={busy} onPress={() => void handleComplete()} />}
       title="오늘 어떤 영화가 필요해요?">
       <Text style={styles.description}>
-        지금 마음과 가까운 키워드를 {ONBOARDING_MIN_KEYWORDS}~{ONBOARDING_MAX_KEYWORDS}개 골라주세요. 추천과 기록에서 같은 언어로 사용할게요.
+        지금 마음과 가까운 키워드를 {ONBOARDING_MIN_KEYWORDS}~{ONBOARDING_MAX_KEYWORDS}개 골라주세요.
       </Text>
 
       <View accessibilityLabel="선택한 키워드 수" style={styles.counter}>
@@ -78,9 +78,7 @@ export default function OnboardingScreen() {
           message={`앞으로 ${Math.max(0, ONBOARDING_MIN_KEYWORDS - selection.length)}개를 더 고르면 시작할 수 있어요.`}
           title="취향을 조금만 더 알려주세요"
         />
-      ) : (
-        <StateNotice message="언제든 마이 화면에서 다시 고를 수 있어요." title="준비됐어요" tone="success" />
-      )}
+      ) : null}
     </Screen>
   );
 }

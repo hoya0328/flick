@@ -15,7 +15,7 @@ export default function Html({ children }: PropsWithChildren) {
       <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"/>
       <link rel="icon" type="image/png" href="/icons/flick-192.png"/>
       <ScrollViewStyleReset />
-      <style dangerouslySetInnerHTML={{ __html: '@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/InterVariable.woff2) format("woff2")} @font-face{font-family:Pretendard;font-style:normal;font-weight:45 920;font-display:swap;src:url(/fonts/PretendardVariable.woff2) format("woff2")} :focus-visible{outline:2px solid #F8233C;outline-offset:3px}' }} />
+      <style dangerouslySetInnerHTML={{ __html: '@font-face{font-family:Inter;font-style:normal;font-weight:100 900;font-display:swap;src:url(/fonts/InterVariable.woff2) format("woff2")} @font-face{font-family:Pretendard;font-style:normal;font-weight:45 920;font-display:swap;src:url(/fonts/PretendardVariable.woff2) format("woff2")} :focus-visible{outline:2px solid #F8233C;outline-offset:3px} [data-testid=readable-copy]{word-break:keep-all;overflow-wrap:anywhere}' }} />
     </head>
     <body>{children}</body>
   </html>;

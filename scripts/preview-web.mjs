@@ -15,7 +15,13 @@ createServer(async (request, response) => {
     let relative = pathname === '/' ? 'index.html' : pathname.slice(1);
     if (!path.extname(relative)) {
       const dynamic = relative.match(/^(movie|review|post|people|collection|curation)\/[^/]+$/);
-      relative = dynamic ? `${dynamic[1]}/[id].html` : `${relative}.html`;
+      if (dynamic) relative = `${dynamic[1]}/[id].html`;
+      else {
+        // Expo exports an index route beside dynamic children as folder/index.html.
+        const flat = `${relative}.html`;
+        try { await stat(path.resolve(root, flat)); relative = flat; }
+        catch { relative = `${relative}/index.html`; }
+      }
     }
     const file = await realpath(path.resolve(root, relative));
     if (!file.startsWith(root + path.sep) || !(await stat(file)).isFile()) return reply(403);

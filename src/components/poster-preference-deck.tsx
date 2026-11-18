@@ -56,7 +56,7 @@ export function PosterPreferenceDeck({ movies, onLike }: PosterPreferenceDeckPro
         {movie ? <PosterArt fullBleed movie={movie} style={styles.poster} /> : <Image accessibilityLabel="이터널 선샤인 디자인 예시 포스터" resizeMode="cover" source={homeAssets.hero} style={styles.poster} />}
         <View style={[styles.shade, Platform.OS === 'web' && { backgroundImage: 'linear-gradient(0deg, rgba(0,0,0,.9), transparent 38%)' } as ViewStyle]} />
       </Pressable>
-      {!movie ? <Text style={styles.preview}>디자인 예시</Text> : null}
+      {!movie ? <Text style={styles.preview}>샘플</Text> : null}
       <View style={styles.bottom}>
         <Pressable accessibilityRole="button" accessibilityLabel="다음 영화로 건너뛰기" disabled={animating} hitSlop={10} onPress={() => decide(false)} style={styles.skip}><Text style={styles.skipText}>건너뛰기</Text></Pressable>
         <Pressable accessibilityLabel="영화 상세 및 보고 싶어요 메뉴" accessibilityRole="button" hitSlop={10} onPress={() => setMenuOpen((current) => !current)} style={styles.more}><HomeIcon name="more" width={24} height={6} /></Pressable>

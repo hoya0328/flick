@@ -82,7 +82,7 @@ export default function CollectionsScreen() {
     } finally { setBusy(false); }
   }
 
-  if (mode !== 'supabase') return <Screen eyebrow="나의 영화 묶음" title="컬렉션"><StateNotice message="컬렉션은 로그인 계정에 안전하게 저장됩니다." title="로그인이 필요해요" tone="warning" /><Button label="로그인하기" onPress={() => router.replace('/welcome')} /></Screen>;
+  if (mode !== 'supabase') return <Screen eyebrow="나의 영화 묶음" title="로그인 후 컬렉션을 만들어요"><Button label="로그인하기" onPress={() => router.replace('/welcome')} /></Screen>;
 
   return (
     <Screen eyebrow="나의 영화 묶음" title="컬렉션">

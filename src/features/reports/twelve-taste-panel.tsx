@@ -1,4 +1,5 @@
 import { ActivityIndicator,Pressable,StyleSheet,Text,View } from 'react-native';
+import { useState } from 'react';
 import { Button } from '@/components/button';
 import { DesignVector } from '@/components/design-vector';
 import type { ReviewRecord } from '../reviews/reviews';
@@ -9,6 +10,7 @@ import { colors,radii,spacing,typography } from '@/theme/tokens';
 function Words({items}:{items:{label:string;count:number}[]}){return items.length?<View style={s.chips}>{items.map(item=><View key={item.label} style={[s.chip,{maxWidth:'100%'}]}><Text numberOfLines={2} style={s.chipText}>{item.label} · {item.count}편</Text></View>)}</View>:<Text style={s.muted}>표시할 기록이 아직 없어요.</Text>;}
 export function TwelveTastePanel({records,mode}:{records:ReviewRecord[];mode:'demo'|'supabase'}){
   const taste=useTwelveTaste(records,mode),r=taste.report;
+  const [showMethod,setShowMethod]=useState(false);
   const statusLabel={insufficient:'데이터 부족',provisional:'임시 유형',mixed:r.reason==='close_scores'?'두 유형이 비슷해요':'긍정 근거를 더 모으는 중',representative:'대표 유형'}[r.status];
   return <View style={s.wrap}>
     <View style={s.dark}>
@@ -17,13 +19,12 @@ export function TwelveTastePanel({records,mode}:{records:ReviewRecord[];mode:'de
       {r.primary?<Text style={s.darkBody}>{tasteTypes[r.primary].description}</Text>:null}
       {r.secondary?<Text style={s.darkEvidence}>함께 나타나는 성향 · {tasteTypes[r.secondary].name}</Text>:null}
       <Text style={s.darkEvidence}>완료 영화 {r.totalMovies}편 · 분석 가능 {r.validFilms}편 · Core 의미 분석 {r.deepFilms}편</Text>
-      {r.status==='mixed'?<Text style={s.darkBody}>8편 이상이어도 1·2위 차이 6%p 또는 1위의 긍정 근거 4편 기준을 충족하지 않으면 하나로 확정하지 않아요.</Text>:null}
     </View>
     <View style={s.card}>
-      <Text accessibilityRole="header" style={s.heading}>12가지 취향의 상대 비중</Text><Text style={s.muted}>이 비중은 기록 속 근거의 상대적인 구성이지, 유형에 속할 확률이나 정확도가 아닙니다.</Text>
+      <Text accessibilityRole="header" style={s.heading}>12가지 취향의 상대 비중</Text>
       {r.ranking.map(id=><View key={id} style={s.row}><View style={s.rowHeader}><Text style={s.label}>{tasteTypes[id].name}</Text><Text style={s.muted}>{r.validFilms&&r.ranking.some(t=>r.share[t]>0)?`${r.share[id].toFixed(1)}%`:'—'} · 긍정 근거 {r.support[id]}편</Text></View><View style={s.track}><View style={[s.fill,{width:`${r.share[id]}%`}]}/></View></View>)}
     </View>
-    <View style={s.card}><Text accessibilityRole="header" style={s.heading}>자주 선택한 키워드 TOP 5</Text><Words items={r.topKeywords}/><Text style={s.muted}>동일 영화에서는 한 번만 집계해요. 감상 표현의 빈도이며 모두 선호라는 뜻은 아니에요.</Text></View>
+    <View style={s.card}><Text accessibilityRole="header" style={s.heading}>자주 선택한 키워드 TOP 5</Text><Words items={r.topKeywords}/></View>
     <View style={s.card}><Text accessibilityRole="header" style={s.heading}>직접 선택한 감상 포인트 TOP 3</Text>{r.topPoints.length?r.topPoints.map(p=><Text key={p.label} style={s.body}>{p.label} · {p.count}편 · {p.percent.toFixed(1)}%</Text>):<Text style={s.muted}>Light에서 ‘어떤 점이 좋았나요?’를 선택하면 표시돼요.</Text>}<Text style={s.muted}>Light의 실제 선택 항목을 기준으로 집계합니다.</Text></View>
     <View style={s.card}><Text accessibilityRole="header" style={s.heading}>별점별 감상 표현</Text><Text style={s.label}>높은 별점 영화 · 4점 이상</Text><Words items={r.highKeywords}/><Text style={s.label}>낮은 별점 영화 · 2.5점 이하</Text><Words items={r.lowKeywords}/></View>
     <View style={s.card}><Text accessibilityRole="header" style={s.heading}>별점 분포</Text><Text style={s.body}>평균 ★{r.meanRating??'—'} · 평가 영화 {Object.values(r.ratingCounts).reduce((a,b)=>a+b,0)}편</Text><Text style={s.muted}>가장 많이 준 별점 · {r.modalRatings.length?r.modalRatings.map(v=>`★${v}`).join(' · '):'아직 없어요'}</Text>{Object.entries(r.ratingCounts).sort(([a],[b])=>Number(b)-Number(a)).map(([rating,count])=><View key={rating} style={s.rowHeader}><Text style={s.body}>★ {Number(rating).toFixed(1)}</Text><Text style={s.muted}>{count}편</Text></View>)}<Text style={s.muted}>같은 영화는 가장 최근 감상일의 완료 기록으로 한 번만 계산해요.</Text></View>
@@ -42,7 +43,12 @@ export function TwelveTastePanel({records,mode}:{records:ReviewRecord[];mode:'de
       {taste.error?<Text accessibilityRole="alert" style={s.error}>{taste.error}</Text>:null}{taste.message?<Text accessibilityLiveRegion="polite" style={s.muted}>{taste.message}</Text>:null}
       <Button label="분석 상태 새로고침" disabled={taste.busy} onPress={taste.reload} variant="ghost"/>
     </View>
-    <View style={s.card}><Text style={s.heading}>분석 기준과 준비 중 기능</Text><Text style={s.muted}>Light·Core가 모두 분석 가능하면 40:60으로 합산하고, 별점·최신성·자료 품질을 작게 보정해요. 미매핑 표현 {r.unmapped.length}개는 유형에 임의로 넣지 않습니다.</Text><Text style={s.muted}>보고 싶은 영화는 저장 이유가 없어 유형에 반영하지 않아요. 직접 수정한 매거진 문장만 구분하는 기능·유료 AI/검색/대량 분석 연동은 제공하지 않습니다.</Text><Text style={s.muted}>버전 {r.version} · 3~7편은 임시, 8편부터 추가 근거 기준을 충족하면 대표 유형을 제시합니다. 통계적으로 검증된 성격 검사가 아닙니다.</Text></View>
+    <View style={s.card}><Pressable accessibilityRole="button" aria-expanded={showMethod} accessibilityLabel="리포트 계산 기준" onPress={()=>setShowMethod(value=>!value)} style={{minHeight:44,justifyContent:'center'}}><Text style={s.heading}>리포트 계산 기준 {showMethod?'−':'+'}</Text></Pressable>{showMethod?<>
+      <Text style={s.body}>같은 영화는 가장 최근의 완료 기록으로 한 번만 계산해요. 키워드는 감상에서 등장한 횟수이며, 모두 선호를 뜻하지는 않아요.</Text>
+      <Text style={s.body}>3~7편은 임시 유형, 8편부터 추가 근거 기준을 충족하면 대표 유형을 제시해요. 비중은 기록의 상대적인 구성으로, 유형에 속할 확률이나 성격 검사 결과가 아니에요.</Text>
+      <Text style={s.body}>Light·Core를 함께 분석할 때는 40:60으로 반영해요. Core는 직접 쓴 답변의 표현을 사용하며, AI 초안은 나의 의견으로 집계하지 않아요.</Text>
+      <Text style={s.body}>별점 분포의 0.5점 단위 평가는 오른쪽 정수 구간에 합산해요. 예를 들어 3.5점과 4점은 4점 구간에 표시해요.</Text>
+    </>:null}</View>
   </View>;
 }
 const s=StyleSheet.create({wrap:{gap:spacing.lg},card:{backgroundColor:colors.surface,borderRadius:radii.lg,padding:spacing.lg,gap:spacing.md},heading:{...typography.heading,color:colors.text},body:{...typography.body,color:colors.text},muted:{...typography.caption,color:colors.textMuted},label:{...typography.label,color:colors.text},dark:{backgroundColor:colors.text,borderRadius:radii.lg,padding:spacing.xxl,gap:spacing.sm},kicker:{...typography.caption,color:'#FF9CAA',fontWeight:'800'},darkTitle:{...typography.title,color:colors.surface},darkBody:{...typography.body,color:colors.border},darkEvidence:{...typography.caption,color:'#FFCAD2'},row:{gap:spacing.xs},rowHeader:{flexDirection:'row',justifyContent:'space-between',gap:8,flexWrap:'wrap'},track:{height:8,borderRadius:10,backgroundColor:colors.border,overflow:'hidden'},fill:{height:8,borderRadius:10,backgroundColor:colors.primary},chips:{flexDirection:'row',flexWrap:'wrap',gap:spacing.sm},chip:{backgroundColor:colors.primarySoft,borderRadius:radii.pill,paddingHorizontal:spacing.md,paddingVertical:spacing.sm},chipText:{...typography.label,color:colors.primary},consent:{minHeight:44,paddingVertical:8},error:{...typography.caption,color:'#C50022'}});

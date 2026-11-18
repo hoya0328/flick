@@ -84,7 +84,7 @@ export default function ArchiveScreen() {
   return (
     <Screen eyebrow="나의 FLICK" title="영화 아카이브">
       {message ? <StateNotice message={message} title="기록 관리" tone={message.includes('못했어요') ? 'danger' : 'success'} /> : null}
-      {drafts.length ? <StateNotice message={`작성 중인 기록 ${drafts.length}개가 안전하게 보관되어 있어요. 아래 통합 기록 관리에서 바로 이어 쓸 수 있습니다.`} title="이어 쓸 기록이 있어요" tone="warning" /> : null}
+      {drafts.length ? <StateNotice message={`작성 중인 기록 ${drafts.length}개`} title="이어 쓸 기록이 있어요" tone="warning" /> : null}
 
       <View style={styles.kpiRow}>
         <View style={styles.kpi}><Text style={styles.kpiValue}>{report.total}</Text><Text style={styles.kpiLabel}>완료 기록</Text></View>
@@ -93,7 +93,7 @@ export default function ArchiveScreen() {
       </View>
 
       {!report.total ? <StateNotice message="첫 기록을 완료하면 캘린더와 감정·별점 리포트가 자동으로 만들어져요." title="아직 완성된 기록이 없어요" /> : null}
-      {report.total === 1 ? <StateNotice message="한 편만 더 기록하면 첫 취향 비교가 열립니다." title="두 번째 기록까지 1편" tone="warning" /> : null}
+
 
       <View style={styles.section}>
         <View style={styles.headingRow}>
@@ -124,12 +124,12 @@ export default function ArchiveScreen() {
         <Text style={styles.body}>Light {report.modeCounts.light}편 · Core {report.modeCounts.core}편</Text>
         <Text style={styles.label}>별점 분포</Text>
 {[5, 4.5, 4, 3.5, 3, 2.5, 2, 1.5, 1, 0.5].map((rating) => { const count = report.ratingCounts[rating] ?? 0; return <View accessibilityLabel={`${rating}점 ${count}편`} key={rating} style={styles.barRow}><Text style={styles.barLabel}>★ {rating}</Text><View style={styles.barTrack}><View style={[styles.barFill, { width: `${(count / maxRatingCount) * 100}%` }]} /></View><Text style={styles.barCount}>{count}</Text></View>; })}
-        <Button label="5D 취향 인사이트 자세히 보기" onPress={() => router.push('/taste-insights' as Href)} variant="secondary" />
+        <Button label="취향 리포트 보기" onPress={() => router.push('/taste-insights' as Href)} variant="secondary" />
       </View>
 
       <View style={styles.section}>
         <Text accessibilityRole="header" style={styles.sectionTitle}>통합 기록 관리</Text>
-        <Text style={styles.muted}>{selectedDate ? `${selectedDate}의 기록만 보고 있어요.` : '모든 날짜의 Light·Core·초안·완료 기록을 한곳에서 관리합니다.'}</Text>
+        <Text style={styles.muted}>{selectedDate ?? ''}</Text>
         <Text style={styles.label}>기록 방식</Text>
         <View style={styles.filters}>{(['all', 'light', 'core'] as const).map((item) => <FilterButton key={item} label={item === 'all' ? '전체' : item === 'light' ? 'Light' : 'Core'} onPress={() => setFilter(item)} selected={filter === item} />)}</View>
         <Text style={styles.label}>작성 상태</Text>

@@ -41,10 +41,6 @@ export function CommunityGate({
   if (mode !== "supabase")
     return (
       <Screen title="로그인 후 함께 나눠요">
-        <Text style={p.body}>
-          실제 계정의 공개 정보만 사용합니다. 데모에서는 다른 사용자에게 글을
-          남기지 않아요.
-        </Text>
         <Button
           label="로그인하기"
           onPress={() =>

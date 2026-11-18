@@ -31,7 +31,9 @@ describe('account authorization contract', () => {
 
     expect(viewer).toContain('getPublicReview');
     expect(viewer).not.toMatch(/saveReview|deleteReview/);
-    expect(viewer).toContain('기록 본문은 작성자만 수정·삭제');
+    expect(viewer).toContain("mode !== 'supabase'");
+    expect(viewer).toContain('comment.isMine');
+    expect(viewer).not.toContain('pathname: \'/(tabs)/record\'');
     expect(archive).toContain('publicReviewPath(record.id)');
     expect(archive).not.toContain("Linking.createURL('/record'");
   });

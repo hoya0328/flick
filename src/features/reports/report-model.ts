@@ -27,9 +27,9 @@ export function recordingInsights(records: ReviewRecord[]) {
   const coreTop = ordered(words).slice(0, 3), join = (items: { label: string }[]) => items.map(item => item.label).join(' · ');
   return {
     lightFilms: light.length, coreFilms: core.length,
-    lightSummary: light.length ? `가볍게 기록한 ${light.length}편의 질문별 선택을 정리했어요. 선택하지 않거나 건너뛴 항목은 추정하지 않아요.` : '가볍게 기록을 완료하면 질문별 키워드의 반복을 보여드려요.',
-    lightLines: [`좋았던 느낌: ${join(likes) || '아직 근거가 없어요'}`, `자주 남긴 감정: ${join(emotions) || '아직 근거가 없어요'}`, `아쉬움으로 남긴 표현: ${join(dislikes) || '아직 근거가 없어요'}`],
-    coreSummary: core.length ? `집중 기록 ${core.length}편에서 직접 쓴 답변의 표현을 살펴봤어요. 단어 언급 횟수이며, 선호나 감정의 방향을 단정하지 않아요.` : '집중 기록의 직접 쓴 답변이 쌓이면 반복되는 표현을 보여드려요.',
+    lightSummary: light.length ? `가볍게 기록한 영화 ${light.length}편` : '아직 가볍게 기록한 영화가 없어요.',
+    lightLines: [`좋았던 느낌: ${join(likes) || '—'}`, `자주 남긴 감정: ${join(emotions) || '—'}`, `아쉬웠던 점: ${join(dislikes) || '—'}`],
+    coreSummary: core.length ? `집중 기록한 영화 ${core.length}편` : '아직 집중 기록한 영화가 없어요.',
     coreLines: coreTop.map(item => `‘${item.label}’ · ${item.count}편의 답변에서 언급`),
   };
 }

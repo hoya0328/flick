@@ -23,7 +23,7 @@ type ReviewProps = { review?: PublicReviewCard; width: number; onPreview: Previe
 function Author({ name, image, light = false, preview = false }: { name: string; image?: ImageSourcePropType; light?: boolean; preview?: boolean }) {
   return <View style={styles.author}>
     {image ? <Image accessible={false} source={image} style={light ? styles.lightAvatar : styles.avatar} /> : <View style={[styles.avatar, styles.avatarFallback]}><Text style={styles.initial}>{name.slice(0, 1)}</Text></View>}
-    <Text numberOfLines={1} style={[styles.authorText, light && styles.authorLight]}>{name}{preview ? ' · 디자인 예시' : ''}</Text>
+    <Text numberOfLines={1} style={[styles.authorText, light && styles.authorLight]}>{name}{preview ? ' · 샘플' : ''}</Text>
   </View>;
 }
 
@@ -32,10 +32,10 @@ export function HomeReviewCard({ review, width, onPreview, onLike, busy, readOnl
   const title = review?.movieTitle ?? '에브리씽 에브리웨어 올앳원스';
   const open = () => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title);
   const tags = ['혼돈', '멀티버스', '허무', '다정함', '가족'];
-  return <View style={[styles.review, { width }]}>
+  return <View testID="home-review-card" style={[styles.review, { width }]}>
     <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '공개 리뷰'} 보기`} onPress={open}>
-      <View pointerEvents="none" style={styles.reviewOutline} /><View style={styles.cover}>
-        <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? homeAssets.lightCover : null} label={title} width={width} height={143} radius={0} />
+      <View style={styles.cover}>
+        <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? homeAssets.lightCover : null} label={title} width={width - 2} height={143} radius={0} />
         <View style={styles.authorOverlay}><Author name={review?.authorDisplayName ?? '솜사탕덕후'} image={sample ? homeAssets.lightAvatar : undefined} light preview={sample} /></View>
       </View>
       <View style={styles.reviewCopy}>
@@ -43,23 +43,22 @@ export function HomeReviewCard({ review, width, onPreview, onLike, busy, readOnl
         <Text style={[styles.small, styles.filmSubtitle]}>{review ? `${review.watchedAt} · Light 기록` : '다니엘 콴·다니엘 샤이너트 · 2022'}</Text>
         <View style={styles.divider} />
         <View style={styles.rating}><HomeIcon name="star" width={16} /><Text style={[styles.small, { fontSize: 12 }]}>{review?.rating?.toFixed(1) ?? (sample ? '4.5' : '평점 없음')}</Text></View>
-        <Text numberOfLines={2} style={[homeText.body, styles.reviewBody]}>{review?.spoiler ? '스포일러가 포함된 기록입니다. 상세에서 확인해 주세요.' : review?.bodyExcerpt || review?.oneLine || (sample ? 'B급 쌈마이 코미디의 껍데기를 뒤집어쓴 채 철학적 허무주의를 패버리는 미친 영화. 내 영화 관람 인생에서 가장 위대한 돌멩이를 만났다.' : '질문과 감정 태그로 남긴 감상이에요.')}</Text>
+        <Text numberOfLines={2} style={[homeText.body, styles.reviewBody]}>{review?.spoiler ? '스포일러가 포함된 기록입니다. 상세에서 확인해 주세요.' : review?.bodyExcerpt || review?.oneLine || (sample ? 'B급 쌈마이 코미디의 껍데기를 뒤집어쓴 채 철학적 허무주의를 패버리는 미친 영화. 내 영화 관람 인생에서 가장 위대한 돌멩이를 만났다.' : '키워드로 남긴 감상')}</Text>
         <ReviewKeywords keywords={sample ? tags : review?.representativeKeywords} concealed={review?.spoiler} />
       </View>
     </Pressable>
-    <View style={styles.reactions}>
+    <View testID="home-review-reactions" style={styles.reactions}>
       {readOnlyReactions ? <View accessibilityLabel={`공감 ${review?.likeCount ?? 0}`} style={styles.reaction}><HomeIcon name="heart" width={13} height={12}/><Text style={styles.small}>{review?.likeCount ?? 0}</Text></View> : <Pressable accessibilityLabel={`공감 ${review?.likeCount ?? 0}`} accessibilityRole="button" accessibilityState={{ selected: review?.viewerLiked ?? false }} disabled={busy} onPress={() => review ? onLike(review) : onPreview(title)} style={styles.reaction}><HomeIcon name="heart" width={13} height={12} tint={review?.viewerLiked ? homeTheme.accent : undefined} /><Text style={styles.small}>{review ? review.likeCount : '—'}</Text></Pressable>}
       <Pressable accessibilityLabel="리뷰 댓글 보기" accessibilityRole="button" onPress={open} style={styles.reaction}><HomeIcon name="comment" width={12} height={12} /><Text style={styles.small}>{review ? review.commentCount : '—'}</Text></Pressable>
-      <View accessibilityLabel="조회수는 집계 준비 중입니다" style={styles.reactionEnd}><HomeIcon name="eye" width={13.4} height={9} /><Text style={styles.small}>—</Text></View>
     </View>
   </View>;
 }
 
-export function HomeMagazineCard({ review, alternate = false, onPreview }: { review?: PublicReviewCard; alternate?: boolean; onPreview: PreviewHandler }) {
+export function HomeMagazineCard({ review, alternate = false, onPreview, width = 311 }: { review?: PublicReviewCard; alternate?: boolean; onPreview: PreviewHandler; width?: number }) {
   const sample = !review;
   const title = review?.oneLine || review?.movieTitle || (alternate ? '헤일메리 프로젝트' : '이별과 만남이 스쳐지나가는 곳, 사랑을 가득 담아.');
-  return <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '매거진'} 보기`} onPress={() => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title)} style={styles.magazine}>
-    {review?.coreCover ? <CorePhoto path={review.coreCover} style={{ width: 311, height: 160 }} label={title} /> : <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? alternate ? homeAssets.hailMaryCover : homeAssets.magazineCover : null} label={title} width={311} height={160} />}
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '매거진'} 보기`} onPress={() => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title)} style={[styles.magazine, { width }]}>
+    <View testID="home-magazine-cover" style={styles.magazineCover}>{review?.coreCover ? <CorePhoto path={review.coreCover} style={{ width: '100%', height: 160 }} label={title} /> : <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? alternate ? homeAssets.hailMaryCover : homeAssets.magazineCover : null} label={title} width={width} height={160} />}</View>
     <View style={styles.magazineCopy}>
       <Author name={review?.authorDisplayName ?? (alternate ? 'MICHI' : '솜사탕덕후')} image={sample ? alternate ? homeAssets.hailMaryAvatar : homeAssets.magazineAvatar : undefined} preview={sample} />
       <Text numberOfLines={1} style={homeText.title}>{title}</Text>
@@ -84,15 +83,15 @@ export function HomeExpertCard({ curation, exampleIndex = 0, onPreview }: { cura
     </View>
     <Text numberOfLines={1} style={[homeText.title, { lineHeight: 20 }]}>{title}</Text>
     <Text numberOfLines={1} style={[homeText.muted, styles.subtitle]}>{curation?.curatorName ?? example.subtitle}</Text>
-    {!curation ? <Text style={styles.previewLabel}>디자인 예시 · 원문 준비 중</Text> : null}
+    {!curation ? <Text style={styles.previewLabel}>샘플</Text> : null}
   </Pressable>;
 }
 
 const styles = StyleSheet.create({
-  review: { minHeight: 371, borderRadius: 20, overflow: 'hidden', backgroundColor: '#FFFFFF' },
-  reviewOutline: { position: 'absolute', top: 96, left: 0, right: 0, bottom: 0, borderWidth: 1, borderColor: '#D9D9D9', borderRadius: 20 }, filmSubtitle: { lineHeight: 12, marginTop: -2.55, letterSpacing: -0.11 }, cover: { height: 143, overflow: 'hidden' },
+  review: { borderWidth: 1, borderColor: '#D9D9D9', borderRadius: 20, overflow: 'hidden', backgroundColor: '#FFFFFF', paddingBottom: 8 },
+  filmSubtitle: { lineHeight: 18, marginTop: 2, letterSpacing: -0.11 }, cover: { height: 143, overflow: 'hidden' },
   authorOverlay: { position: 'absolute', bottom: 12, left: 19, backgroundColor: '#00000066', borderRadius: 12, paddingHorizontal: 5, paddingVertical: 2 },
-  author: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 16 },
+  author: { flexDirection: 'row', alignItems: 'center', gap: 4, minHeight: 20 },
   avatar: { width: 12.2, height: 12.2, borderRadius: 8 },
   lightAvatar: { width: 18.75, height: 18.75, borderRadius: 10 },
   avatarFallback: { backgroundColor: '#FAD6DC', alignItems: 'center', justifyContent: 'center' },
@@ -100,15 +99,15 @@ const styles = StyleSheet.create({
   authorText: { color: homeTheme.ink, fontSize: 12, fontWeight: '600', fontFamily: homeFont, maxWidth: 250 },
   authorLight: { color: '#FFFFFF', fontSize: 12, fontWeight: '600' },
   reviewCopy: { paddingHorizontal: 18, paddingTop: 12 },
-  reviewTitle: { color: '#1C1C1C', fontSize: 18, fontWeight: '600', lineHeight: 20, minHeight: 28.58, fontFamily: homeFont, letterSpacing: -0.6 },
+  reviewTitle: { color: '#1C1C1C', fontSize: 18, fontWeight: '600', lineHeight: 26, fontFamily: homeFont, letterSpacing: -0.6 },
   small: { color: '#7E7E7E', fontSize: 11, lineHeight: 18, fontFamily: homeFont },
-  divider: { height: 1, backgroundColor: '#EEEEEE', marginTop: 9.973, marginBottom: 10 },
+  divider: { height: 1, backgroundColor: '#EEEEEE', marginTop: 10, marginBottom: 10 },
   rating: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  reviewBody: { height: 40, marginTop: 12, letterSpacing: -0.65 },
-  reactions: { marginHorizontal: 18, borderTopColor: '#E5E5E5', borderTopWidth: 1, marginTop: 10.637, flexDirection: 'row', alignItems: 'center' },
-  reaction: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 34.132, minWidth: 44 },
-  reactionEnd: { marginLeft: 'auto', flexDirection: 'row', alignItems: 'center', gap: 5 },
+  reviewBody: { minHeight: 40, marginTop: 12, letterSpacing: -0.4 },
+  reactions: { marginHorizontal: 18, borderTopColor: '#E5E5E5', borderTopWidth: 1, marginTop: 12, paddingTop: 4, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  reaction: { flexDirection: 'row', alignItems: 'center', gap: 5, minHeight: 44, minWidth: 44 },
   magazine: { width: 311, minHeight: 227.87, gap: 4 },
+  magazineCover: { width: '100%', height: 160, borderRadius: 20, overflow: 'hidden' },
   magazineCopy: { paddingHorizontal: 6, gap: 1 },
   subtitle: { fontSize: 13, lineHeight: 20, letterSpacing: -0.6 },
   expert: { width: 160, minHeight: 205.87, gap: 2.935 },

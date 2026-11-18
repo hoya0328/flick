@@ -7,9 +7,9 @@ const KEY = 'flick.feed.v3.demo';
 type DemoState = { posts: FeedPost[]; comments: Record<string, FeedComment[]>; answers: Record<string, (AnonymousAnswer & { hidden?: boolean })[]> };
 const seedPost = (id: string, body: string): FeedPost => ({ id, body, photos: [], visibility: 'public', status: 'active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), removedAt: null, isMine: false, authorName: '데모 플리커 · 예시', authorProfileId: null, avatar: null, likeCount: 0, commentCount: 0, viewerLiked: false, viewerSaved: false, blocks: [], viewerFollows: true, demo: true });
 function initial(): DemoState {
-  const first = seedPost('20000000-0000-4000-8000-000000000001', '영화를 보고 오래 남은 장면을 나눠보세요. 이 글과 참여 결과는 이 브라우저의 데모에만 저장됩니다.');
+  const first = seedPost('20000000-0000-4000-8000-000000000001', '기생충은 다시 볼 때마다 처음엔 지나쳤던 장면이 눈에 들어와요. 오래 기억에 남는 영화가 있나요?');
   first.blocks = [{ type: 'movie', movieId: discoverDemoMovies().movies[0]!.id }]; first.movie = discoverDemoMovies().movies[0];
-  const second = seedPost('20000000-0000-4000-8000-000000000002', '영화를 볼 때 무엇을 더 좋아하시나요? 투표와 익명 질문을 로컬에서 체험해 보세요.');
+  const second = seedPost('20000000-0000-4000-8000-000000000002', '큰 화면과 사운드가 있는 극장, 편하게 쉬면서 보는 우리 집. 여러분은 어디에서 영화를 보는 게 더 좋나요?');
   second.blocks = [{ type: 'poll', options: ['극장', '집에서'] }, { type: 'question', prompt: '가장 기억에 남는 영화는 무엇인가요?' }];
   second.poll = { options: ['극장', '집에서'], counts: [0, 0], total: 0, mine: null }; second.question = { prompt: '가장 기억에 남는 영화는 무엇인가요?', count: 0, canAnswer: true };
   return { posts: [first, second], comments: {}, answers: {} };

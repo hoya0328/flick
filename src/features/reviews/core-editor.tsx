@@ -15,10 +15,8 @@ export function CoreEditor({flow,onChange,onPhoto,busy}:{flow:CoreFlowState;onCh
   return <View style={{flex:1}}>
     <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={s.content}>
       <TextInput accessibilityLabel="매거진 제목" placeholder="매거진 제목" value={flow.title} maxLength={80} onChangeText={(title)=>onChange({...flow,title})} style={s.title} multiline editable={!busy}/>
-      <Text style={s.hint}>문단을 누르면 해당 문단의 서식을 바꿀 수 있어요.</Text>
       {flow.blocks.map((b,i)=><View key={b.id} style={[s.block,selected===i&&s.selected]}>
         <TextInput accessibilityLabel={`매거진 ${i+1}번째 문단`} placeholder="나의 감상을 작성해 주세요" value={b.text} onFocus={()=>setSelected(i)} multiline scrollEnabled={false} maxLength={1000} editable={!busy} onContentSizeChange={event=>{const height=Math.ceil(event.nativeEvent.contentSize.height);setHeights(current=>current[b.id]===height?current:{...current,[b.id]:height});}} onChangeText={(text)=>onChange({...flow,blocks:flow.blocks.map((item,j)=>j===i?{...item,text}:item)})} style={[s.text,{height:heights[b.id]??Math.max(70,Math.ceil(b.text.length/25)*22),fontSize:b.size,lineHeight:b.size===15?20:26,fontWeight:b.bold?'700':'500',fontStyle:b.italic?'italic':'normal'},b.kind==='quote'&&s.quote]}/>
-        {b.kind==='list'?<Text style={s.hint}>목록 문단</Text>:null}
         {b.photo?<><CorePhoto path={b.photo} style={{height:184,marginTop:12}}/><Pressable accessibilityRole="button" disabled={busy} onPress={()=>onChange({...flow,blocks:flow.blocks.map((item,j)=>j===i?{...item,photo:undefined}:item)})}><Text style={s.link}>이 문단 사진 빼기</Text></Pressable></>:null}
         {flow.blocks.length>1?<Pressable accessibilityRole="button" disabled={busy} onPress={()=>{onChange({...flow,blocks:flow.blocks.filter((_,j)=>j!==i)});setSelected(0);}}><Text style={s.hint}>문단 삭제</Text></Pressable>:null}
       </View>)}

@@ -151,10 +151,9 @@ export default function ExhibitionScreen() {
       </View> : saved ? <View style={s.card}>
         <Text style={s.body}>비공개로 저장했어요. 공개 게시나 회원 계정 이전은 지원하지 않습니다. 아래 감상을 길게 눌러 복사해 보관할 수 있어요.</Text>
         <Text selectable style={s.body}>{form?.body}</Text>
-        <Text style={s.caption}>취향 리포트는 여러 편의 실제 기록이 필요한 별도 회원 기능입니다. 체험 한 편으로 결과를 만들어 보여주지는 않아요.</Text>
       </View> : !form ? <View style={s.card}>
         <View style={s.row}>{(['light', 'core'] as const).map(m => <Button key={m} label={m === 'light' ? '가볍게 기록' : '집중해서 기록'} variant={mode === m ? 'primary' : 'secondary'} disabled={busy} onPress={() => setMode(m)} />)}</View>
-        <Text style={s.caption}>이미 감상한 영화를 선택해 주세요. 기존 영화 목록에서 검색하며 새 TMDB 호출은 하지 않아요.</Text>
+        <Text style={s.caption}>감상한 영화를 선택해 주세요.</Text>
         <TextInput accessibilityLabel="체험 영화 제목 검색" placeholder="영화 제목" value={search} onChangeText={setSearch} maxLength={80} editable={!busy} style={s.input} onSubmitEditing={() => void run(async () => setMovies(await exhibitionMovies(search)))} />
         <Button label="영화 검색" onPress={() => void run(async () => setMovies(await exhibitionMovies(search)))} loading={busy} variant="secondary" />
         {!movies.length ? <Text style={s.caption}>검색 결과가 없어요. 다른 제목으로 검색해 주세요.</Text> : movies.map(m => <Button key={m.id} label={`${m.title}${m.releaseDate ? ` · ${m.releaseDate.slice(0, 4)}` : ''}`} variant="secondary" disabled={busy} onPress={() => choose(m)} />)}
