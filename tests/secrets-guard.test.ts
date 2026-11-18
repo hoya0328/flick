@@ -21,6 +21,10 @@ describe('credential publication boundary', () => {
     expect(forbiddenPath('supabase/.env.example')).toBe(false);
     expect(publicEnvRules(readFileSync('.env.example', 'utf8'))).toEqual([]);
   });
+  it.each(['backups/data.sql', 'private-backups/auth.json', 'FLICK-test.flickbackup', 'database.dump', 'database.backup.sql', 'credentials.dpapi'])('blocks private recovery material %s even if force-staged', file => {
+    expect(forbiddenPath(file)).toBe(true);
+    expect(execFileSync('git', ['check-ignore', file], { encoding: 'utf8' }).trim()).toBe(file);
+  });
   it('detects synthetic provider secrets without returning values', () => {
     const cases = [
       fakeGoogleKey(),

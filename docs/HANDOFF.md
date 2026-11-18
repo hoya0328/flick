@@ -1,5 +1,12 @@
 # HANDOFF
 
+## 2026-11-19 2번 보안 의존성 / 3번 메일 보류
+
+- 사용자 후속 선택으로 SMTP는 보류. 계정/발송 공급자/도메인/인증 정책/메일 전송 변경 없음, 기존 게스트 체험 유지. 의존성만 수정·검증해 기존 GitHub/beta 대상으로 게시한다.
+- node-forge 공식1.4.3을 override/lock 및 npm ci로 실제 설치, Expo signing consumer 확인. picomatch2.3.2/4.0.7의 3개 경로에 원본 SHA 기반의 반복 extglob fail-closed 가드·postinstall/start/check/build 강제 검증 추가. wildcard/중첩/prefix·casefold 모호성 차단, 정상 프로젝트 패턴 보존, 관련14회귀.
+- npm audit는 **HIGH34 잔존**(omit-dev24), moderate0/forge 경고 제거. 공식 picomatch 수정판 없음. CI는 회귀/빌드를 먼저 실행한 뒤 기존 동일 임계치 감사로 실패하며 경고/실패를 숨기지 않는다. 로컬 완화를 upstream 보안판/전체 통과라고 표현하지 않는다.
+- 상세 [SECURITY_DEPENDENCIES_2026-11-19.md](SECURITY_DEPENDENCIES_2026-11-19.md). 이전 발표·QR·백업 자료 미커밋은 보존하고 실제 비공개 백업을 게시하지 않는다. 최종 검사와 source/deployment는 전용 문서 최신 항목을 따른다.
+
 ## 2026-11-18 앱 문구·모바일 정밀 검수
 
 - 사용자 휴대폰 사진 기준의 불필요한 설명 제거와 카드 경계·반응형·서체 정리를 완료했다. 상세 범위/검수는 [UI_POLISH_2026-11-18.md](UI_POLISH_2026-11-18.md).

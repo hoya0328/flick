@@ -47,6 +47,8 @@ export function forbiddenPath(file) {
   const name = parts.at(-1);
   if (name === '.env.example') return parts.includes('secrets');
   return parts.includes('secrets') ||
+    parts.some(part => ['private-backups', 'backups'].includes(part.toLowerCase())) ||
+    /\.(?:flickbackup|dpapi|dump|backup\.sql)$/i.test(name) ||
     (name !== '.env.example' && /^(?:\.env(?:$|[._-])|\.dev\.vars(?:$|\.)|\.envrc$)/.test(name)) ||
     /\.(?:env(?:\..*)?|pem|key|p12|pfx|keystore)$/i.test(name) ||
     /^(?:service-account.*|.*-service-account)\.json$/i.test(name);
