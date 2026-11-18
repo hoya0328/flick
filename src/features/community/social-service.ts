@@ -211,6 +211,7 @@ export const moderatePostReport = (id: string, hide: boolean) =>
   socialRpc<void>("moderate_post_report", { p_report: id, p_hide: hide });
 
 export function safeCommunityPath(value: unknown): string | undefined {
+  if (typeof value === 'string' && /^\/review\?id=[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) return value;
   return typeof value === "string" &&
     /^\/(review|post|people)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
       value,

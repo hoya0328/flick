@@ -37,8 +37,11 @@ describe('stage 3A/3B review rules', () => {
 
   it('only accepts a UUID-based internal public review return path', () => {
     const id = 'e9e7874e-8098-4192-8229-8e45f9674d95';
-    expect(publicReviewPath(id)).toBe(`/review/${id}`);
-    expect(safeSharedReviewPath(`/review/${id}`)).toBe(`/review/${id}`);
+    expect(publicReviewPath(id)).toBe(`/review?id=${id}`);
+    expect(safeSharedReviewPath(`/review/${id}`)).toBe(`/review?id=${id}`);
+    expect(safeSharedReviewPath(`/review?id=${id}`)).toBe(`/review?id=${id}`);
+    expect(safeSharedReviewPath(`/review?id=${id}&redirect=https://evil.example`)).toBeUndefined();
+    expect(safeSharedReviewPath('/review?id=demo-123')).toBeUndefined();
     expect(safeSharedReviewPath('/record?reviewId=friend')).toBeUndefined();
     expect(safeSharedReviewPath('https://evil.example')).toBeUndefined();
   });

@@ -24,7 +24,7 @@ export function PublicReviewCard({ review, busy = false, onLike, onSave }: Publi
       <Pressable
         accessibilityHint="공개 감상 기록을 엽니다"
         accessibilityRole="button"
-        onPress={() => router.push({ pathname: '/review/[id]', params: { id: review.reviewId } })}
+        onPress={() => router.push({ pathname: '/review', params: { id: review.reviewId } })}
         style={({ pressed }) => pressed && styles.pressed}>
         <Text numberOfLines={2} style={core ? styles.coreTitle : styles.title}>{review.movieTitle}</Text>
         <Text style={styles.meta}>{review.watchedAt}{review.rating ? ` · ★ ${review.rating}` : ''}</Text>
@@ -35,7 +35,7 @@ export function PublicReviewCard({ review, busy = false, onLike, onSave }: Publi
       <View style={styles.actions}>
         <Button disabled={busy} label={`공감 ${review.likeCount}`} onPress={() => onLike(review)} style={styles.action} variant={review.viewerLiked ? 'primary' : 'secondary'} />
         {core ? <Button disabled={busy} label={`저장 ${review.saveCount}`} onPress={() => onSave(review)} style={styles.action} variant="secondary" /> : null}
-        <Button label={`댓글 ${review.commentCount}`} onPress={() => router.push({ pathname: '/review/[id]', params: { id: review.reviewId } })} style={styles.action} variant="ghost" />
+        <Button label={`댓글 ${review.commentCount}`} onPress={() => router.push({ pathname: '/review', params: { id: review.reviewId } })} style={styles.action} variant="ghost" />
       </View>
     </View>
   );

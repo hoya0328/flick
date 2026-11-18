@@ -8,7 +8,7 @@ export function validReaderId(id: string | undefined, mode: 'none' | 'demo' | 's
 
 export function reviewReadDestination(record: Pick<ReviewRecord, 'id' | 'status'>) {
   return record.status === 'completed'
-    ? { pathname: '/review/[id]' as const, params: { id: record.id } }
+    ? { pathname: '/review' as const, params: { id: record.id } }
     : { pathname: '/(tabs)/record' as const, params: { reviewId: record.id } };
 }
 

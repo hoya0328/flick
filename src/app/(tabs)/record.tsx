@@ -99,7 +99,7 @@ function RecordFlow() {
           if (!record) {
             const sharedPath = safeSharedReviewPath(`/review/${reviewIdParam}`);
             if (sharedPath) {
-              router.replace({ pathname: '/review/[id]', params: { id: reviewIdParam } });
+              router.replace({ pathname: '/review', params: { id: reviewIdParam } });
               return;
             }
             throw new Error('기록을 찾을 수 없어요.');
@@ -224,7 +224,7 @@ function RecordFlow() {
       await clearLocalReviewBackup(form.movieId, { mode: storageMode, email: sessionEmail });
       setAutosave(complete ? '' : '초안을 저장했어요.');
       setNotice({ tone: 'success', title: complete ? '감상 기록을 남겼어요' : '초안을 저장했어요', message: complete ? '기록 탭에서 언제든 다시 읽고 수정할 수 있어요.' : '다음에 이어서 작성할 수 있어요.' });
-      if (complete) router.replace({ pathname: '/review/[id]', params: { id: savedId } });
+      if (complete) router.replace({ pathname: '/review', params: { id: savedId } });
     } catch (error) {
       await saveLocalReviewBackup(form, reviewId, movieTitle, { mode: storageMode, email: sessionEmail });
       setNotice({ tone: 'danger', title: '서버에 저장하지 못했어요', message: `${error instanceof Error ? error.message : '잠시 뒤 다시 시도해 주세요.'} 작성 내용은 이 기기에 보관했어요.` });

@@ -55,13 +55,13 @@ export function emptyReviewForm(movieId: string): ReviewForm {
   return { movieId, mode: 'light', watchedAt: todayDate(), rating: null, body: '', oneLine: '', spoiler: false, visibility: 'private', answers: {}, keywordIds: [], questions: [], questionTags: {} };
 }
 
-export function publicReviewPath(reviewId: string): `/review/${string}` {
-  return `/review/${encodeURIComponent(reviewId)}`;
+export function publicReviewPath(reviewId: string): `/review?id=${string}` {
+  return `/review?id=${encodeURIComponent(reviewId)}`;
 }
 
-export function safeSharedReviewPath(value: string | undefined): `/review/${string}` | undefined {
+export function safeSharedReviewPath(value: string | undefined): `/review?id=${string}` | undefined {
   if (!value) return undefined;
-  const match = value.match(/^\/review\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i);
+  const match = value.match(/^\/review(?:\/|\?id=)([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i);
   return match?.[1] ? publicReviewPath(match[1]) : undefined;
 }
 

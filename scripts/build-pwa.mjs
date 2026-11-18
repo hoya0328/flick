@@ -5,6 +5,8 @@ const root=path.resolve('dist'),bundlePath=path.join(root,'_expo','static','js',
 // Hosting resolves /people to people.html; Expo emits people/index.html when
 // that index has a dynamic sibling. Keep both URLs backed by the same page.
 await copyFile(path.join(root,'people','index.html'),path.join(root,'people.html'));
+// Completed reviews need a real static document, not Hosting's dynamic 404 page.
+await copyFile(path.join(root,'review','index.html'),path.join(root,'review.html'));
 const names=(await readdir(bundlePath)).sort();
 const id=createHash('sha256').update(names.join('\n')).digest('hex').slice(0,16);
 const worker=await readFile(path.join(root,'sw.js'),'utf8');

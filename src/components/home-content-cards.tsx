@@ -30,7 +30,7 @@ function Author({ name, image, light = false, preview = false }: { name: string;
 export function HomeReviewCard({ review, width, onPreview, onLike, busy, readOnlyReactions = false }: ReviewProps) {
   const sample = !review;
   const title = review?.movieTitle ?? '에브리씽 에브리웨어 올앳원스';
-  const open = () => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title);
+  const open = () => review ? router.push({ pathname: '/review', params: { id: review.reviewId } }) : onPreview(title);
   const tags = ['혼돈', '멀티버스', '허무', '다정함', '가족'];
   return <View testID="home-review-card" style={[styles.review, { width }]}>
     <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '공개 리뷰'} 보기`} onPress={open}>
@@ -57,7 +57,7 @@ export function HomeReviewCard({ review, width, onPreview, onLike, busy, readOnl
 export function HomeMagazineCard({ review, alternate = false, onPreview, width = 311 }: { review?: PublicReviewCard; alternate?: boolean; onPreview: PreviewHandler; width?: number }) {
   const sample = !review;
   const title = review?.oneLine || review?.movieTitle || (alternate ? '헤일메리 프로젝트' : '이별과 만남이 스쳐지나가는 곳, 사랑을 가득 담아.');
-  return <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '매거진'} 보기`} onPress={() => review ? router.push({ pathname: '/review/[id]', params: { id: review.reviewId } }) : onPreview(title)} style={[styles.magazine, { width }]}>
+  return <Pressable accessibilityRole="button" accessibilityLabel={`${title} ${sample ? '디자인 예시' : '매거진'} 보기`} onPress={() => review ? router.push({ pathname: '/review', params: { id: review.reviewId } }) : onPreview(title)} style={[styles.magazine, { width }]}>
     <View testID="home-magazine-cover" style={styles.magazineCover}>{review?.coreCover ? <CorePhoto path={review.coreCover} style={{ width: '100%', height: 160 }} label={title} /> : <HomePicture source={review?.posterPath ? { uri: `https://image.tmdb.org/t/p/w500${review.posterPath}` } : sample ? alternate ? homeAssets.hailMaryCover : homeAssets.magazineCover : null} label={title} width={width} height={160} />}</View>
     <View style={styles.magazineCopy}>
       <Author name={review?.authorDisplayName ?? (alternate ? 'MICHI' : '솜사탕덕후')} image={sample ? alternate ? homeAssets.hailMaryAvatar : homeAssets.magazineAvatar : undefined} preview={sample} />

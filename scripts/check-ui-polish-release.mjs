@@ -11,7 +11,7 @@ const routes = ['/', '/welcome', '/intro', '/search', '/explore-list', '/profile
   '/archive', '/record', '/light-record', '/core-record', '/taste-insights', '/taste-details',
   '/feed', '/post-edit', '/people', '/connections', '/notifications', '/collections',
   '/collection-picker', '/community-settings', '/account-settings', '/install', '/emoji-quiz',
-  '/post-trash', '/exhibition', '/credits', '/manifest.webmanifest', '/sw.js'];
+  '/post-trash', '/exhibition', '/credits', '/manifest.webmanifest', '/sw.js', '/review?id=00000000-0000-4000-8000-000000000001'];
 for (let start = 0; start < routes.length; start += 4) {
   await Promise.all(routes.slice(start, start + 4).map(async route => {
     const response = await fetch(new URL(route, base), { signal: AbortSignal.timeout(15000) });

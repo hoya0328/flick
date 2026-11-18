@@ -30,6 +30,8 @@ describe("free social boundaries", () => {
     expect(publicCommunityUrl('https://evil.example')).toBe('https://flick-film-journal--beta.expo.app/welcome');
   });
   it("allowlists only exact UUID content routes after login", () => {
+    expect(safeCommunityPath(`/review?id=${id}`)).toBe(`/review?id=${id}`);
+    for (const value of [`/review?id=${id}&next=/admin`, '/review?id=demo-123', '/review?id=https://evil.example']) expect(safeCommunityPath(value)).toBeUndefined();
     for (const kind of ["review", "post", "people"])
       expect(safeCommunityPath(`/${kind}/${id}`)).toBe(`/${kind}/${id}`);
     for (const path of [

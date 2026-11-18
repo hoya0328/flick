@@ -21,7 +21,7 @@ beforeEach(() => { vi.clearAllMocks(); mocks.getReview.mockResolvedValue(null); 
 
 describe('completed review reading and editing destinations', () => {
   it('opens completed records for reading and keeps drafts in the editor', () => {
-    expect(reviewReadDestination(record())).toEqual({ pathname: '/review/[id]', params: { id } });
+    expect(reviewReadDestination(record())).toEqual({ pathname: '/review', params: { id } });
     expect(reviewReadDestination(record({ status: 'draft' }))).toEqual({ pathname: '/(tabs)/record', params: { reviewId: id } });
     expect(canReadCompletedReview(record())).toBe(true);
     expect(canReadCompletedReview(record({ status: 'draft' }))).toBe(false);
@@ -91,6 +91,12 @@ describe('owner/private/public reading with existing services', () => {
 });
 
 describe('Figma red-box reader composition', () => {
+  it('uses a concrete static reading document, preserving the legacy route', () => {
+    const build = readFileSync('scripts/build-pwa.mjs','utf8');
+    expect(build).toContain("path.join(root,'review','index.html'),path.join(root,'review.html')");
+    const links = readFileSync('src/features/community/social-service.ts','utf8');
+    expect(links).toContain('\\/review\\?id=');
+  });
   it('uses saved text, vector controls and responsive photo geometry, not editing controls', () => {
     const reader = readFileSync('src/features/reviews/review-reader.tsx', 'utf8');
     const page = readFileSync('src/app/review/[id].tsx', 'utf8');
@@ -105,6 +111,7 @@ describe('Figma red-box reader composition', () => {
   });
   it('opens finished records for reading from archive, calendar and legacy list', () => {
     for (const file of ['archive', 'profile', 'record']) expect(readFileSync(`src/app/(tabs)/${file}.tsx`, 'utf8')).toContain('router.push(reviewReadDestination(record))');
-    for (const file of ['light-record', 'core-record']) expect(readFileSync(`src/app/${file}.tsx`, 'utf8')).toMatch(/router.replace\(\{\s*pathname:\s*['"]\/review\/\[id\]['"]/);
+    for (const file of ['light-record', 'core-record']) expect(readFileSync(`src/app/${file}.tsx`, 'utf8')).toMatch(/router.replace\(\{\s*pathname:\s*['"]\/review['"]/);
+    expect(readFileSync('src/app/review/index.tsx','utf8')).toContain("export { default } from './[id]'");
   });
 });

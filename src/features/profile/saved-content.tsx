@@ -16,7 +16,7 @@ function open(item:SavedItem){
   if(item.kind==='movie')router.push({pathname:'/movie/[id]',params:{id:item.id}});
   else if(item.kind==='curation')router.push({pathname:'/curation/[id]',params:{id:item.id}});
   else if(item.kind==='collection')router.push({pathname:'/collection/[id]',params:{id:item.id}});
-  else router.push({pathname:'/review/[id]',params:{id:item.id}});
+  else router.push({pathname:'/review',params:{id:item.id}});
 }
 function reviewCard(item:SavedItem):PublicReviewCard{return {reviewId:item.id,authorDisplayName:item.authorName,movieId:item.movieId,movieTitle:item.movieTitle,posterPath:item.posterPath,mode:item.kind==='review'?'light':'core',watchedAt:item.watchedAt,rating:item.rating,oneLine:item.kind==='magazine'?item.title:'',bodyExcerpt:item.bodyExcerpt,spoiler:item.spoiler,updatedAt:item.savedAt,likeCount:item.likeCount,commentCount:item.commentCount,saveCount:0,viewerLiked:false,viewerSaved:true,representativeKeywords:item.keywords,coreCover:item.coverPath};}
 
