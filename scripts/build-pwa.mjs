@@ -1,7 +1,10 @@
-import { readFile,writeFile,readdir } from 'node:fs/promises';
+import { copyFile,readFile,writeFile,readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 const root=path.resolve('dist'),bundlePath=path.join(root,'_expo','static','js','web');
+// Hosting resolves /people to people.html; Expo emits people/index.html when
+// that index has a dynamic sibling. Keep both URLs backed by the same page.
+await copyFile(path.join(root,'people','index.html'),path.join(root,'people.html'));
 const names=(await readdir(bundlePath)).sort();
 const id=createHash('sha256').update(names.join('\n')).digest('hex').slice(0,16);
 const worker=await readFile(path.join(root,'sw.js'),'utf8');
