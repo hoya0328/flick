@@ -13,6 +13,7 @@ import { ensureCoreQuestions } from '@/features/reviews/core-questions';
 import { LightQuestionnaire } from '@/features/reviews/light-questionnaire';
 import { ensureLightQuestions } from '@/features/reviews/light-questions';
 import { emptyReviewForm, reviewCompletionIssue, reviewExcerpt, safeSharedReviewPath, type ReviewCompletionField, type ReviewCompletionIssue, type ReviewForm, type ReviewMode, type ReviewStatus, type ReviewVisibility } from '@/features/reviews/review-logic';
+import { reviewReadDestination } from '@/features/reviews/review-reader-model';
 import { clearLocalReviewBackup, deleteReview, getDraftForMovie, getReview, listReviews, loadLocalReviewBackup, saveLocalReviewBackup, saveReview, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
@@ -223,7 +224,7 @@ function RecordFlow() {
       await clearLocalReviewBackup(form.movieId, { mode: storageMode, email: sessionEmail });
       setAutosave(complete ? '' : '초안을 저장했어요.');
       setNotice({ tone: 'success', title: complete ? '감상 기록을 남겼어요' : '초안을 저장했어요', message: complete ? '기록 탭에서 언제든 다시 읽고 수정할 수 있어요.' : '다음에 이어서 작성할 수 있어요.' });
-      if (complete) setTimeout(() => router.replace('/(tabs)/record'), 500);
+      if (complete) router.replace({ pathname: '/review/[id]', params: { id: savedId } });
     } catch (error) {
       await saveLocalReviewBackup(form, reviewId, movieTitle, { mode: storageMode, email: sessionEmail });
       setNotice({ tone: 'danger', title: '서버에 저장하지 못했어요', message: `${error instanceof Error ? error.message : '잠시 뒤 다시 시도해 주세요.'} 작성 내용은 이 기기에 보관했어요.` });
@@ -271,7 +272,7 @@ function RecordFlow() {
                 <View style={styles.actions}><Button label="취소" onPress={() => setPendingDelete(null)} style={styles.action} variant="ghost" /><Button label="삭제" loading={saving} onPress={() => void confirmDelete(record.id)} style={styles.action} variant="secondary" /></View>
               </View>
             ) : (
-              <View style={styles.actions}><Button label="열기·수정" onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: record.movieId, reviewId: record.id, title: record.movie.title } })} style={styles.action} variant="secondary" /><Button label="삭제" onPress={() => setPendingDelete(record.id)} style={styles.action} variant="ghost" /></View>
+              <View style={styles.actions}><Button label={record.status === 'completed' ? '기록 열기' : '이어 쓰기'} onPress={() => router.push(reviewReadDestination(record))} style={styles.action} variant="secondary" /><Button label="삭제" onPress={() => setPendingDelete(record.id)} style={styles.action} variant="ghost" /></View>
             )}
           </View>
         ))}

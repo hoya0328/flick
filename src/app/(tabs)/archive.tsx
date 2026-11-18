@@ -8,6 +8,7 @@ import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import { buildMonthCalendar, buildTasteReport, reportShareText, shiftMonth } from '@/features/reports/taste-report';
 import { publicReviewPath, todayDate } from '@/features/reviews/review-logic';
+import { reviewReadDestination } from '@/features/reviews/review-reader-model';
 import { deleteReview, listReviews, type ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { recordClientIssue } from '@/lib/observability';
@@ -139,7 +140,7 @@ export default function ArchiveScreen() {
         {!visibleRecords.length ? <Text style={styles.muted}>조건과 맞는 기록이 없어요.</Text> : visibleRecords.map((record) => (
           <View key={record.id} style={styles.recordCard}>
             <View style={styles.flex}><Text style={styles.cardTitle}>{record.movie.title}</Text><Text style={styles.muted}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'} · {record.status === 'draft' ? '작성 중' : '완료'} · {record.visibility === 'public' ? '전체 공개' : '나만 보기'} · ★ {record.rating ?? '-'}</Text></View>
-            <View style={styles.cardActions}><Button label={record.status === 'draft' ? '이어 쓰기' : '기록 열기'} onPress={() => router.push({ pathname: '/(tabs)/record', params: { movieId: record.movieId, reviewId: record.id, title: record.movie.title } })} style={styles.action} variant="secondary" />{mode === 'supabase' && record.status === 'completed' && record.visibility === 'public' ? <Button label="공개 링크 공유" onPress={() => void shareRecord(record)} style={styles.action} variant="ghost" /> : null}</View>
+            <View style={styles.cardActions}><Button label={record.status === 'draft' ? '이어 쓰기' : '기록 열기'} onPress={() => router.push(reviewReadDestination(record))} style={styles.action} variant="secondary" />{mode === 'supabase' && record.status === 'completed' && record.visibility === 'public' ? <Button label="공개 링크 공유" onPress={() => void shareRecord(record)} style={styles.action} variant="ghost" /> : null}</View>
             {pendingDeleteId === record.id ? <View style={styles.dangerBox}><Text style={styles.dangerText}>이 기록과 연결된 질문·답변·태그를 영구 삭제할까요?</Text><View style={styles.cardActions}><Button label="취소" onPress={() => setPendingDeleteId(null)} style={styles.action} variant="ghost" /><Button label="영구 삭제 확인" onPress={() => void removeRecord(record)} style={styles.action} variant="secondary" /></View></View> : <Button label="기록 삭제" onPress={() => setPendingDeleteId(record.id)} variant="ghost" />}
           </View>
         ))}

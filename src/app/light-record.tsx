@@ -227,7 +227,7 @@ function LightRecordFlow() {
       const id = await saveReview(form, reviewId, complete, storageMode, movie.title);
       if (token !== generation.current) return;
       setReviewId(id);
-      if (complete) { await clearLocalReviewBackup(form.movieId, { mode: storageMode, email: session.email }).catch(() => undefined); if (token === generation.current) router.replace('/(tabs)/archive'); }
+      if (complete) { await clearLocalReviewBackup(form.movieId, { mode: storageMode, email: session.email }).catch(() => undefined); if (token === generation.current) router.replace({ pathname: '/review/[id]', params: { id } }); }
       else { setMessage('초안을 저장했어요. 기록 목록에서 이어서 작성할 수 있어요.'); setInfo(false); }
     } catch (caught) { if (token === generation.current) setError(`${caught instanceof Error ? caught.message : '서버에 저장하지 못했어요.'} 작성 내용은 화면에 남아 있어요. 다시 시도해 주세요.`); }
     finally { if (token === generation.current) setBusy(false); busyRef.current = false; }

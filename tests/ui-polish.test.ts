@@ -56,7 +56,7 @@ describe('quiet product copy and flexible card boundaries', () => {
     expect(page).not.toMatch(/안전한 공개 기록|첫 댓글을 남겨보세요|읽기 전용/);
     expect(page).toContain("mode !== 'supabase'");
     expect(page).toContain('comment.isMine');
-    expect(page).toContain('record.spoiler');
+    expect(source('features/reviews/review-reader.tsx')).toContain('record.spoiler');
     expect(page).toContain('maxLength={500}');
   });
   it('retains AI consent, spoiler choices, private/public selection and field errors', () => {

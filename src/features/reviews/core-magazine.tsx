@@ -4,12 +4,12 @@ import type { CoreFlowState } from './core-flow';
 import { CorePhoto } from './core-photo';
 
 // Structured text only: never render user/AI-controlled HTML, embeds or scripts.
-export function CoreMagazine({ flow, cover = false }: {flow:CoreFlowState;cover?:boolean}) {
+export function CoreMagazine({ flow, cover = false, reading = false }: {flow:CoreFlowState;cover?:boolean;reading?:boolean}) {
   return <View>{cover && flow.cover ? <CorePhoto path={flow.cover} style={{height:259}} label="매거진 대표 사진"/> : null}<View style={s.article}>
-    <Text style={s.title}>{flow.title}</Text>
+    <Text selectable={reading} style={s.title}>{flow.title}</Text>
     {flow.blocks.map((block)=><View key={block.id} style={{marginTop:20}}>
-      {block.text ? <Text style={[s.text,{fontSize:block.size,lineHeight:block.size===15?20:26,fontWeight:block.bold?'700':'500',fontStyle:block.italic?'italic':'normal'},block.kind==='quote' && s.quote]}>{block.kind==='list'?'• ':''}{block.text}</Text> : null}
-      {block.photo ? <CorePhoto path={block.photo} style={{height:184,marginTop:20}}/> : null}
+      {block.text ? <Text selectable={reading} testID="readable-copy" style={[s.text,{fontSize:block.size,lineHeight:block.size===15?20:26,fontWeight:block.bold?'700':'500',fontStyle:block.italic?'italic':'normal'},block.kind==='quote' && s.quote]}>{block.kind==='list'?'• ':''}{block.text}</Text> : null}
+      {block.photo ? <CorePhoto path={block.photo} style={reading?{width:'100%',aspectRatio:323/184,marginTop:20}:{height:184,marginTop:20}}/> : null}
     </View>)}
   </View></View>;
 }

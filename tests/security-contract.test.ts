@@ -29,7 +29,8 @@ describe('account authorization contract', () => {
     const viewer = read('src/app/review/[id].tsx');
     const archive = read('src/app/(tabs)/archive.tsx');
 
-    expect(viewer).toContain('getPublicReview');
+    expect(viewer).toContain('getReadableReview');
+    expect(read('src/features/reviews/review-reader-service.ts')).toContain('getPublicReview');
     expect(viewer).not.toMatch(/saveReview|deleteReview/);
     expect(viewer).toContain("mode !== 'supabase'");
     expect(viewer).toContain('comment.isMine');

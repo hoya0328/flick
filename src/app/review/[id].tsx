@@ -1,10 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { Button } from '@/components/button';
-import { ReviewKeywords } from '@/components/review-keywords';
-import { CoreMagazine } from '@/features/reviews/core-magazine';
+import { ReviewReaderShell } from '@/features/reviews/review-reader';
+import { getReadableReview } from '@/features/reviews/review-reader-service';
+import { reviewEditDestination, validReaderId } from '@/features/reviews/review-reader-model';
 import { Screen } from '@/components/screen';
 import { StateNotice } from '@/components/state-notice';
 import {
@@ -20,8 +21,8 @@ import {
   type ReviewCommunity,
   type ReviewReportReason,
 } from '@/features/community/community-service';
-import { safeSharedReviewPath, shouldWaitForPublicReview } from '@/features/reviews/review-logic';
-import { getPublicReview, type ReviewRecord } from '@/features/reviews/reviews';
+import { safeSharedReviewPath } from '@/features/reviews/review-logic';
+import type { ReviewRecord } from '@/features/reviews/reviews';
 import { useSession } from '@/features/session/session-provider';
 import { colors, radii, spacing, typography } from '@/theme/tokens';
 
@@ -38,10 +39,19 @@ function shortDate(value: string) {
 }
 
 export default function PublicReviewScreen() {
+  const identity = useSession();
+  const params = useLocalSearchParams<{ id?: string }>();
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  return <ReviewReadingScreen key={`${identity.mode}:${identity.email ?? ''}:${id ?? ''}`} />;
+}
+
+function ReviewReadingScreen() {
   const params = useLocalSearchParams<{ id?: string }>();
   const reviewId = Array.isArray(params.id) ? params.id[0] : params.id;
   const returnTo = safeSharedReviewPath(reviewId ? `/review/${reviewId}` : undefined);
   const { mode, status: sessionStatus } = useSession();
+  const validId = validReaderId(reviewId, mode);
+  const [isOwner, setIsOwner] = useState(false);
   const [record, setRecord] = useState<ReviewRecord | null>(null);
   const [community, setCommunity] = useState<ReviewCommunity | null>(null);
   const [comments, setComments] = useState<ReviewComment[]>([]);
@@ -62,31 +72,30 @@ export default function PublicReviewScreen() {
   }, [reviewId]);
 
   useEffect(() => {
-    if (sessionStatus !== 'ready' || mode !== 'supabase' || !reviewId || !returnTo) return;
+    if (sessionStatus !== 'ready' || mode === 'none') return;
+    if (!reviewId || !validId) return;
     let active = true;
-    void getPublicReview(reviewId)
+    void getReadableReview(reviewId, mode)
       .then(async (result) => {
         if (!active) return;
-        setRecord(result);
         if (!result) { setStatus('missing'); return; }
-        await loadCommunity();
+        setRecord(result.record);
+        setIsOwner(result.isOwner);
+        if (mode === 'supabase' && result.record.visibility === 'public') {
+          try {
+            const [nextCommunity, nextComments] = await Promise.all([getReviewCommunity(reviewId), listReviewComments(reviewId)]);
+            if (!active) return;
+            setCommunity(nextCommunity); setComments(nextComments);
+          }
+          catch { if (active) setNotice({title:'댓글을 불러오지 못했어요',message:'리뷰는 계속 읽을 수 있습니다. 잠시 뒤 다시 열어 주세요.',tone:'warning'}); }
+        }
         if (!active) return;
         setStatus('ready');
-        void trackProductEvent('public_review_view', 'review', reviewId, { surface: 'public_review', mode: result.mode });
+        if (mode === 'supabase' && result.record.visibility === 'public') void trackProductEvent('public_review_view', 'review', reviewId, { surface: 'public_review', mode: result.record.mode });
       })
       .catch(() => { if (active) setStatus('error'); });
     return () => { active = false; };
-  }, [loadCommunity, mode, returnTo, reviewId, sessionStatus]);
-
-  const questionRows = useMemo(() => {
-    if (!record) return [];
-    return record.questions.map((question) => {
-      const answer = record.answers[question.key]?.trim();
-      const selected = new Set(record.questionTags[question.key] ?? []);
-      const tags = question.options.filter((option) => selected.has(option.id)).map((option) => option.label);
-      return { key: question.key, question: question.text, response: answer || tags.join(' · ') };
-    }).filter((row) => row.response);
-  }, [record]);
+  }, [loadCommunity, mode, validId, reviewId, sessionStatus]);
 
   async function toggleLike() {
     if (!reviewId || !community) return;
@@ -161,47 +170,37 @@ export default function PublicReviewScreen() {
     } finally { setBusy(false); }
   }
 
-  if (shouldWaitForPublicReview(sessionStatus, mode, Boolean(returnTo), status)) {
+  if (sessionStatus === 'loading') {
     return <Screen eyebrow="공개 기록" title="감상 기록"><ActivityIndicator color={colors.primary} size="large" /></Screen>;
   }
 
-  if (mode !== 'supabase') {
+  if (mode !== 'supabase' && mode !== 'demo') {
     return (
-      <Screen eyebrow="공개 기록" title="로그인 후 볼 수 있어요">
+      <Screen title="로그인 후 볼 수 있어요">
         <Button label="이메일로 로그인" onPress={() => router.replace({ pathname: '/welcome', params: returnTo ? { returnTo } : {} })} />
       </Screen>
     );
   }
 
+  if (sessionStatus === 'error') return <Screen title="로그인을 다시 확인해 주세요"><Button label="로그인 화면으로" onPress={() => router.replace('/welcome')} /></Screen>;
+  if (validId && status === 'loading') return <Screen title="감상 기록"><ActivityIndicator color={colors.primary} size="large" /></Screen>;
+
   if (status === 'error') {
     return <Screen eyebrow="공개 기록" title="기록을 불러오지 못했어요"><StateNotice message="연결을 확인한 뒤 다시 열어 주세요." title="조회 오류" tone="danger" /><Button label="FLICK 홈으로" onPress={() => router.replace('/')} /></Screen>;
   }
 
-  if (status === 'missing' || !record || !community) {
-    return <Screen eyebrow="공개 기록" title="볼 수 없는 기록이에요"><StateNotice message="작성자가 비공개로 바꾸거나 삭제했을 수 있습니다. 공개가 완료된 기록만 볼 수 있어요." title="접근할 수 없음" tone="warning" /><Button label="FLICK 홈으로" onPress={() => router.replace('/')} /></Screen>;
+  if (!validId || status === 'missing' || !record) {
+    return <Screen title="볼 수 없는 기록이에요"><StateNotice message="기록이 삭제되었거나 접근할 수 없는 상태입니다." title="접근할 수 없음" tone="warning" /><Button label="FLICK 홈으로" onPress={() => router.replace('/')} /></Screen>;
   }
 
   return (
-    <Screen eyebrow="공개 기록" title={record.movie.title}>
-      {notice ? <StateNotice {...notice} /> : null}
-      <View style={styles.summary}>
-        <Text style={styles.meta}>{record.watchedAt} · {record.mode === 'light' ? 'Light' : 'Core'}</Text>
-        <Text accessibilityLabel={`별점 ${record.rating}점`} style={styles.rating}>★ {record.rating} / 5</Text>
-        {record.oneLine ? <Text style={styles.oneLine}>“{record.oneLine}”</Text> : null}
+    <ReviewReaderShell record={record} onBack={() => { if(router.canGoBack()) router.back(); else router.replace('/'); }} onEdit={isOwner ? () => router.push(reviewEditDestination(record)) : undefined}>
+      {notice ? <View style={styles.readerNotice}><StateNotice {...notice} /></View> : null}
+      {community ? <View style={styles.community}>
         <View style={styles.actionRow}>
           <Button disabled={busy} label={`${community.viewerLiked ? '공감 취소' : '공감'} · ${community.likeCount}`} onPress={() => void toggleLike()} style={styles.action} variant={community.viewerLiked ? 'primary' : 'secondary'} />
           <Button disabled={busy} label={`${community.viewerSaved ? '저장 취소' : '저장'} · ${community.saveCount}`} onPress={() => void toggleSave()} style={styles.action} variant="secondary" />
         </View>
-      </View>
-      {record.spoiler ? <StateNotice message="아래 내용에 영화의 주요 장면이나 결말이 포함될 수 있어요." title="스포일러 주의" tone="warning" /> : null}
-      {questionRows.map((row, index) => (
-        <View key={row.key} style={styles.section}>
-          <Text testID="readable-copy" style={styles.question}>Q{index + 1}. {row.question}</Text>
-          <Text testID="readable-copy" style={styles.response}>{row.response}</Text>
-        </View>
-      ))}
-      {record.coreFlow?.version === 1 ? <CoreMagazine flow={record.coreFlow} cover /> : record.body ? <View style={styles.section}><Text style={styles.sectionTitle}>자유 감상</Text><Text testID="readable-copy" style={styles.response}>{record.body}</Text></View> : null}
-      <ReviewKeywords keywords={record.lightFlow?.representativeKeywords} />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>댓글 {community.commentCount}개</Text>
@@ -227,21 +226,17 @@ export default function PublicReviewScreen() {
           <Button disabled={!reportReason || busy} label="신고 접수" onPress={() => void submitReport()} variant="secondary" />
         </> : null}
       </View> : null}
-
-      <Button label="영화 상세 보기" onPress={() => { void trackProductEvent('movie_detail_open', 'movie', record.movieId, { surface: 'public_review', source: 'review' }); router.push({ pathname: '/movie/[id]', params: { id: record.movieId } }); }} variant="secondary" />
-      <Button label="FLICK 홈으로" onPress={() => router.replace('/')} variant="ghost" />
-    </Screen>
+      </View> : null}
+    </ReviewReaderShell>
   );
 }
 
 const styles = StyleSheet.create({
-  summary: { backgroundColor: colors.surface, borderRadius: radii.lg, gap: spacing.md, padding: spacing.xl },
+  readerNotice: { paddingHorizontal: 21, paddingTop: 16 },
+  community: { marginTop: 24, paddingHorizontal: 21, paddingTop: 20, gap: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
   meta: { ...typography.caption, color: colors.textMuted },
-  rating: { ...typography.heading, color: colors.warning },
-  oneLine: { ...typography.heading, color: colors.text },
   section: { backgroundColor: colors.surface, borderRadius: radii.md, gap: spacing.md, padding: spacing.lg },
   sectionTitle: { ...typography.heading, color: colors.text },
-  question: { ...typography.label, color: colors.text },
   response: { ...typography.body, color: colors.textMuted },
   actionRow: { flexDirection: 'row', gap: spacing.sm },
   action: { flex: 1 },
