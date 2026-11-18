@@ -4,6 +4,7 @@ import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, V
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DesignVector } from '@/components/design-vector';
+import { HomeWordmark } from '@/components/home-wordmark';
 import { Button } from '@/components/button';
 import { HomeExpertCard, HomeMagazineCard, HomeReviewCard, previewKeywords, previewMovies } from '@/components/home-content-cards';
 import { HomeIcon, HomeInfoDialog, HomePicture, HomeRail, HomeSection, homeFont, homeText, homeTheme } from '@/components/home-ui';
@@ -97,7 +98,7 @@ export default function HomeScreen() {
       <View style={styles.page} testID="figma-home">
         <View style={styles.header}>
           <DesignVector label="FLICK 심볼" name="symbol" width={28} />
-          <DesignVector label="FLICK" name="wordmark" width={116.4} height={22} style={styles.wordmark} />
+          <HomeWordmark style={styles.wordmark} />
           <View style={styles.headerActions}>
             <Pressable accessibilityRole="button" accessibilityLabel="알림" onPress={() => router.push('/notifications')} style={styles.headerButton}><NotificationBell width={23} height={25}/></Pressable>
             <Pressable accessibilityRole="button" accessibilityLabel="메시지" onPress={() => setInfo({ title: '메시지', body: '메시지 기능은 준비 중이에요. 지금은 공개 리뷰의 댓글로 감상을 나눌 수 있어요.' })} style={styles.headerButton}><HomeIcon name="message" width={27} height={25} /></Pressable>
@@ -178,7 +179,7 @@ const styles = StyleSheet.create({
   page: { alignSelf: 'center', backgroundColor: '#FFFFFF', maxWidth: 402, width: '100%', paddingTop: 28, paddingBottom: 40, overflow: 'hidden' },
   header: { marginHorizontal: 21, height: 28, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   symbol: { width: 28, height: 28 },
-  wordmark: { position: 'absolute', width: 116.4, height: 22, left: '50%', marginLeft: -58.2 },
+  wordmark: { position: 'absolute', width: 116.4, height: 44, left: '50%', marginLeft: -58.2 },
   headerActions: { flexDirection: 'row', gap: 0 },
   headerButton: { minWidth: 36, height: 28, alignItems: 'center', justifyContent: 'center' },
   loading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, padding: 12 },

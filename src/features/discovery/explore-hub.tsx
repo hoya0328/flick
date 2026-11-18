@@ -2,6 +2,7 @@ import { type Href, router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { DesignVector } from '@/components/design-vector';
+import { HomeWordmark } from '@/components/home-wordmark';
 import { HomeInfoDialog, HomeRail } from '@/components/home-ui';
 import { useExploreData } from './explore-data';
 import { ExploreButton, ExploreChips, ExploreFrame, ExploreMessage, ExploreMovieRail, ExplorePoster, ExploreSection, MovieRating, openExploreMovie, ui, useExploreWidth } from './explore-ui';
@@ -24,7 +25,7 @@ export default function ExploreHub() {
   const openList = (options: Record<string, string> = {}) => router.push(`/explore-list?${new URLSearchParams({ ratio: String(ratio), ...options })}` as Href);
   useEffect(() => { if (linkedQuery) router.replace(`/explore-list?${new URLSearchParams({ query: linkedQuery })}` as Href); }, [linkedQuery]);
   return <ExploreFrame><ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 65 }}>
-    <View style={styles.header}><DesignVector name="symbol" width={29} height={28} /><DesignVector name="wordmark" width={116.4} height={22} /><Pressable accessibilityRole="button" accessibilityLabel="메시지 안내" onPress={() => setInfo({ title: '메시지', body: '개인 메시지는 아직 제공하지 않아요. 공개된 감상은 피드에서 나눌 수 있어요.' })} style={{ minHeight: 44, justifyContent: 'center' }}><DesignVector name="exploreSend" width={27.2424} /></Pressable></View>
+    <View style={styles.header}><DesignVector name="symbol" width={29} height={28} /><HomeWordmark /><Pressable accessibilityRole="button" accessibilityLabel="메시지 안내" onPress={() => setInfo({ title: '메시지', body: '개인 메시지는 아직 제공하지 않아요. 공개된 감상은 피드에서 나눌 수 있어요.' })} style={{ minHeight: 44, justifyContent: 'center' }}><DesignVector name="exploreSend" width={27.2424} /></Pressable></View>
     <View style={styles.search}><Pressable accessibilityRole="button" accessibilityLabel="영화 검색 실행" onPress={() => openList({ query })} style={{ padding: 8 }}><DesignVector name="exploreSearch" width={16.7418} /></Pressable><TextInput accessibilityLabel="제목, 키워드, 기분, 장면 검색" placeholder="제목, 키워드, 기분, 장면으로 검색" placeholderTextColor="#B8B8B8" style={[ui.body, { flex: 1, minWidth: 0, fontSize: 15, height: 50 }]} value={query} maxLength={120} onChangeText={setQuery} returnKeyType="search" onSubmitEditing={() => openList({ query })} /></View>
     <View style={styles.ratio}><Text style={[ui.title, { fontWeight: '700', color: '#364153' }]}>오늘의 추천 성향</Text><View style={{ marginTop: 20 }}><RatioControl value={ratio} onChange={setRatio} onCommit={saveRatio} /><View style={styles.ticks}>{[0, 30, 50, 70, 100].map(value => <Text key={value} style={[ui.small, { fontSize: 11, color: ratio === value ? '#F8233C' : '#6A7282' }]}>{value}%</Text>)}</View><View style={styles.ticks}>{['익숙한 취향', '반반', '새로운 발견'].map(label => <Text key={label} style={[ui.small, { fontSize: 11 }]}>{label}</Text>)}</View></View></View>
     {ratioError ? <Text accessibilityRole="alert" style={[ui.caption, { marginTop: 6 }]}>{ratioError}</Text> : null}
