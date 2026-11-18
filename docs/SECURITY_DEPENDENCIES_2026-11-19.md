@@ -52,3 +52,11 @@
 - 기존 HANDOFF/DECISIONS·발표 원본/QR 제작 등의 관련 없는 미커밋 변경은 보존하고 게시에 섞지 않는다. 최종 commit/deployment/CI 결과는 게시 후 아래에 기록한다.
 
 공식 근거: [picomatch advisory: 수정판 없음](https://github.com/advisories/GHSA-fc5q-39xc-vjpf), [node-forge 1.4.3 수정판](https://github.com/advisories/GHSA-6889-vf6x-f3g5), [Gmail 앱 비밀번호](https://support.google.com/mail/answer/185833?hl=ko), [SMTP2GO 발신 검증](https://support.smtp2go.com/hc/en-gb/articles/115004408567-Verified-Senders).
+
+### 최종 게시 확인
+
+- 보안 코드 `d0953807797464a17a8c5a6ace926f7fd06c9a1b`를 GitHub main에 push했다. 원격 복원 태그 `rollback/security-before-2026-11-19`는 직전 `136746e`를 가리킨다. 실제 비공개 백업/발표자료/서버 비밀값은 게시하지 않았다.
+- 기존 beta 새 deployment **`h01wwxmbwk`**, 고정 주소 `https://flick-film-journal--beta.expo.app` 유지. 이전 `do0u03tp9j` 보존. 새 대상/유료 요구/SMTP·서버 함수·DB 설정 변경 없음.
+- 외부29경로 HTTP200 및 최종 웹 엔트리 bytes 일치, 빌드99파일 비밀정보 재검사 통과. 무료 입장/AI gate open,11/24 00:00KST 종료/확인 기한 유지. 점검 시 AI394/일·12/분 잔여. 새 Gemini/가입/메일 호출 없음.
+- [코드 커밋 GitHub CI44337507515](https://github.com/hoya0328/flick/actions/runs/44337507515): 비밀정보·깨끗한 설치·타입/린트/344테스트·웹 빌드 **성공**, 마지막 의존성 감사 **실패**. CI 전체 성공으로 보고하지 않는다. 이후 문서 전용 커밋은 실행 코드를 바꾸지 않는다.
+- 로컬 검수 탭과 임시8086 서버 정리. 앞선 문서·발표/QR·비공개 백업 도구의 관련 없는 미커밋 변경은 남겨 보존했다. 실기기 네이티브 실행, 전체 사용자 JWT E2E, 실제 메일 수신 검사는 이번 완료 범위가 아니다.
