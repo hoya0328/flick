@@ -54,6 +54,7 @@ export function validatePasswordConfirmation(password: string, confirmation: str
 export function accountErrorMessage(error: unknown) {
   const raw = error instanceof Error ? error.message : String(error ?? '');
   const message = raw.toLowerCase();
+  if (message.includes('failed to fetch') || message.includes('network request failed') || message.includes('fetch failed')) return '서버에 연결하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.';
 
   if (message.includes('invalid login credentials')) return '이메일 또는 비밀번호가 올바르지 않습니다.';
   if (message.includes('user already registered') || message.includes('already been registered')) {

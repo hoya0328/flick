@@ -43,5 +43,6 @@ describe('account validation', () => {
   it('turns Supabase login failures into useful Korean copy', () => {
     expect(accountErrorMessage(new Error('Invalid login credentials'))).toContain('이메일 또는 비밀번호');
     expect(accountErrorMessage(new Error('Email rate limit exceeded'))).toContain('발송 한도');
+    expect(accountErrorMessage(new Error('Failed to fetch'))).toContain('인터넷 연결');
   });
 });

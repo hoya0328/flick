@@ -13,7 +13,7 @@
     "web": "expo start --web",
     "preview:web": "node scripts/preview-web.mjs",
     "build:web": "npm run design:check && node scripts/security-compat.mjs --check && node scripts/security-deepmerge.mjs --check && node scripts/security-picomatch.mjs --check && npm run security:secrets && expo export --platform web && node scripts/build-pwa.mjs && npm run security:secrets -- --build",
-    "design:check": "node scripts/build-intro-vectors.mjs --check && node scripts/build-explore-vectors.mjs --check && node scripts/build-feed-vectors.mjs --check && node scripts/build-report-vectors.mjs --check",
+    "design:check": "node scripts/build-intro-vectors.mjs --check && node scripts/build-explore-vectors.mjs --check && node scripts/build-feed-vectors.mjs --check && node scripts/build-report-vectors.mjs --check && node scripts/build-auth-vector.mjs --check",
     "security:audit": "npm audit --audit-level=moderate",
     "security:secrets": "node scripts/secrets-guard.mjs",
     "catalog:audit": "node scripts/audit-tmdb-catalog.mjs",
