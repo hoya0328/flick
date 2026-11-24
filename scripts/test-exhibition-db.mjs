@@ -1,5 +1,6 @@
 // Isolated PostgreSQL/WASM. Never reads credentials or connects to a remote DB.
 import { readFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
 const { PGlite } = await import('../tmp/feed-db-qa/node_modules/@electric-sql/pglite/dist/index.js');
 const db = new PGlite();
 try {
@@ -28,4 +29,16 @@ try {
  const results = await db.exec(await readFile('supabase/tests/exhibition.sql','utf8'));
  console.log(results.at(-1).rows);
  console.log('PASS isolated exact exhibition DDL + restricted-role rollback tests.');
+ // The operator SQL must change only the approved window, never renew guest IDs.
+ await db.exec("update public.exhibition_settings set closes_at='2026-11-24T00:00:00+09:00',free_verified_until='2026-11-24T00:00:00+09:00'");
+ const before = await db.query('select (select count(*) from public.exhibition_guests)::int as guests, (select count(*) from public.exhibition_records)::int as records');
+ // Fixed clock applies only to this isolated test, never the operator file.
+ const operation = (await readFile('supabase/operations/20261124_exhibition_window.sql','utf8')).replace(/\bnow\(\)/g,"timestamptz '2026-11-24 12:00:00+09'");
+ await db.exec(operation);
+ const window = await db.query("select enabled,closes_at=timestamptz '2026-11-27 00:00:00+09' as correct_end, free_verified_until=closes_at as verified,daily_limit,minute_limit from public.exhibition_settings where id=true");
+ assert.deepEqual(window.rows,[{enabled:true,correct_end:true,verified:true,daily_limit:400,minute_limit:12}]);
+ const after = await db.query('select (select count(*) from public.exhibition_guests)::int as guests, (select count(*) from public.exhibition_records)::int as records');
+ assert.deepEqual(after.rows,before.rows);
+ await assert.rejects(db.exec(operation),/unexpected_existing_window/);
+ console.log('PASS Nov 24 operator extension, exact end/quotas, records preserved and repeat execution refused.');
 } finally { await db.close(); }

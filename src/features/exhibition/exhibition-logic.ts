@@ -5,7 +5,8 @@ import type { ReviewForm } from '@/features/reviews/review-logic';
 export type ExhibitionStatus = { open: boolean; aiAvailable: boolean; closesAt: string; verifiedUntil: string; dailyRemaining: number; minuteRemaining: number; guestRemaining: number };
 export type Guest = { user_id: string; expires_at: string; adult_confirmed: boolean; ai_consent: boolean };
 export const guestStorageKey = (id: string) => `flick.exhibition.form.${id}`;
-export const guestAiAllowed = (g: Guest | null, now = Date.now()) => Boolean(g?.adult_confirmed && g.ai_consent && Date.parse(g.expires_at) > now);
+export const guestSessionActive = (g: Guest | null, now = Date.now()) => Boolean(g && Date.parse(g.expires_at) > now);
+export const guestAiAllowed = (g: Guest | null, now = Date.now()) => Boolean(g?.adult_confirmed && g.ai_consent && guestSessionActive(g, now));
 export function guestResponses(form: ReviewForm) {
   return form.questions.map(q => ({ question: q.text, answer: form.mode === 'core' ? form.answers[q.key]?.trim() ?? '' : q.options.filter(o => form.questionTags[q.key]?.includes(o.id)).map(o => o.label).join(', ') }));
 }
@@ -30,5 +31,6 @@ export function exhibitionMessage(error: unknown): string {
   if (/closed|expired/i.test(message)) return '전시 체험 시간이 종료됐어요. 작성 내용은 이 기기에 남아 있어요. 아래에서 복사해 보관해 주세요.';
   if (/23505|duplicate/i.test(message)) return '이미 저장한 체험 기록이 있어요. 새로고침해 저장 결과를 확인해 주세요.';
   if (/anonymous.*disabled/i.test(message)) return '게스트 접속 준비 중이에요. 잠시 뒤 다시 시도해 주세요.';
+  if (/exhibition_admission_required/i.test(message)) return '이전 체험 세션으로는 입장할 수 없어요. 체험을 종료한 뒤 다시 시작해 주세요.';
   return '연결하지 못했어요. 작성 내용은 유지됩니다. 인터넷을 확인하고 다시 시도해 주세요.';
 }

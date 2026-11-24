@@ -1,12 +1,19 @@
 /// <reference types="node" />
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { guestAiAllowed, guestKeywords, guestResponses, guestStorageKey, restoreGuestForm, withGuestKeywords } from '../src/features/exhibition/exhibition-logic';
+import { guestAiAllowed, guestKeywords, guestResponses, guestSessionActive, guestStorageKey, restoreGuestForm, withGuestKeywords } from '../src/features/exhibition/exhibition-logic';
 import { newLightForm, respondToLight } from '../src/features/reviews/light-flow';
 import { newCoreForm } from '../src/features/reviews/core-flow';
 import type { Movie } from '../src/features/discovery/discovery-logic';
 const movie = { id:'10000000-0000-4000-8000-000000000001',title:'테스트',genres:[],details:null } as unknown as Movie;
 describe('isolated free exhibition',()=>{
+ it('recognizes expired and invalid sessions even without AI consent',()=>{
+  const guest={user_id:'a',expires_at:new Date(2000).toISOString(),adult_confirmed:false,ai_consent:false};
+  expect(guestSessionActive(guest,1999)).toBe(true);
+  expect(guestSessionActive(guest,2000)).toBe(false);
+  expect(guestSessionActive({...guest,expires_at:'invalid'},1000)).toBe(false);
+  expect(guestSessionActive(null,1000)).toBe(false);
+ });
  it('requires server enrollment, adult confirmation, consent and a live session for AI',()=>{
   const g={user_id:'a',expires_at:new Date(2000).toISOString(),adult_confirmed:true,ai_consent:true};
   expect(guestAiAllowed(g,1000)).toBe(true);expect(guestAiAllowed(g,2000)).toBe(false);

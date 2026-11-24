@@ -6,7 +6,7 @@ import { coreTurns } from '@/features/reviews/core-flow';
 import { lightLabels } from '@/features/reviews/light-flow';
 import { readAiOperationError } from '@/features/reviews/ai-operations';
 import type { ReviewForm } from '@/features/reviews/review-logic';
-import { guestKeywords, guestResponses, type Guest, type ExhibitionStatus } from './exhibition-logic';
+import { guestKeywords, guestResponses, guestSessionActive, type Guest, type ExhibitionStatus } from './exhibition-logic';
 
 const url = process.env.EXPO_PUBLIC_SUPABASE_URL?.trim();
 const key = process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim() || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY?.trim();
@@ -31,9 +31,12 @@ export async function resumeGuest(): Promise<{ guest: Guest | null; saved: { bod
 }
 export async function enterExhibition(adult: boolean, ai: boolean): Promise<Guest> {
   if (!exhibitionClient) throw new Error('not_configured');
-  const { data: { session } } = await exhibitionClient.auth.getSession();
+  const { data: { session }, error: sessionError } = await exhibitionClient.auth.getSession();
+  if (sessionError) throw sessionError;
   if (!session) { const { error } = await exhibitionClient.auth.signInAnonymously(); if (error) throw error; }
-  return rpc<Guest>('join_exhibition', { p_adult: adult, p_ai: ai && adult });
+  const guest = await rpc<Guest>('join_exhibition', { p_adult: adult, p_ai: ai && adult });
+  if (!guestSessionActive(guest)) throw new Error('exhibition_session_expired');
+  return guest;
 }
 export async function exhibitionMovies(search: string): Promise<Movie[]> {
   const rows = await rpc<{ id: string; title: string; original_title: string | null; overview: string; provider_id: string; poster_path: string | null; release_date: string | null; genres: string[] | null }[]>('exhibition_movies', { p_search: search.trim().slice(0, 80) });

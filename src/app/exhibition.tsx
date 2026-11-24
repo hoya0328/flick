@@ -13,7 +13,7 @@ import { fallbackCoreQuestion } from '@/features/reviews/core-questions';
 import { changeLightQuestion, lightLabels, newLightForm, normalizeLightDraft, ratingMessage, respondToLight } from '@/features/reviews/light-flow';
 import type { ReviewForm, ReviewMode } from '@/features/reviews/review-logic';
 import { AiOperationError, aiOperationMessage } from '@/features/reviews/ai-operations';
-import { exhibitionMessage, guestAiAllowed, guestKeywords, guestStorageKey, restoreGuestForm, withGuestKeywords, type Guest, type ExhibitionStatus } from '@/features/exhibition/exhibition-logic';
+import { exhibitionMessage, guestAiAllowed, guestKeywords, guestSessionActive, guestStorageKey, restoreGuestForm, withGuestKeywords, type Guest, type ExhibitionStatus } from '@/features/exhibition/exhibition-logic';
 import { endGuest, enterExhibition, exhibitionMovies, exhibitionStatus, guestAi, resumeGuest, saveGuestRecord } from '@/features/exhibition/exhibition-service';
 
 export default function ExhibitionScreen() {
@@ -25,8 +25,10 @@ export default function ExhibitionScreen() {
   const [index, setIndex] = useState(0), [summary, setSummary] = useState(false), [saved, setSaved] = useState(false), [confirmEnd, setConfirmEnd] = useState(false);
   const [keywordText, setKeywordText] = useState('');
   const [notice, setNotice] = useState(''), [wait, setWait] = useState(0), [backupWarning, setBackupWarning] = useState(false);
+  const [now, setNow] = useState(Date.now);
   const lock = useRef(false), mounted = useRef(true), scroll = useRef<ScrollView>(null);
-  const ai = guestAiAllowed(guest) && status?.aiAvailable === true;
+  const expired = Boolean(guest && !guestSessionActive(guest, now));
+  const ai = guestAiAllowed(guest, now) && status?.aiAvailable === true;
   const refreshStatus = async () => { const s = await exhibitionStatus(); if (mounted.current) setStatus(s); };
   useEffect(() => {
     mounted.current = true;
@@ -34,19 +36,24 @@ export default function ExhibitionScreen() {
       try {
         const [s, resumed] = await Promise.all([exhibitionStatus(), resumeGuest()]);
         if (!mounted.current) return;
-        setStatus(s); setGuest(resumed.guest);
+        setStatus(s); setGuest(resumed.guest); setNow(Date.now());
         if (resumed.saved) { setForm({ ...newLightForm({ id: '', title: '' } as Movie), body: resumed.saved.body }); setSaved(true); }
         else if (resumed.guest) {
           const restored = restoreGuestForm(await AsyncStorage.getItem(guestStorageKey(resumed.guest.user_id)));
           if (!mounted.current) return;
           if (restored) { setMovie(restored.movie); setForm(restored.form); setIndex(restored.index); setSummary(restored.summary); setKeywordText(guestKeywords(restored.form).join(', ')); }
-          else { const list = await exhibitionMovies(''); if (mounted.current) setMovies(list); }
+          else if (guestSessionActive(resumed.guest)) { const list = await exhibitionMovies(''); if (mounted.current) setMovies(list); }
         }
       } catch (error) { if (mounted.current) setNotice(exhibitionMessage(error)); }
       finally { if (mounted.current) setReady(true); }
     })();
     return () => { mounted.current = false; };
   }, []);
+  useEffect(() => {
+    if (!guest) return;
+    const timer = setInterval(() => setNow(Date.now()), 10000);
+    return () => clearInterval(timer);
+  }, [guest]);
   useEffect(() => {
     if (!ready || !guest || !movie || !form || saved) return;
     const timer = setTimeout(() => { void AsyncStorage.setItem(guestStorageKey(guest.user_id), JSON.stringify({ movie, form, index, summary })).catch(() => { if (mounted.current) setBackupWarning(true); }); }, 200);
@@ -68,7 +75,7 @@ export default function ExhibitionScreen() {
   const start = () => void run(async () => {
     if (!privacy) { setNotice('비공개 저장·기기 세션 안내를 확인해 주세요.'); return; }
     const g = await enterExhibition(adult, consent); if (!mounted.current) return;
-    setGuest(g); const list = await exhibitionMovies(''); if (!mounted.current) return;
+    setGuest(g); setNow(Date.now()); const list = await exhibitionMovies(''); if (!mounted.current) return;
     setMovies(list); await refreshStatus(); top();
   });
   const choose = (m: Movie) => { setMovie(m); setForm(mode === 'light' ? newLightForm(m) : newCoreForm(m)); setKeywordText(''); setIndex(0); setSummary(false); setNotice(''); top(); };
@@ -148,6 +155,13 @@ export default function ExhibitionScreen() {
         <Check label="안내를 읽고 무료 AI 전송에 동의해요 (선택)" value={consent} onChange={setConsent} disabled={busy || !adult} />
         <Button label={consent ? '무료 AI 체험 시작' : 'AI 없이 체험 시작'} onPress={start} loading={busy} disabled={!status?.open} />
         <Button label="일반 회원 로그인으로 돌아가기" onPress={() => router.replace('/welcome')} variant="ghost" />
+      </View> : expired && !saved ? <View style={s.card}>
+        <Text accessibilityRole="alert" style={s.heading}>이전 체험 시간이 만료됐어요</Text>
+        <Text style={s.body}>체험은 시작 후 2시간 동안 유효해요. 남겨 둔 감상은 아래에서 복사할 수 있습니다. 새 체험을 시작하려면 아래 버튼을 눌러 주세요.</Text>
+        {form ? <>
+          {form.body ? <Text selectable style={s.body}>{form.body}</Text> : null}
+          {form.questions.map(question => <Text key={question.key} selectable style={s.caption}>{question.text}{'\n'}{form.mode === 'core' ? form.answers[question.key] : question.options.filter(o => form.questionTags[question.key]?.includes(o.id)).map(o => o.label).join(' · ') || '건너뜀'}</Text>)}
+        </> : null}
       </View> : saved ? <View style={s.card}>
         <Text style={s.body}>비공개로 저장했어요. 공개 게시나 회원 계정 이전은 지원하지 않습니다. 아래 감상을 길게 눌러 복사해 보관할 수 있어요.</Text>
         <Text selectable style={s.body}>{form?.body}</Text>
@@ -183,7 +197,7 @@ export default function ExhibitionScreen() {
       </View>}
       {guest ? <View style={s.card}>
         {!saved ? <Text style={s.caption}>입력 중인 내용은 이 브라우저에 임시 보관돼요. 종료 전에 필요한 내용을 복사해 주세요.</Text> : null}
-        {confirmEnd ? <><Text style={s.notice}>종료하면 이 기기의 체험 세션과 임시 초안을 지워요. 서버에 비공개 저장한 기록은 삭제되지 않지만 다시 접속할 수 없어요. 복사해 보관했나요?</Text><Button label="확인 · 체험 종료" loading={busy} onPress={finish} /><Button label="계속 보기" onPress={() => setConfirmEnd(false)} disabled={busy} variant="ghost" /></> : <Button label={saved ? '체험 종료 · 다음 방문객에게 넘기기' : '체험 그만하기'} disabled={busy} onPress={() => setConfirmEnd(true)} variant="ghost" />}
+        {confirmEnd ? <><Text style={s.notice}>종료하면 이 기기의 체험 세션과 임시 초안을 지워요. 서버에 비공개 저장한 기록은 삭제되지 않지만 다시 접속할 수 없어요. 복사해 보관했나요?</Text><Button label="확인 · 체험 종료" loading={busy} onPress={finish} /><Button label="계속 보기" onPress={() => setConfirmEnd(false)} disabled={busy} variant="ghost" /></> : <Button label={expired ? '새 체험 시작' : saved ? '체험 종료 · 다음 방문객에게 넘기기' : '체험 그만하기'} disabled={busy} onPress={() => setConfirmEnd(true)} variant="ghost" />}
       </View> : null}
     </>}
   </Screen>;
